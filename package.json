@@ -1,0 +1,8 @@
+{
+  "name": "family-adventures-kitchen-prep",
+  "private": true,
+  "description": "Netlify Functions used by the staff admin panel's Upload changes button (see netlify/functions/). The site itself (app.html, index.html, sites/) is plain static HTML with no build step.",
+  "dependencies": {
+    "@netlify/blobs": "latest"
+  }
+}

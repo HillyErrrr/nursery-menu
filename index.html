@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Family Adventures Group — Kitchen Prep Lists</title>
+<style>
+:root{
+  --paper-dim:#E9E2D2;
+  --ink:#1A303C;
+  --ink-soft:#54626C;
+  --ink-faint:#8B9AA3;
+  --line:#D9D2C2;
+  --line-strong:#C2B9A3;
+  --sage:#4B8A5C;
+  --sage-light:#E1F0E3;
+  --sage-text:#256339;
+  --butter:#DB6F52;
+  --butter-dark:#8C3A26;
+  --card:#FFFFFF;
+  --radius:12px;
+  --shadow:0 1px 2px rgba(26,48,60,0.08);
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;background:var(--paper-dim);color:var(--ink);
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  padding-bottom:3rem;
+}
+.wrap{max-width:720px;margin:0 auto;padding:0 20px;}
+.head{
+  background:var(--ink);color:#fff;padding:32px 0 26px;
+}
+.head h1{font-size:22px;margin:0 0 4px;}
+.head p{margin:0;color:#B8C4CC;font-size:14px;}
+.group{margin-top:28px;}
+.group-title{
+  font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--ink-faint);margin:0 0 10px;
+}
+.site-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;}
+.site-link{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:16px 18px;text-decoration:none;color:var(--ink);
+  min-height:44px;
+}
+.site-link:active{background:var(--sage-light);}
+.site-link .name{font-weight:600;font-size:15.5px;}
+.site-link .addr{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
+.site-link .go{color:var(--sage-text);font-size:20px;flex:none;}
+.note{
+  margin-top:30px;padding:16px 18px;background:var(--card);border:1px dashed var(--line-strong);
+  border-radius:var(--radius);font-size:13px;color:var(--ink-soft);line-height:1.5;
+}
+</style>
+</head>
+<body>
+<div class="head">
+  <div class="wrap">
+    <h1>Family Adventures Group</h1>
+    <p>Kitchen prep lists — choose your setting</p>
+  </div>
+</div>
+<div class="wrap">
+
+  <div class="group">
+    <div class="group-title">Green Giraffe</div>
+    <ul class="site-list" id="greenGiraffeList"></ul>
+  </div>
+
+  <div class="group">
+    <div class="group-title">Little Adventures Nursery</div>
+    <ul class="site-list" id="littleAdventuresList"></ul>
+  </div>
+
+  <div class="note">
+    Bookmark your setting's own link (or add it to the Home Screen) on the kitchen iPad so you only
+    ever need to tap once — you shouldn't need to come back to this picker page day to day.
+  </div>
+</div>
+
+<script>
+const SITES = [
+  { slug: 'green-giraffe-cardiff-bay', group: 'green', name: 'Cardiff Bay', addr: 'Cardiff Bay, Cardiff, CF11 0SR' },
+  { slug: 'green-giraffe-cathedral-road', group: 'green', name: 'Cathedral Road', addr: 'Cathedral Road, Cardiff, CF11 9LJ' },
+  { slug: 'green-giraffe-parade', group: 'green', name: 'Parade', addr: 'Parade, Cardiff, CF24 3AB' },
+  { slug: 'green-giraffe-radnor-road', group: 'green', name: 'Radnor Road', addr: 'Radnor Road, Cardiff, CF5 1RB' },
+  { slug: 'green-giraffe-penarth', group: 'green', name: 'Penarth', addr: 'Penarth, Cardiff, CF64 2AG' },
+  { slug: 'little-adventures-washwood-heath', group: 'little', name: 'Washwood Heath', addr: 'Washwood Heath, West Midlands, B8 1SH' },
+  { slug: 'little-adventures-stirchley', group: 'little', name: 'Stirchley', addr: 'Stirchley, West Midlands, B30 2DB' },
+  { slug: 'little-adventures-dudley', group: 'little', name: 'Dudley', addr: 'Dudley, West Midlands, DY1 2ER' },
+  { slug: 'little-adventures-st-philips-bristol', group: 'little', name: 'St Philips, Bristol', addr: 'St Philips, Bristol, BS2 0LP' },
+  { slug: 'little-adventures-taunton', group: 'little', name: 'Taunton', addr: 'Taunton, Somerset, TA2 6BB' },
+  { slug: 'little-adventures-cheddar', group: 'little', name: 'Cheddar', addr: 'Cheddar, Somerset, BS27 3EB' },
+  { slug: 'little-adventures-worle', group: 'little', name: 'Worle', addr: 'Worle, Somerset, BS22 9HF' },
+  { slug: 'little-adventures-victoria-park-bridgwater', group: 'little', name: 'Victoria Park, Bridgwater', addr: 'Victoria Park, Bridgwater, Somerset, TA6 7AS' },
+  { slug: 'little-adventures-weston-super-mare', group: 'little', name: 'Weston-super-Mare', addr: 'Weston-super-Mare, Somerset, BS23 4HG' },
+  { slug: 'little-adventures-wedmore', group: 'little', name: 'Wedmore', addr: 'Wells Rd, Wedmore BS28 4SA' },
+];
+
+const greenList = document.getElementById('greenGiraffeList');
+const littleList = document.getElementById('littleAdventuresList');
+
+SITES.forEach(site=>{
+  const li = document.createElement('li');
+  const a = document.createElement('a');
+  a.className = 'site-link';
+  a.href = 'app.html?site=' + encodeURIComponent(site.slug);
+  a.innerHTML = `<div><div class="name">${site.name}</div><div class="addr">${site.addr}</div></div><span class="go">&rarr;</span>`;
+  li.appendChild(a);
+  (site.group === 'green' ? greenList : littleList).appendChild(li);
+});
+</script>
+</body>
+</html>
