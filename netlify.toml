@@ -1,0 +1,30 @@
+# Build settings for this site, committed to the repo so they can't drift.
+#
+# This site has NO build step: `index.html`, `app.html`, `sites/*/config.json`
+# and `groups/*/seasons/*.json` are plain static files that are served exactly
+# as they appear here (see the "Deploying" section of the README). There is no
+# static-site generator involved — nothing to compile, and no generated output
+# directory.
+#
+# Settings in this file take precedence over the ones in the Netlify UI, which
+# is the point of it being here: the UI had its build command set to `hugo`,
+# which failed every deploy with "hugo: command not found" (exit code 127),
+# because Hugo isn't used by this project at all. Rather than install Hugo, the
+# build command below is a no-op that just prints a line and succeeds, and the
+# publish directory is the repo root where the site's files actually live.
+[build]
+  # Deliberately a no-op rather than an empty string, so this unambiguously
+  # overrides whatever build command is set in the Netlify UI.
+  command = "echo 'No build step required — publishing static files as-is.'"
+
+  # The site's files are at the top level of the repo, not in a generated
+  # subdirectory like `public/` or `dist/`.
+  publish = "."
+
+# The staff admin panel's "Upload changes" button and the Ingredient Database's
+# "Fetch from Tesco" button call these (see netlify/functions/). Declared here
+# as well as in the UI so a git-based deploy always picks them up — the README
+# warns that losing the functions silently breaks saving while reading keeps
+# working, which is exactly the kind of failure that's easy to miss.
+[functions]
+  directory = "netlify/functions"
