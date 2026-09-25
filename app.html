@@ -725,6 +725,42 @@ body.draggingIngredient{-webkit-user-select:none;user-select:none;}
 /* ---- Footer entry point (outside #rbAdminRoot, so unscoped by design) ---- */
 .rbAdminTriggerBtn{background:none;border:none;padding:0;color:var(--ink-soft, #566C7F);font-size:12px;text-decoration:underline;cursor:pointer;font-family:inherit;}
 .rbAdminTriggerBtn:hover{color:var(--ink, #1F3C55);}
+#rbAdminRoot .btn.hasUnsaved{background:#B8860B;border-color:#B8860B;color:#fff;}
+
+/* ---------- prep grid + detail overlay (day-at-a-glance mode) ---------- */
+#prepGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin:18px 0;}
+.pgCard{position:relative;display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;cursor:pointer;font:inherit;color:inherit;box-sizing:border-box;transition:transform .12s ease, box-shadow .12s ease;}
+.pgCard:hover,.pgCard:focus-visible{transform:translateY(-2px);box-shadow:0 4px 14px rgba(31,60,85,0.16);outline:none;}
+.pgCard .course-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;}
+#prepDetailOverlay{position:fixed;inset:0;z-index:8000;}
+.pgBackdrop{position:fixed;inset:0;background:rgba(31,60,85,0.45);}
+.pgPanelOuter{position:fixed;inset:0;background:var(--paper);display:flex;flex-direction:column;min-height:0;box-sizing:border-box;padding:16px;overflow:hidden;}
+.pgBackBtn{align-self:flex-start;background:none;border:none;color:var(--ink-soft);font-size:14px;padding:8px 4px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:6px;flex:0 0 auto;font-family:inherit;}
+.pgBackBtn:hover{color:var(--ink);}
+.pgDetailHead{flex:0 0 auto;display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding-bottom:12px;border-bottom:1px solid var(--line);margin-bottom:12px;}
+.pgSplitRow{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.pgSplitRow.no-method{grid-template-columns:1fr;}
+.pgSplitRow.pgExpanded-ing{grid-template-columns:1fr;}
+.pgSplitRow.pgExpanded-ing .pgMethodCol{display:none;}
+.pgSplitRow.pgExpanded-method{grid-template-columns:1fr;}
+.pgSplitRow.pgExpanded-method .pgIngCol{display:none;}
+.pgCol{display:flex;flex-direction:column;min-height:0;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+.pgColBar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line);font-family:'Roca','Space Grotesk',sans-serif;font-weight:600;color:var(--ink);}
+.pgExpandBtn{background:var(--paper-dim);border:1px solid var(--line-strong);color:var(--ink-soft);border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;}
+.pgExpandBtn:hover{color:var(--ink);}
+.pgScroll{flex:1 1 auto;min-height:0;overflow:auto;padding:10px;}
+@media (max-width:680px){
+  .pgPanelOuter{overflow:auto;}
+  .pgSplitRow{display:block;overflow:visible;min-height:0;}
+  .pgCol{margin-bottom:16px;min-height:0;}
+  .pgCol:last-child{margin-bottom:0;}
+  .pgScroll{overflow:visible;}
+  .pgExpandBtn{display:none;}
+}
+#prepModeToggle{margin-left:auto;margin-right:8px;}
+#prepModeToggle ~ #prepPrintBtn{margin-right:8px;}
+.pgCard .course-head{padding:0;border:0;cursor:inherit;background:none;}
+.pgCard .course-head:hover{background:none;}
 
 </style>
 </head>
@@ -749,6 +785,7 @@ body.draggingIngredient{-webkit-user-select:none;user-select:none;}
     </div>
     <div class="ticket-head-top">
       <span class="kicker" id="dateLabel">Today</span>
+      <button class="clear-btn" id="prepModeToggle"><i class="ti ti-layout-grid"></i>Grid view</button>
       <button class="clear-btn" id="prepPrintBtn" title="One prep sheet per course for this day, scaled to the headcount above"><i class="ti ti-printer"></i>Print prep sheets</button>
       <button class="clear-btn" id="resetBtn"><i class="ti ti-eraser"></i>Clear ticks</button>
     </div>
@@ -770,6 +807,8 @@ body.draggingIngredient{-webkit-user-select:none;user-select:none;}
   </div>
 
   <div id="courses"></div>
+  <div id="prepGrid" style="display:none;"></div>
+  <div id="prepDetailOverlay" style="display:none;"></div>
 
   <div id="shopView" style="display:none;">
     <div class="shop-grid">
@@ -1608,7 +1647,10 @@ let state = {
   // ticking an item off as bought and deciding how many to order are two
   // independent things a shopper does to the same row.
   shopOrder: {},
-  methodOpen: {}
+  methodOpen: {},
+  prepMode: 'list',
+  prepDetailKey: null,
+  prepDetailExpanded: null
 };
 
 function todayKey(){
@@ -1850,7 +1892,7 @@ function renderHeadcount(){
       state.headcounts[g.key] = clamped;
       saveHeadcounts();
       renderTotal();
-      renderCourses();
+      renderActivePrep();
     });
     row.appendChild(input);
     body.appendChild(row);
@@ -1876,7 +1918,7 @@ function renderHeadcount(){
     vegInput.addEventListener('input', ()=>{
       state.headcounts.veg = Math.max(0, Number(vegInput.value)||0);
       saveHeadcounts();
-      renderCourses();
+      renderActivePrep();
     });
     vegRow.appendChild(vegInput);
     body.appendChild(vegRow);
@@ -1889,6 +1931,33 @@ function renderTotal(){
   const total = document.getElementById('hcTotal');
   if(!total) return;
   total.innerHTML = `<span class="lbl">Total servings</span><span class="num">${roundQty(totalServings())}</span>`;
+}
+
+function ingRowInnerHtml(ing, id, qtyText){
+  return `
+          <div class="checkbox ${state.checked[id]?'checked':''}">${state.checked[id]?'<i class="ti ti-check"></i>':''}</div>
+          <div class="ing-body">
+            <div class="ing-toprow">
+              <span class="ing-name">${ing.name}</span>
+              <span class="ing-qty">${qtyText}</span>
+            </div>
+            ${ing.prep ? `<div class="ing-prep">${escapeHtml(ing.prep)}</div>` : ''}
+            ${allergensToBadges(ing.allergens)}
+          </div>
+        `;
+}
+
+function buildIngRow(ing, id, scale){
+  const row = document.createElement('div');
+  row.className = 'ing-row' + (state.checked[id] ? ' checked' : '');
+  const qtyText = formatQty(ing, scale);
+  row.innerHTML = ingRowInnerHtml(ing, id, qtyText);
+  row.addEventListener('click', ()=>{
+    state.checked[id] = !state.checked[id];
+    saveChecked();
+    renderActivePrep();
+  });
+  return row;
 }
 
 function renderCourses(){
@@ -1978,26 +2047,7 @@ function renderCourses(){
       list.className = 'ing-list';
       recipe.ingredients.forEach((ing, i)=>{
         const id = ids[i];
-        const row = document.createElement('div');
-        row.className = 'ing-row' + (state.checked[id] ? ' checked' : '');
-        const qtyText = formatQty(ing, scale);
-        row.innerHTML = `
-          <div class="checkbox ${state.checked[id]?'checked':''}">${state.checked[id]?'<i class="ti ti-check"></i>':''}</div>
-          <div class="ing-body">
-            <div class="ing-toprow">
-              <span class="ing-name">${ing.name}</span>
-              <span class="ing-qty">${qtyText}</span>
-            </div>
-            ${ing.prep ? `<div class="ing-prep">${escapeHtml(ing.prep)}</div>` : ''}
-            ${allergensToBadges(ing.allergens)}
-          </div>
-        `;
-        row.addEventListener('click', ()=>{
-          state.checked[id] = !state.checked[id];
-          saveChecked();
-          renderCourses();
-        });
-        list.appendChild(row);
+        list.appendChild(buildIngRow(ing, id, scale));
       });
       ingCol.appendChild(list);
       columns.appendChild(ingCol);
@@ -2063,6 +2113,238 @@ function appendMethodSection(container, recipe, courseName, recipeName){
 
   container.appendChild(header);
   container.appendChild(body);
+}
+
+/* ---------- prep grid + detail overlay (day-at-a-glance mode) ---------- */
+
+function prepDetailKeyFor(courseName, recipeName){
+  return courseName + '||' + recipeName;
+}
+
+function findRecipeByKey(dayCourses, key){
+  if(!key) return null;
+  for(const courseName of COURSE_ORDER){
+    const recipes = dayCourses[courseName];
+    if(!recipes) continue;
+    for(const recipeName of Object.keys(recipes)){
+      if(prepDetailKeyFor(courseName, recipeName) === key){
+        return {courseName, recipeName, recipe: recipes[recipeName]};
+      }
+    }
+  }
+  return null;
+}
+
+function applyPrepVisibility(){
+  const isShop = state.view === 'shop';
+  const showDetail = !isShop && !!state.prepDetailKey;
+  const showGrid = !isShop && !showDetail && state.prepMode === 'grid';
+  const showList = !isShop && !showDetail && state.prepMode !== 'grid';
+  const coursesEl = document.getElementById('courses');
+  const gridEl = document.getElementById('prepGrid');
+  const detailEl = document.getElementById('prepDetailOverlay');
+  const toggleBtn = document.getElementById('prepModeToggle');
+  if(coursesEl) coursesEl.style.display = showList ? 'block' : 'none';
+  if(gridEl) gridEl.style.display = showGrid ? 'block' : 'none';
+  if(detailEl) detailEl.style.display = showDetail ? 'block' : 'none';
+  if(toggleBtn) toggleBtn.style.display = isShop ? 'none' : '';
+}
+
+function renderActivePrep(){
+  if(state.prepDetailKey){
+    renderPrepDetail();
+  }else if(state.prepMode === 'grid'){
+    renderPrepGrid();
+  }else{
+    renderCourses();
+  }
+  applyPrepVisibility();
+}
+
+function setPrepMode(mode){
+  state.prepMode = mode;
+  const toggleBtn = document.getElementById('prepModeToggle');
+  if(toggleBtn){
+    toggleBtn.innerHTML = mode === 'grid'
+      ? '<i class="ti ti-list"></i>List view'
+      : '<i class="ti ti-layout-grid"></i>Grid view';
+  }
+  renderActivePrep();
+}
+
+function renderPrepGrid(){
+  const container = document.getElementById('prepGrid');
+  if(!container) return;
+  container.innerHTML = '';
+  const dayCourses = (MENU[state.week] && MENU[state.week][state.day]) || {};
+  const totalServ = totalServings();
+  const availableCourses = COURSE_ORDER.filter(c=>dayCourses[c]);
+
+  if(availableCourses.length===0){
+    container.innerHTML = '<div class="empty"><i class="ti ti-toque"></i>No menu on file for this day.</div>';
+    return;
+  }
+
+  availableCourses.forEach(courseName=>{
+    const recipes = dayCourses[courseName];
+    Object.keys(recipes).forEach(recipeName=>{
+      const recipe = recipes[recipeName];
+      const servingsForCourse = servingsForCourseName(courseName, dayCourses, totalServ, state.headcounts.veg);
+      const base = recipe.baseServings;
+      const ids = recipe.ingredients.map((_,i)=> `${state.week}|${state.day}|${courseName}|${recipeName}|${i}`);
+      const numChecked = ids.filter(id=>state.checked[id]).length;
+      const allDone = ids.length>0 && numChecked===ids.length;
+
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'pgCard';
+
+      const stamp = document.createElement('div');
+      stamp.className = 'stamp' + (allDone ? ' show' : '');
+      stamp.textContent = 'Prepped';
+      card.appendChild(stamp);
+
+      const head = document.createElement('div');
+      head.className = 'course-head';
+      head.innerHTML = `
+        <div>
+          <div class="course-name">${courseName}</div>
+          <div class="course-recipe">${recipeName}</div>
+          <div class="course-servings">${base ? roundQty(servingsForCourse)+' servings (recipe serves '+base+')' : ''}</div>
+          ${recipeAllergenBadgesHtml(recipe)}
+        </div>
+        <div class="progress-pill ${allDone?'done':''}">${numChecked}/${ids.length}</div>
+      `;
+      card.appendChild(head);
+
+      card.addEventListener('click', ()=>{
+        openPrepDetail(courseName, recipeName);
+      });
+
+      container.appendChild(card);
+    });
+  });
+}
+
+function openPrepDetail(courseName, recipeName){
+  state.prepDetailKey = prepDetailKeyFor(courseName, recipeName);
+  state.prepDetailExpanded = null;
+  renderActivePrep();
+}
+
+function closePrepDetail(){
+  state.prepDetailKey = null;
+  state.prepDetailExpanded = null;
+  renderActivePrep();
+}
+
+function toggleExpandSection(section){
+  state.prepDetailExpanded = (state.prepDetailExpanded === section) ? null : section;
+  renderActivePrep();
+}
+
+function renderPrepDetail(){
+  const overlay = document.getElementById('prepDetailOverlay');
+  if(!overlay) return;
+  overlay.innerHTML = '';
+  const dayCourses = (MENU[state.week] && MENU[state.week][state.day]) || {};
+  const found = findRecipeByKey(dayCourses, state.prepDetailKey);
+  if(!found){
+    state.prepDetailKey = null;
+    state.prepDetailExpanded = null;
+    renderActivePrep();
+    return;
+  }
+  const courseName = found.courseName, recipeName = found.recipeName, recipe = found.recipe;
+  const totalServ = totalServings();
+  const servingsForCourse = servingsForCourseName(courseName, dayCourses, totalServ, state.headcounts.veg);
+  const base = recipe.baseServings;
+  const scale = (base && base > 0) ? (servingsForCourse / base) : 1;
+  const ids = recipe.ingredients.map((_,i)=> `${state.week}|${state.day}|${courseName}|${recipeName}|${i}`);
+  const numChecked = ids.filter(id=>state.checked[id]).length;
+  const allDone = ids.length>0 && numChecked===ids.length;
+  const hasMethod = !!(recipe.method && recipe.method.length);
+
+  const backdrop = document.createElement('div');
+  backdrop.className = 'pgBackdrop';
+  backdrop.addEventListener('click', closePrepDetail);
+  overlay.appendChild(backdrop);
+
+  const panel = document.createElement('div');
+  panel.className = 'pgPanelOuter';
+
+  const backBtn = document.createElement('button');
+  backBtn.type = 'button';
+  backBtn.className = 'pgBackBtn';
+  backBtn.innerHTML = '<i class="ti ti-arrow-left"></i>Back to ' + (state.prepMode === 'grid' ? 'grid' : 'list');
+  backBtn.addEventListener('click', closePrepDetail);
+  panel.appendChild(backBtn);
+
+  const head = document.createElement('div');
+  head.className = 'course-head pgDetailHead';
+  head.innerHTML = `
+    <div>
+      <div class="course-name">${courseName}</div>
+      <div class="course-recipe">${recipeName}</div>
+      <div class="course-servings">${base ? roundQty(servingsForCourse)+' servings (recipe serves '+base+')' : ''}</div>
+      ${recipeAllergenBadgesHtml(recipe)}
+    </div>
+    <div class="progress-pill ${allDone?'done':''}">${numChecked}/${ids.length}</div>
+  `;
+  panel.appendChild(head);
+
+  const splitRow = document.createElement('div');
+  splitRow.className = 'pgSplitRow' + (hasMethod ? '' : ' no-method') + (state.prepDetailExpanded ? ' pgExpanded-'+state.prepDetailExpanded : '');
+
+  const ingCol = document.createElement('div');
+  ingCol.className = 'pgCol pgIngCol';
+  const ingBar = document.createElement('div');
+  ingBar.className = 'pgColBar';
+  ingBar.innerHTML = '<span>Ingredients</span>';
+  if(hasMethod){
+    const ingExpandBtn = document.createElement('button');
+    ingExpandBtn.type = 'button';
+    ingExpandBtn.className = 'pgExpandBtn';
+    ingExpandBtn.innerHTML = state.prepDetailExpanded === 'ing' ? '<i class="ti ti-arrows-minimize"></i>' : '<i class="ti ti-arrows-maximize"></i>';
+    ingExpandBtn.setAttribute('aria-label', state.prepDetailExpanded === 'ing' ? 'Shrink ingredients' : 'Expand ingredients');
+    ingExpandBtn.addEventListener('click', ()=> toggleExpandSection('ing'));
+    ingBar.appendChild(ingExpandBtn);
+  }
+  ingCol.appendChild(ingBar);
+  const ingScroll = document.createElement('div');
+  ingScroll.className = 'pgScroll ing-list';
+  recipe.ingredients.forEach((ing, i)=>{
+    ingScroll.appendChild(buildIngRow(ing, ids[i], scale));
+  });
+  ingCol.appendChild(ingScroll);
+  splitRow.appendChild(ingCol);
+
+  if(hasMethod){
+    const methodCol = document.createElement('div');
+    methodCol.className = 'pgCol pgMethodCol';
+    const methodBar = document.createElement('div');
+    methodBar.className = 'pgColBar';
+    methodBar.innerHTML = '<span>Method</span>';
+    const methodExpandBtn = document.createElement('button');
+    methodExpandBtn.type = 'button';
+    methodExpandBtn.className = 'pgExpandBtn';
+    methodExpandBtn.innerHTML = state.prepDetailExpanded === 'method' ? '<i class="ti ti-arrows-minimize"></i>' : '<i class="ti ti-arrows-maximize"></i>';
+    methodExpandBtn.setAttribute('aria-label', state.prepDetailExpanded === 'method' ? 'Shrink method' : 'Expand method');
+    methodExpandBtn.addEventListener('click', ()=> toggleExpandSection('method'));
+    methodBar.appendChild(methodExpandBtn);
+    methodCol.appendChild(methodBar);
+    const methodScroll = document.createElement('div');
+    methodScroll.className = 'pgScroll';
+    const utensilsHtml = (recipe.utensils && recipe.utensils.length)
+      ? `<div class="utensils-line"><i class="ti ti-tools"></i>${recipe.utensils.join(', ')}</div>`
+      : '';
+    methodScroll.innerHTML = `${utensilsHtml}<ol class="method-steps">${recipe.method.map(renderMethodStep).join('')}</ol>`;
+    methodCol.appendChild(methodScroll);
+    splitRow.appendChild(methodCol);
+  }
+
+  panel.appendChild(splitRow);
+  overlay.appendChild(panel);
 }
 
 /* ================= Printable prep sheets =================
@@ -3171,14 +3453,18 @@ function setView(view){
   document.querySelectorAll('.viewtab').forEach(b=> b.classList.toggle('active', b.dataset.view===view));
   const isShop = view === 'shop';
   document.getElementById('dayTabs').style.display = isShop ? 'none' : 'flex';
+  if(isShop){
+    state.prepDetailKey = null;
+    state.prepDetailExpanded = null;
+  }
   document.getElementById('headcountPanel').style.display = isShop ? 'none' : 'block';
-  document.getElementById('courses').style.display = isShop ? 'none' : 'block';
   document.getElementById('shopView').style.display = isShop ? 'block' : 'none';
   document.getElementById('prepPrintBtn').style.display = isShop ? 'none' : 'inline-flex';
   document.getElementById('pageTitle').textContent = isShop ? 'Weekly shopping list' : 'Nursery kitchen prep list';
   document.getElementById('resetBtn').innerHTML = isShop
     ? '<i class="ti ti-eraser"></i>Clear ticks'
     : '<i class="ti ti-eraser"></i>Clear ticks';
+  renderActivePrep();
   if(isShop){
     renderShopGrid();
     renderShopList();
@@ -3189,7 +3475,7 @@ function renderAll(){
   renderDateLabel();
   renderTabs();
   renderHeadcount();
-  renderCourses();
+  renderActivePrep();
   if(state.view === 'shop'){
     renderShopGrid();
     renderShopList();
@@ -3206,6 +3492,16 @@ document.getElementById('headcountToggle').addEventListener('click', ()=>{
 
 document.getElementById('prepPrintBtn').addEventListener('click', ()=> openPrepSheets());
 
+document.getElementById('prepModeToggle').addEventListener('click', ()=>{
+  setPrepMode(state.prepMode === 'grid' ? 'list' : 'grid');
+});
+
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape' && state.prepDetailKey){
+    closePrepDetail();
+  }
+});
+
 document.getElementById('resetBtn').addEventListener('click', async ()=>{
   if(state.view === 'shop'){
     state.shopChecked = {};
@@ -3214,7 +3510,7 @@ document.getElementById('resetBtn').addEventListener('click', async ()=>{
   }else{
     state.checked = {};
     await saveChecked();
-    renderCourses();
+    renderActivePrep();
   }
 });
 
@@ -3972,6 +4268,16 @@ function loadData(){
   // silently overwriting anything (seasonMatchesRecordedBase treats "no
   // base recorded yet" as "not provably safe").
   data.seasonBase = data.seasonBase || {};
+  // The last export-shaped (weeks-only, recipe-name-keyed) document this
+  // device actually knows the server held -- set at the same moments as
+  // seasonBase, but in the SAME shape saveSeasonToServer publishes and
+  // get-season serves, not the local ID-keyed shape. seasonBase alone can
+  // only answer "have I touched this since I last agreed with the server";
+  // publishing safely against a concurrent colleague needs the actual
+  // agreed content to three-way-merge against, and re-deriving it from
+  // seasonBase's local recipe IDs would drift the moment a recipe is
+  // renamed. See mergeSeasonExportThreeWay below.
+  data.seasonPublishedSnapshot = data.seasonPublishedSnapshot || {};
   // Phase 1 backfill for recipe cards — give every existing recipe the new
   // fields so a card never renders blank/undefined for a recipe that
   // predates them. reviewedBy/reviewedAt are deliberately NOT backfilled:
@@ -4087,16 +4393,40 @@ function copyRotationToGroup(targetGroup, seasonKey){
 
 /* Publishes the season being edited to the menu being edited. One place,
    so an upload can never land on the other menu by accident. */
+/* Publishes the season this device is editing -- and, since Sept 2026, does
+   it safely even when a colleague published their own changes to the same
+   season since this device last synced. The old version of this function
+   was a blind whole-document overwrite: whoever clicked Upload last won
+   completely, silently erasing the other admin's entire session of work,
+   however unrelated the slots each of them had actually touched were.
+
+   Now: fetch what's actually live, three-way-merge this device's changes
+   against it (mergeSeasonExportThreeWay, keyed at week/day/course slot
+   granularity -- see its comment for why recipe NAME rather than this
+   device's own local id is the right comparison value), and only ever
+   bother a human when the two of you changed the exact same slot to two
+   different dishes. Everything else -- the overwhelmingly common case of
+   two admins working on different weeks, or even different days of the
+   same week -- merges automatically, both sets of changes land, and
+   nobody sees a prompt.
+
+   The whole thing is also retried against a genuine same-instant race: the
+   live fetch and the eventual write are two separate round trips, so a
+   THIRD save could land in between them. saveSeasonToServer's ifMatch
+   makes that write fail loudly (409) instead of silently winning against a
+   version this device never actually looked at; on that, this refetches
+   what's now live and merges again, same as the ingredient database's
+   save loop already does. */
 async function uploadCurrentSeason(seasonKey){
-  // Captured once, up front -- not re-read after the await below. EDITING_GROUP
+  // Captured once, up front -- not re-read after the awaits below. EDITING_GROUP
   // is a plain module-level variable a colleague-simulating caller (or, in
-  // principle, another async flow) could change while saveSeasonToServer is
-  // in flight; reading it again afterwards would publish under one group
-  // but log/record the base under whatever group happens to be current by
-  // then, silently certifying THAT group's local copy as "matches the
-  // server" using content it never actually sent. See seasonForGroup below
-  // for why recordSeasonBase also needs the season object fetched by this
-  // same captured group, not through the EDITING_GROUP-following alias.
+  // principle, another async flow) could change while this is in flight;
+  // reading it again afterwards would publish under one group but log/
+  // record the base under whatever group happens to be current by then,
+  // silently certifying THAT group's local copy as "matches the server"
+  // using content it never actually sent. Every read/write below goes
+  // through seasonForGroup(group, ...), never the EDITING_GROUP-following
+  // alias, for the same reason.
   const group = EDITING_GROUP;
   const key = seasonKey || DATA.currentSeason;
   const missing = seasonSlotsMissingRecipes(key);
@@ -4108,12 +4438,95 @@ async function uploadCurrentSeason(seasonKey){
       '). Uploading now would publish those slots as empty'
     );
   }
-  const out = buildSeasonExportJson(key);
-  await saveSeasonToServer(group, key + '.json', out);
-  logUpload(key, group);
-  recordSeasonBase(key, group, seasonForGroup(group, key));
-  save();
-  return out;
+  const mineJson = buildSeasonExportJson(key);
+  const dishCount = Object.keys(mineJson).reduce((n, wk)=>
+    n + Object.keys(mineJson[wk] || {}).reduce((m, day)=>
+      m + Object.keys(mineJson[wk][day] || {}).length, 0), 0);
+  if(dishCount === 0){
+    throw new Error(
+      'This rotation is empty on this device, so publishing it would replace the live menu with nothing. ' +
+      'Load the published version first, or import a week'
+    );
+  }
+  const baseJson = (DATA.seasonPublishedSnapshot || {})[seasonBaseKey(key, group)] || null;
+
+  let lastErr = null;
+  for(let attempt = 1; attempt <= 3; attempt++){
+    const live = await fetchLiveSeasonFromFunction(key, group);
+    let theirsJson = null, etag = null;
+    if(live.status === 'ok'){ theirsJson = live.json; etag = live.etag; }
+    else if(live.status === 'empty'){ theirsJson = null; etag = null; } // nothing published for this menu yet -- this IS the first publish
+    else if(live.status === 'fallback'){
+      throw new Error("Couldn't read the live menu just now (storage had a bad moment), so nothing was published. Try again in a moment.");
+    } else {
+      throw new Error('Could not check the published version before publishing. Try again.');
+    }
+
+    let toPublish = mineJson;
+    let merged = false;
+    if(theirsJson && baseJson){
+      const outcome = mergeSeasonExportThreeWay(baseJson, mineJson, theirsJson);
+      if(outcome.conflicts.length){
+        const choice = await new Promise(resolve=> openSeasonConflictModal(outcome.conflicts, resolve));
+        if(!choice) return {cancelled: true};
+        const finalFlat = Object.assign({}, outcome.mergedFlat);
+        outcome.conflicts.forEach(c=>{
+          const v = choice === 'mine' ? outcome.mineFlat[c.key] : outcome.theirsFlat[c.key];
+          if(!v) delete finalFlat[c.key]; else finalFlat[c.key] = v;
+        });
+        toPublish = rebuildSeasonExportFromFlat(finalFlat, mineJson, theirsJson);
+      } else {
+        toPublish = rebuildSeasonExportFromFlat(outcome.mergedFlat, mineJson, theirsJson);
+      }
+      merged = true;
+    }
+    // else: nothing published yet, or this device has never recorded a
+    // base for this season (never synced -- e.g. straight from SEED_DATA).
+    // There is nothing to three-way-merge against, so this device's own
+    // copy publishes as-is -- the same behaviour this always had -- but
+    // still race-protected below by ifMatch/retry against a genuine
+    // same-instant collision.
+
+    try{
+      await saveSeasonToServer(group, key + '.json', toPublish, undefined, etag);
+    }catch(e){
+      lastErr = e;
+      if(!e || !e.conflict) throw e;
+      // Somebody else's publish landed in the gap between our own live
+      // fetch and this write. Go round again on their version -- mineJson
+      // and baseJson stay exactly what this device started with, only
+      // theirsJson is re-fetched fresh.
+      continue;
+    }
+    // The publish itself has now succeeded -- nothing from here on may
+    // ever be reported as a failed upload, whatever happens next.
+    // importSeasonJson also does recipe-bank matching/creation beyond the
+    // slot assignment itself, and is not atomic; if it throws partway
+    // through, this device's local bookkeeping is best left exactly where
+    // it was rather than recorded against content that may only have been
+    // half-applied. That just means the next sync point (login, refresh,
+    // or this device's next successful publish) treats this rotation as
+    // still needing to check in again -- degraded, never unsafe, and the
+    // publish the admin actually asked for already happened regardless.
+    try{
+      // groupHint = the captured `group`, not the EDITING_GROUP-following
+      // default: unlike openRefreshSeasonModal/autoSyncSeasonIfSafe, this
+      // function is called directly (every test in seasonmerge.js does
+      // exactly that) with nothing stopping EDITING_GROUP from having
+      // moved on across the awaits above (the live fetch, the save/retry
+      // loop) by the time this runs. Without it, importSeasonJson would
+      // write this group's just-published rotation into whatever group
+      // happens to be live right now -- silently corrupting it.
+      await importSeasonJson(toPublish, key, group);
+      const updated = seasonForGroup(group, key);
+      recordSeasonPublishedSnapshot(key, group, toPublish);
+      recordSeasonBase(key, group, updated);
+    }catch(e){ /* see comment above -- the publish already succeeded regardless */ }
+    logUpload(key, group);
+    save();
+    return {ok: true, merged: merged, json: toPublish};
+  }
+  throw lastErr || new Error('Another publish kept landing first. Try again in a moment.');
 }
 
 function ensureSeason(key){
@@ -4259,9 +4672,13 @@ async function fetchLiveSeasonFromFunction(seasonKey, group){
     if(res.headers.get('X-RB-Source') === 'static-fallback'){
       return {status: 'fallback'};
     }
+    // Carried through so a caller that's about to publish over this can send
+    // it back as ifMatch -- the version this device actually saw, not a
+    // guess. Absent on a static-seed response (never a real Blobs version).
+    const etag = res.headers.get('X-RB-Etag') || null;
     const json = await res.json();
     if(!json || !Object.keys(json).length) return {status: 'empty'};
-    return {status: 'ok', json};
+    return {status: 'ok', json, etag};
   }catch(e){
     return {status: 'error'};
   }
@@ -4291,6 +4708,139 @@ function seasonMatchesRecordedBase(seasonKey, group, season){
   const stored = DATA.seasonBase && DATA.seasonBase[seasonBaseKey(seasonKey, group)];
   if(!stored) return false;
   return seasonFingerprint(season) === stored;
+}
+/* The three-way-merge counterpart to recordSeasonBase above -- same call
+   sites (a successful auto-sync pull, an explicit refresh, this device's
+   own publish), but stores the export-shaped JSON itself rather than a
+   fingerprint, since a merge needs the actual last-agreed content, not
+   just a yes/no signal that something changed. */
+function recordSeasonPublishedSnapshot(seasonKey, group, exportJson){
+  DATA.seasonPublishedSnapshot = DATA.seasonPublishedSnapshot || {};
+  DATA.seasonPublishedSnapshot[seasonBaseKey(seasonKey, group)] = exportJson;
+}
+
+/* ================= Rotation presence: who else is editing this ================
+   The merge above (mergeSeasonExportThreeWay etc.) makes two admins
+   publishing the same season safe. It doesn't make it visible -- an admin
+   could still spend twenty minutes on a rotation not knowing a colleague
+   is doing the same thing right now, and only find out at the conflict
+   modal (or not at all, if neither of them touches the same slot). This
+   is the heads-up: a lightweight, best-effort "so-and-so is also editing
+   this right now" banner, using the exact same generic patch mechanism
+   the shared recipe bank already saves through (`_config/presence.json`,
+   collection 'presence') -- no new server code needed.
+
+   Deliberately advisory only. A missed heartbeat, a stale entry, a poll
+   that never lands -- none of it is allowed to block or change what
+   publishing actually does; the merge above is what keeps that safe. This
+   is purely "you might want to know". */
+const PRESENCE_HEARTBEAT_MS = 45000;
+// A bit over 2x the heartbeat: one missed beat (a slow network, a
+// backgrounded tab) shouldn't make a colleague who is genuinely still
+// there flicker in and out of the banner.
+const PRESENCE_STALE_MS = 130000;
+let PRESENCE_HEARTBEAT_TIMER = null;
+let PRESENCE_POLL_TIMER = null;
+
+function presenceDeviceId(){
+  try{
+    let id = localStorage.getItem('rb_deviceId');
+    if(!id){
+      id = 'dev_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+      localStorage.setItem('rb_deviceId', id);
+    }
+    return id;
+  }catch(e){
+    // No localStorage (private browsing, quota) -- fall back to a
+    // per-load id. Presence just won't recognise this device across a
+    // reload, which is a worse but harmless version of the same feature.
+    return PRESENCE_EPHEMERAL_ID || (PRESENCE_EPHEMERAL_ID = 'dev_ephemeral_' + Math.random().toString(36).slice(2));
+  }
+}
+let PRESENCE_EPHEMERAL_ID = null;
+
+async function sendPresenceHeartbeat(){
+  if(VIEW !== 'rotation') return;
+  const group = EDITING_GROUP || 'general';
+  const seasonKey = DATA.currentSeason;
+  if(!seasonKey) return;
+  const entry = {group: group, seasonKey: seasonKey, name: (function(){
+    try{ return localStorage.getItem('rb_reviewerName') || ''; }catch(e){ return ''; }
+  })(), at: nowIso()};
+  try{
+    await saveSeasonToServer('_config', 'presence.json', undefined, {
+      collection: 'presence',
+      set: (function(){ const s = {}; s[presenceDeviceId()] = entry; return s; })()
+    });
+  }catch(e){
+    // Best-effort. A failed heartbeat just means this device won't show up
+    // for a colleague for the next ~45s -- never worth surfacing an error
+    // over, and never worth retrying eagerly (the next scheduled beat
+    // already will).
+  }
+}
+
+async function pollSeasonPresence(){
+  if(VIEW !== 'rotation'){ hideSeasonPresenceBanner(); return; }
+  const group = EDITING_GROUP || 'general';
+  const seasonKey = DATA.currentSeason;
+  const selfId = presenceDeviceId();
+  try{
+    const res = await fetch('/.netlify/functions/get-season?group=_config&file=presence.json', {cache: 'no-store'});
+    if(!res.ok){ return; } // including a clean 404 (nobody has ever heartbeat -- nothing to show)
+    const doc = await res.json();
+    // Patch mode (see sendPresenceHeartbeat/saveSeasonToServer) stores
+    // whatever it writes NESTED under the collection name -- the same
+    // shape recipes.json ends up in ({recipes: {...}}) -- not as the flat
+    // id-keyed map directly. Reading straight off `doc` here would silently
+    // find zero entries forever, exactly like it did until this was caught.
+    const entries = doc && doc.presence;
+    if(!entries || typeof entries !== 'object') return;
+    const now = Date.now();
+    const others = Object.keys(entries)
+      .filter(id=> id !== selfId)
+      .map(id=> entries[id])
+      .filter(e=> e && e.group === group && e.seasonKey === seasonKey)
+      .filter(e=> { const at = e.at ? Date.parse(e.at) : NaN; return !isNaN(at) && (now - at) < PRESENCE_STALE_MS; });
+    // A late-arriving answer for a season/group this device has since
+    // navigated away from would otherwise paint a banner for the wrong
+    // screen -- re-checked here, not just at the top, since fetch is async.
+    if(VIEW !== 'rotation' || EDITING_GROUP !== group || DATA.currentSeason !== seasonKey) return;
+    renderSeasonPresenceBanner(others);
+  }catch(e){
+    // Best-effort, same as the heartbeat -- a network hiccup just means the
+    // banner doesn't update this tick.
+  }
+}
+
+function renderSeasonPresenceBanner(others){
+  const el = document.getElementById('rbPresenceBanner');
+  if(!el) return;
+  if(!others || !others.length){ el.style.display = 'none'; el.innerHTML = ''; return; }
+  const names = others.map(o=> (o.name && String(o.name).trim()) || 'Another admin').slice(0, 3);
+  let who = names.join(', ');
+  if(others.length > names.length) who += ' and ' + (others.length - names.length) + ' more';
+  el.className = 'card';
+  el.style.cssText = 'display:block;margin-bottom:12px;background:#fff7e6;border:1px solid #e8c375;';
+  el.innerHTML = '<b>' + escapeHtml(who) + '</b> ' + (others.length === 1 ? 'is' : 'are') +
+    ' also editing this rotation right now. Publishing merges automatically in most cases, but the sooner you publish, the less you\'re both changing at once.';
+}
+function hideSeasonPresenceBanner(){
+  const el = document.getElementById('rbPresenceBanner');
+  if(el){ el.style.display = 'none'; el.innerHTML = ''; }
+}
+
+function startSeasonPresence(){
+  stopSeasonPresence(); // idempotent restart -- also re-sends immediately, so switching season/group updates a colleague's view within one poll instead of waiting up to 45s
+  sendPresenceHeartbeat();
+  pollSeasonPresence();
+  PRESENCE_HEARTBEAT_TIMER = setInterval(sendPresenceHeartbeat, PRESENCE_HEARTBEAT_MS);
+  PRESENCE_POLL_TIMER = setInterval(pollSeasonPresence, PRESENCE_HEARTBEAT_MS);
+}
+function stopSeasonPresence(){
+  if(PRESENCE_HEARTBEAT_TIMER){ clearInterval(PRESENCE_HEARTBEAT_TIMER); PRESENCE_HEARTBEAT_TIMER = null; }
+  if(PRESENCE_POLL_TIMER){ clearInterval(PRESENCE_POLL_TIMER); PRESENCE_POLL_TIMER = null; }
+  hideSeasonPresenceBanner();
 }
 
 /* Called whenever Staff Admin opens, and whenever the season picker or
@@ -4363,6 +4913,7 @@ async function autoSyncSeasonIfSafe(seasonKey){
   await importSeasonJson(result.json, seasonKey);
   const updated = seasonForGroup(group, seasonKey);
   recordSeasonBase(seasonKey, group, updated);
+  recordSeasonPublishedSnapshot(seasonKey, group, result.json);
   if(seasonFingerprint(updated) === before) return; // already matched what's published -- nothing worth a toast
   toast((untouched ? 'Loaded' : 'Updated') + ' "' + (updated.label || seasonKey) + '" to match what\'s published for ' + menuGroupLabel(group) + '.');
 }
@@ -4426,6 +4977,7 @@ function openRefreshSeasonModal(seasonKey){
         await importSeasonJson(result.json, seasonKey);
         const updated = seasonForGroup(group, seasonKey);
         recordSeasonBase(seasonKey, group, updated);
+        recordSeasonPublishedSnapshot(seasonKey, group, result.json);
         setView('rotation');
         toast('Refreshed "' + (updated.label || seasonKey) + '" from the live site.');
       } else if(result.status === 'empty'){
@@ -5909,7 +6461,32 @@ async function fetchSharedIngredients(){
 /* The shared ingredient database as this device last read it. Used as the
    common ancestor when saving, so we can tell OUR edits apart from a
    colleague's rather than assuming our whole snapshot is the truth. */
-let INGREDIENTS_BASE = {};
+/* FIX (allergens undone by a colleague): this baseline used to live only
+   in memory and start every page load as {}. locallyChangedIngredientIds()
+   then reports EVERY record as changed here, so the first
+   ensureIngredientsLoaded() after a reload kept this browser's own, maybe
+   days-old copy of every product over the shared one (the screen showed
+   stale allergens), and the next ingredient save of ANY product published
+   those stale records over a colleague's newer ones. Reproduced: A sets
+   Mustard on X; B reloads and saves Celery on Y; X's Mustard is gone.
+
+   Now persisted next to DATA (full stableJson strings, because
+   mergeIngredientBeforeSave uses them as the three-way ancestor), and a
+   device with no baseline at all (null) trusts the shared copy instead of
+   treating everything local as newer. */
+const INGREDIENTS_BASE_KEY = STORAGE_KEY + '::ingredientsBase';
+function loadIngredientsBase(){
+  try{
+    const raw = localStorage.getItem(INGREDIENTS_BASE_KEY);
+    if(raw){ const b = JSON.parse(raw); if(b && typeof b === 'object') return b; }
+  }catch(e){}
+  return null;
+}
+function persistIngredientsBase(){
+  try{ localStorage.setItem(INGREDIENTS_BASE_KEY, JSON.stringify(INGREDIENTS_BASE || {})); }
+  catch(e){ /* quota: the next load then has no baseline and trusts the shared copy -- the safe direction */ }
+}
+let INGREDIENTS_BASE = loadIngredientsBase();
 /* stableJson, not JSON.stringify, and it has to match the comparison used
    everywhere else that asks "has this record changed".
 
@@ -5925,6 +6502,7 @@ function snapshotIngredientsBase(){
   Object.keys(DATA.ingredients||{}).forEach(id=>{
     INGREDIENTS_BASE[id] = stableJson(DATA.ingredients[id]);
   });
+  persistIngredientsBase();
 }
 /* Which records this device has actually changed since that read: edited,
    added, or removed. Everything else is left exactly as the shared copy
@@ -5932,10 +6510,11 @@ function snapshotIngredientsBase(){
 function locallyChangedIngredientIds(){
   const changed = [];
   const now = DATA.ingredients || {};
+  const base = INGREDIENTS_BASE || {};
   Object.keys(now).forEach(id=>{
-    if(INGREDIENTS_BASE[id] !== stableJson(now[id])) changed.push(id);
+    if(base[id] !== stableJson(now[id])) changed.push(id);
   });
-  Object.keys(INGREDIENTS_BASE).forEach(id=>{
+  Object.keys(base).forEach(id=>{
     if(!now[id]) changed.push(id); // removed here
   });
   return changed;
@@ -5976,6 +6555,13 @@ async function saveIngredientsToServer(){
     INGREDIENTS_STALE = true;
     throw new Error('Could not reach the shared ingredient database to merge this change safely.');
   }
+  // No baseline: this device has never read the shared copy, so it cannot
+  // tell its own edits from stale records. Publishing would be the
+  // overwrite described at INGREDIENTS_BASE_KEY; say so instead.
+  if(INGREDIENTS_BASE === null && fresh.ingredients){
+    INGREDIENTS_STALE = true;
+    throw new Error('This device has not loaded the shared ingredient database yet, so the change was kept here only.');
+  }
   if(fresh.ingredients){
     const changedIds = locallyChangedIngredientIds();
     const merged = Object.assign({}, fresh.ingredients);
@@ -6001,10 +6587,19 @@ async function saveIngredientsToServer(){
   let lastErr = null;
   for(let attempt = 1; attempt <= 3; attempt++){
     try{
+      /* FIX (allergens lost right after "+ Add new ingredient"): the
+         baseline is what was SENT, captured in the same tick the request
+         body is serialised -- not DATA after the round trip. An allergen
+         ticked while this request was in the air (that publish is not
+         awaited, and a cold Function takes seconds) used to be folded into
+         the baseline, so the next merge read it as the colleague's value
+         and handed back the published "" -- under the toast "Allergens
+         saved". Reproduced at 700ms latency. */
+      const sentBase = {};
+      Object.keys(DATA.ingredients||{}).forEach(id=>{ sentBase[id] = stableJson(DATA.ingredients[id]); });
       await saveSeasonToServer('_config', 'ingredients.json', {ingredients: DATA.ingredients}, undefined, INGREDIENTS_ETAG);
-      // This device's copy is now what the shared store holds, so it
-      // becomes the base the next save's merge is measured against.
-      snapshotIngredientsBase();
+      INGREDIENTS_BASE = sentBase;
+      persistIngredientsBase();
       INGREDIENTS_STALE = false;
       INGREDIENTS_LAST_SYNC = Date.now();
       return;
@@ -6046,7 +6641,9 @@ async function ensureIngredientsLoaded(){
     // Merge rather than replace: a change made on this device and not yet
     // published (the network was down when it was saved) would otherwise
     // be silently discarded by the incoming shared copy.
-    const pending = locallyChangedIngredientIds();
+    // No baseline yet: nothing here can be told apart from a stale copy,
+    // so the shared database wins outright.
+    const pending = INGREDIENTS_BASE === null ? [] : locallyChangedIngredientIds();
     const incoming = Object.assign({}, result.ingredients);
     pending.forEach(id=>{
       if(DATA.ingredients[id]) incoming[id] = DATA.ingredients[id];
@@ -6061,6 +6658,7 @@ async function ensureIngredientsLoaded(){
     Object.keys(result.ingredients).forEach(id=>{
       INGREDIENTS_BASE[id] = stableJson(result.ingredients[id]);
     });
+    persistIngredientsBase();
     INGREDIENTS_STALE = false;
     INGREDIENTS_LAST_SYNC = Date.now();
   } else if(result.reachable){
@@ -6569,6 +7167,92 @@ function mergeRecordThreeWay(base, mine, theirs){
   return {merged: out, conflicts: conflicts};
 }
 
+/* The rotation's counterpart to mergeRecordThreeWay above -- same idea
+   (auto-merge whatever only one side touched, only ask about whatever both
+   sides touched DIFFERENTLY), but a season isn't a flat record: it's a
+   grid of week/day/course slots, and the published document is keyed by
+   RECIPE NAME at each slot (see buildSeasonExportJson), not by this
+   device's own local recipe id -- two devices that both hold "Fish
+   Pie" under genuinely different ids would otherwise look like a
+   conflict on every single slot. Flattening to one name per slot, in the
+   exact shape the server already serves and buildSeasonExportJson already
+   produces, means mergeRecordThreeWay can be reused as-is: the id/content
+   question is somebody else's problem (the recipe's own publish/merge
+   flow), and this only ever decides which NAME occupies which slot. */
+function flattenSeasonSlotNames(exportJson){
+  const flat = {};
+  Object.keys(exportJson || {}).forEach(wk=>{
+    const days = exportJson[wk] || {};
+    Object.keys(days).forEach(day=>{
+      const courses = days[day] || {};
+      Object.keys(courses).forEach(course=>{
+        const names = Object.keys(courses[course] || {});
+        // A slot's value in the export shape is always {recipeName: {...}}
+        // -- one key. Absent entirely if a caller building this JSON left
+        // the slot empty (see buildSeasonExportJson), never present with an
+        // empty object, so names[0] is always what was actually assigned.
+        if(names.length) flat[wk + '|' + day + '|' + course] = names[0];
+      });
+    });
+  });
+  return flat;
+}
+function seasonSlotLabel(flatKey){
+  const parts = String(flatKey).split('|');
+  return 'Week ' + parts[0] + ' · ' + parts[1] + ' · ' + parts[2];
+}
+/* The full slot value (the {recipeName: {...full recipe details...}}
+   object the export format actually needs to publish) for one flattened
+   key, out of a given export-shaped document -- or undefined if that
+   document has nothing at this slot. */
+function seasonSlotValue(exportJson, flatKey){
+  const parts = String(flatKey).split('|');
+  return exportJson && exportJson[parts[0]] && exportJson[parts[0]][parts[1]]
+    && exportJson[parts[0]][parts[1]][parts[2]];
+}
+/* base/mine/theirs are all export-shaped season JSON (weeks only -- see
+   recordSeasonPublishedSnapshot for why notes/importedAt never enter into
+   this: they are never part of what's published in the first place, so
+   there is nothing of a colleague's to lose there). Returns the merged
+   NAME per slot plus which slots need a human decision -- mirroring
+   mergeRecordThreeWay's contract exactly, just over flattened slot keys
+   instead of record fields. */
+function mergeSeasonExportThreeWay(baseJson, mineJson, theirsJson){
+  const baseFlat = flattenSeasonSlotNames(baseJson);
+  const mineFlat = flattenSeasonSlotNames(mineJson);
+  const theirsFlat = flattenSeasonSlotNames(theirsJson);
+  const outcome = mergeRecordThreeWay(baseFlat, mineFlat, theirsFlat);
+  const conflicts = outcome.conflicts.map(k=> ({
+    key: k, label: seasonSlotLabel(k),
+    mine: mineFlat[k] || null, theirs: theirsFlat[k] || null,
+  }));
+  return {mergedFlat: outcome.merged, conflicts: conflicts, baseFlat: baseFlat, mineFlat: mineFlat, theirsFlat: theirsFlat};
+}
+/* Turns a flat {slotKey: recipeName} map (the winning name per slot, after
+   merging and any conflict choices) back into a real export-shaped
+   document, by pulling each slot's full {name: {...details}} object from
+   whichever of mine/theirs actually holds that name there. Falls back to
+   the other side if the "natural" source doesn't have it (can happen for
+   a slot a conflict choice resolved to the side that DIDN'T change --
+   e.g. "keep theirs" on a slot mine also touched elsewhere), and silently
+   drops a slot neither side can supply full details for rather than ever
+   publishing a half-built entry. */
+function rebuildSeasonExportFromFlat(flatNames, mineJson, theirsJson){
+  const out = {};
+  ['1','2','3','4'].forEach(wk=>{ out[wk] = {}; });
+  Object.keys(flatNames).forEach(k=>{
+    const name = flatNames[k];
+    if(!name) return; // cleared slot -- omit entirely, same as buildSeasonExportJson does
+    const parts = k.split('|');
+    let slotVal = seasonSlotValue(mineJson, k);
+    if(!slotVal || Object.keys(slotVal)[0] !== name) slotVal = seasonSlotValue(theirsJson, k);
+    if(!slotVal || Object.keys(slotVal)[0] !== name) return;
+    out[parts[0]][parts[1]] = out[parts[0]][parts[1]] || {};
+    out[parts[0]][parts[1]][parts[2]] = slotVal;
+  });
+  return out;
+}
+
 const MERGE_FIELD_LABELS = {
   name: 'Name', description: 'Description for parents', course: 'Course',
   dietaryCategory: 'Dietary category', servings: 'Recipe makes',
@@ -6647,6 +7331,40 @@ function openEditConflictModal(fields, mine, theirs, onChoose){
   modal.querySelector('#conflictCancel').onclick = ()=>{ overlay.remove(); onChoose(null); };
   modal.querySelector('#conflictKeepTheirs').onclick = ()=>{ overlay.remove(); onChoose('theirs'); };
   modal.querySelector('#conflictKeepMine').onclick = ()=>{ overlay.remove(); onChoose('mine'); };
+}
+
+/* The rotation's twin of openEditConflictModal above, and the same
+   deliberate choice: one decision for the whole publish, not a checkbox
+   per slot. Every slot NEITHER admin touched, or only one of them touched,
+   has already been merged in silently by the time this ever shows --
+   these rows are only the ones where two admins put a genuinely different
+   dish in the exact same week/day/course. */
+function openSeasonConflictModal(conflicts, onChoose){
+  const overlay = document.createElement('div');
+  overlay.className = 'modalOverlay';
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.id = 'seasonConflictModal';
+  const rows = conflicts.map(c=> `
+    <div style="border-top:1px solid #e5e5e5;padding:8px 0;">
+      <div style="font-weight:600;font-size:13px;">${escapeHtml(c.label)}</div>
+      <div style="font-size:12px;margin-top:4px;"><b>Yours:</b> ${escapeHtml(c.mine || '(empty slot)')}</div>
+      <div style="font-size:12px;margin-top:2px;"><b>Theirs:</b> ${escapeHtml(c.theirs || '(empty slot)')}</div>
+    </div>`).join('');
+  modal.innerHTML = `
+    <h3>Someone else changed this rotation too</h3>
+    <div class="tinyNote">Another admin published this menu while you were editing it, and you've both put a different dish in the same ${conflicts.length === 1 ? 'slot' : conflicts.length + ' slots'}. Every other change — from both of you — has already been merged; only ${conflicts.length === 1 ? 'this one needs' : 'these need'} a decision.</div>
+    <div style="margin-top:10px;max-height:40vh;overflow:auto;">${rows}</div>
+    <div class="closeRow" style="margin-top:12px;">
+      <button class="btn" id="seasonConflictCancel">Cancel — don't publish yet</button>
+      <button class="btn" id="seasonConflictKeepTheirs">Keep theirs</button>
+      <button class="btn primary" id="seasonConflictKeepMine">Keep mine</button>
+    </div>`;
+  overlay.appendChild(modal);
+  document.getElementById('rbAdminRoot').appendChild(overlay);
+  modal.querySelector('#seasonConflictCancel').onclick = ()=>{ overlay.remove(); onChoose(null); };
+  modal.querySelector('#seasonConflictKeepTheirs').onclick = ()=>{ overlay.remove(); onChoose('theirs'); };
+  modal.querySelector('#seasonConflictKeepMine').onclick = ()=>{ overlay.remove(); onChoose('mine'); };
 }
 
 /* The shared recipe bank as this device last read it -- the common
@@ -6824,7 +7542,7 @@ async function mergeIngredientBeforeSave(ingredientId){
   if(!live) return 'gone';
   if(!theirs) return 'local';
   let base = null;
-  if(INGREDIENTS_BASE[ingredientId]){
+  if(INGREDIENTS_BASE && INGREDIENTS_BASE[ingredientId]){
     try{ base = JSON.parse(INGREDIENTS_BASE[ingredientId]); }catch(e){}
   }
   /* No recorded ancestor for this record -- this device has never read a
@@ -8639,7 +9357,19 @@ function renderShoppingListView(){
 let VIEW = 'rotation'; // rotation | bank | week | recipe
 let VIEW_PARAMS = {};
 
+/* Set by the recipe page: what is unsaved there (the details form, via
+   unsavedDetailsFields, and the ingredient table) and how to put the
+   table back. Leaving asks first -- a typed description or quantity used
+   to be dropped silently, which reads exactly like "it didn't save". */
+let RECIPE_LEAVE_GUARD = null;
 async function setView(view, params){
+  if(RECIPE_LEAVE_GUARD && !(view === 'recipe' && params && params.recipeId === RECIPE_LEAVE_GUARD.recipeId)){
+    const guard = RECIPE_LEAVE_GUARD;
+    const unsaved = guard.unsaved();
+    if(unsaved.length && !window.confirm('This recipe has changes that haven’t been saved (' + unsaved.join(', ') + '). Leave without saving them?')) return;
+    guard.discard();
+    RECIPE_LEAVE_GUARD = null;
+  }
   VIEW = view; VIEW_PARAMS = params || {};
   /* Every admin view reads the recipe bank, so there is no subset to gate
      this on. First visit blocks behind a placeholder; after that the cached
@@ -8675,6 +9405,11 @@ async function setView(view, params){
     await ensureSiteAlertsLoaded();
   }
   render();
+  // Restarts on every call, including a season/group switch that calls
+  // setView('rotation') again -- see startSeasonPresence -- so a colleague
+  // sees this device move to the new season/group within one poll rather
+  // than up to PRESENCE_HEARTBEAT_MS late showing the old one.
+  if(view === 'rotation') startSeasonPresence(); else stopSeasonPresence();
 }
 
 /* Every view whose content is derived from the shared ingredient database
@@ -9236,15 +9971,33 @@ function renderTopbar(){
 
   const sel = document.getElementById('rbSeasonSelect');
   sel.innerHTML = '';
-  Object.keys(DATA.seasons).forEach(key=>{
+  /* FIX (new season invisible to colleagues): this used to list only the
+     seasons THIS device already held locally (DATA.seasons). A season added
+     with "+ Add season" on another device is published to _config/
+     seasons.json and every group's file, but nothing ever created it in
+     anyone else's local store, so it never appeared here. List the shared
+     season list first, then any local-only seasons. Picking one this
+     device doesn't hold yet goes through the existing onchange below:
+     ensureSeason() makes a blank local copy, which seasonLooksUntouched()
+     treats as untouched, so hydrateSeasonFromServerIfUntouched() pulls the
+     published rotation in. */
+  const seasonKeys = [];
+  (SEASONS || []).forEach(s=>{ if(seasonKeys.indexOf(s.key) === -1) seasonKeys.push(s.key); });
+  Object.keys(DATA.seasons).forEach(k=>{ if(seasonKeys.indexOf(k) === -1) seasonKeys.push(k); });
+  seasonKeys.forEach(key=>{
+    const meta = (SEASONS || []).find(s=> s.key === key);
+    const local = DATA.seasons[key];
     const opt = document.createElement('option');
     opt.value = key;
-    opt.textContent = DATA.seasons[key].label || key;
+    opt.textContent = (meta && meta.label) || (local && local.label) || key;
     if(key === DATA.currentSeason) opt.selected = true;
     sel.appendChild(opt);
   });
   sel.onchange = async ()=>{
-    DATA.currentSeason = sel.value; save();
+    DATA.currentSeason = sel.value;
+    const pickedMeta = (SEASONS || []).find(s=> s.key === sel.value);
+    if(pickedMeta) ensureSeason(sel.value).label = pickedMeta.label;
+    save();
     setView('rotation'); // immediate paint with whatever's already local
     await autoSyncSeasonIfSafe(DATA.currentSeason);
     setView('rotation'); // repaint if hydration just filled in real content
@@ -9372,6 +10125,15 @@ function renderRotationView(){
   actions.appendChild(searchBtn);
   head.appendChild(actions);
   root.appendChild(head);
+
+  // Filled in by renderSeasonPresenceBanner, out of band from this render
+  // -- see startSeasonPresence. Starts empty/hidden: on a normal visit
+  // nobody else is editing this season, and the poll that would say
+  // otherwise hasn't had time to answer yet.
+  const presenceBar = document.createElement('div');
+  presenceBar.id = 'rbPresenceBanner';
+  presenceBar.style.display = 'none';
+  root.appendChild(presenceBar);
 
   /* Name the menu on the page itself, not only in the toolbar. Someone
      who scrolled past the toolbar and is looking at a grid of week cards
@@ -10685,6 +11447,44 @@ function renderRecipeView(recipeId, slotCtx){
      holds them. A flag is the only honest way to know. Set on any row
      edit, cleared by "Save ingredients". */
   let ingredientsTouched = false;
+  /* FIX (ingredient-table changes lost): what was last saved, so leaving
+     with unsaved typed row edits can put the record back instead of
+     leaving half an edit in memory for the next pull to wipe or the next
+     unrelated save to publish. */
+  let savedRowsJson = JSON.stringify(recipe.ingredients || []);
+  function markIngredientRowsUnsaved(){
+    ingredientsTouched = true;
+    const btn = ingCard.querySelector('#saveIngBtn');
+    if(btn && !btn.disabled){ btn.textContent = 'Save ingredients — unsaved changes'; btn.classList.add('hasUnsaved'); }
+  }
+  function clearIngredientRowsUnsaved(){
+    ingredientsTouched = false;
+    savedRowsJson = JSON.stringify(recipe.ingredients || []);
+    const btn = ingCard.querySelector('#saveIngBtn');
+    if(btn){ btn.textContent = 'Save ingredients'; btn.classList.remove('hasUnsaved'); }
+  }
+  /* Only what the person actually typed counts. unsavedDetailsFields()
+     compares the form with the record, and the record can move under the
+     form without anyone typing (a merge, a script) -- that is not
+     something to stop them leaving over. */
+  let detailsTyped = false;
+  root.addEventListener('input', (e)=>{
+    if(e.target && e.target.id && e.target.id.indexOf('f_') === 0) detailsTyped = true;
+  });
+  RECIPE_LEAVE_GUARD = {
+    recipeId,
+    unsaved: ()=>{
+      const list = detailsTyped ? unsavedDetailsFields().filter(x=> x !== 'Ingredients') : [];
+      if(ingredientsTouched) list.push('Ingredients');
+      return list;
+    },
+    discard: ()=>{
+      if(ingredientsTouched && DATA.recipeBank[recipeId] === recipe){
+        recipe.ingredients = JSON.parse(savedRowsJson);
+      }
+      ingredientsTouched = false;
+    }
+  };
   function drawIngredients(){
     const tbody = ingCard.querySelector('#ingBody');
     tbody.innerHTML = '';
@@ -10729,7 +11529,7 @@ function renderRecipeView(recipeId, slotCtx){
         const evt = inp.tagName === 'SELECT' ? 'change' : 'input';
         inp.addEventListener(evt, ()=>{
           ing[inp.dataset.f] = inp.value;
-          ingredientsTouched = true;
+          markIngredientRowsUnsaved();
           drawNutrition();
           drawCost();
           tr.querySelector('.costCell').innerHTML = rowCostHtml();
@@ -10737,8 +11537,8 @@ function renderRecipeView(recipeId, slotCtx){
       });
       tr.querySelector('[data-action="remove"]').onclick = ()=>{
         recipe.ingredients.splice(idx,1);
-        ingredientsTouched = true;
         drawIngredients();
+        commitIngredientRows('Ingredient removed', 'Ingredient removed');
       };
       tr.querySelector('[data-action="linkIngredient"]').onclick = ()=>{
         openIngredientPicker(ing.ingredientId, (newId)=>{
@@ -10746,10 +11546,16 @@ function renderRecipeView(recipeId, slotCtx){
           carryPrepFromNameBeforeLink(ing);
           delete ing.name; delete ing.allergens; delete ing.canonicalName;
           drawIngredients();
+          commitIngredientRows('Ingredient link changed', 'Ingredient link saved');
         });
       };
       const editAllergensBtn = tr.querySelector('[data-action="editAllergens"]');
-      if(editAllergensBtn) editAllergensBtn.onclick = ()=> openAllergenPicker(ing, drawIngredients);
+      // The picker's button says "Save" and the badges update at once, so it
+      // has to actually save; it used to only change the row in memory.
+      if(editAllergensBtn) editAllergensBtn.onclick = ()=> openAllergenPicker(ing, ()=>{
+        drawIngredients();
+        commitIngredientRows('Allergens updated' + (ing.name ? ' for ' + ing.name : ''), 'Allergens saved');
+      });
       tr.querySelector('.dragHandle').addEventListener('pointerdown', (e)=>{
         if(dragActive) return;
         startRowDrag(e, tr);
@@ -10773,6 +11579,7 @@ function renderRecipeView(recipeId, slotCtx){
     openIngredientPicker(null, (newId)=>{
       row.ingredientId = newId;
       drawIngredients();
+      commitIngredientRows('Ingredient added', 'Ingredient added');
     }, ()=>{
       // Cancelled without picking — remove the placeholder row rather than
       // leaving an empty, unlinkable line sitting in the table.
@@ -10794,9 +11601,15 @@ function renderRecipeView(recipeId, slotCtx){
      Preparation field, and it is the reason the rule is now written down:
      anything that changes a recipe field and publishes it goes through the
      merge. A write that skips it is a whole-record overwrite. */
-  ingCard.querySelector('#saveIngBtn').onclick = async ()=>{
+  ingCard.querySelector('#saveIngBtn').onclick = ()=> commitIngredientRows('Ingredients updated', 'Ingredients saved');
+  /* Every change to this table saves through here (FIX: remove, re-link,
+     add and the row allergen picker used to change the record without
+     saving it), and so through commitRecipeEdit, per THE RULE. */
+  async function commitIngredientRows(logSummary, savedMessage){
     const btn = ingCard.querySelector('#saveIngBtn');
-    const label = btn.textContent;
+    const label = 'Save ingredients';
+    const liveBefore = DATA.recipeBank[recipeId];
+    const versionBefore = liveBefore ? liveBefore.version : undefined;
     btn.disabled = true; btn.textContent = 'Saving…';
     const unlock = lockFormCard(ingCard);
     // qty: keep numeric if parseable, else keep as string (as needed / to taste / selection)
@@ -10815,15 +11628,19 @@ function renderRecipeView(recipeId, slotCtx){
     });
     try{
       await commitRecipeEdit(recipeId, {ingredients: rows}, null, {
-        logSummary: 'Ingredients updated',
-        savedMessage: 'Ingredients saved',
+        logSummary: logSummary,
+        savedMessage: savedMessage,
       });
     } finally {
       unlock();
       if(btn.isConnected){ btn.disabled = false; btn.textContent = label; }
     }
-    ingredientsTouched = false;
-  };
+    // Saved only if applyRecipeSave ran (it bumps version); a cancelled
+    // conflict leaves the rows marked unsaved rather than pretending.
+    const liveAfter = DATA.recipeBank[recipeId];
+    if(liveAfter && liveAfter.version !== versionBefore) clearIngredientRowsUnsaved();
+    else markIngredientRowsUnsaved();
+  }
 
   return root;
 }
@@ -10875,7 +11692,7 @@ function openAllergenPicker(ing, onDone){
     </label>`).join('');
 
   modal.innerHTML = `
-    <h3>Allergens for "${escapeHtml(ing.name||'')}"</h3>
+    <h3>Allergens for "${escapeHtml(ing.name||ing.productName||'')}"</h3>
     <div class="tinyNote">Tick everything this ingredient definitely contains. Use "May contain" only for trace/cross-contamination warnings.</div>
     <div class="field" style="margin-top:12px;"><label>Contains</label>
       <div class="allergenCheckGrid">${checklistHtml('contains', contains)}</div>
@@ -11963,7 +12780,7 @@ function recipeFingerprint(name, r){
 
    Human edits publish. Imports do not. Seeding an empty shared bank is a
    button (see recipesMigrateCard). */
-async function importSeasonJson(json, seasonKeyHint){
+async function importSeasonJson(json, seasonKeyHint, groupHint){
   // seasonKey/season are captured BEFORE the await just below, deliberately
   // -- not after. Several callers now run this without any modal gating
   // user interaction first (see autoSyncSeasonIfSafe), so EDITING_GROUP is
@@ -11977,8 +12794,25 @@ async function importSeasonJson(json, seasonKeyHint){
   // (autoSyncSeasonIfSafe, openRefreshSeasonModal) still need their OWN
   // guard for that earlier window; this only closes the gap inside this
   // function itself.
+  //
+  // groupHint is that guard, for a caller that has no UI-level blocking to
+  // fall back on. ensureSeason(seasonKey) resolves through DATA.seasons,
+  // which follows the LIVE EDITING_GROUP at the instant this line runs --
+  // fine for a caller that just re-checked EDITING_GROUP synchronously
+  // beforehand (autoSyncSeasonIfSafe), or one gated behind a modal overlay
+  // that keeps the topbar's group switcher inert for the whole operation
+  // (openRefreshSeasonModal). uploadCurrentSeason is neither: it can be
+  // called directly (tests do exactly this), with nothing stopping
+  // EDITING_GROUP from moving on across ITS OWN several awaits (the live
+  // fetch, the save, the retry loop) before this function ever runs -- and
+  // when it does, ensureSeason would resolve to whatever group is current
+  // BY THEN, silently writing one group's just-published rotation into
+  // another group's local slot. Passing the group uploadCurrentSeason
+  // captured at the top, once, closes that: seasonForGroup(groupHint, ...)
+  // resolves the same way seasonForGroup/seasonForGroup-based callers
+  // elsewhere in this file already do, ignoring EDITING_GROUP entirely.
   const seasonKey = SEASONS.some(s=>s.key===seasonKeyHint) ? seasonKeyHint : DATA.currentSeason;
-  const season = ensureSeason(seasonKey);
+  const season = groupHint ? seasonForGroup(groupHint, seasonKey) : ensureSeason(seasonKey);
   // Make sure the ingredient database is loaded (and as fresh as possible)
   // before matching newly-imported recipes against it below — importing can
   // happen from views that never triggered ensureIngredientsLoaded() yet
@@ -14677,44 +15511,23 @@ function openUploadModal(seasonKey){
     statusEl.style.color = '';
     statusEl.textContent = 'Saving…';
     try{
-      // Refuse to publish a season this device can no longer render in
-      // full -- see seasonSlotsMissingRecipes. Checked here rather than
-      // inside buildSeasonExportJson because exporting a JSON file for
-      // inspection is a perfectly reasonable thing to do with a broken
-      // season; publishing one over every site's live menu is not.
-      const missing = seasonSlotsMissingRecipes(seasonKey);
-      if(missing.length){
-        const where = missing.slice(0,4).map(m=> 'Week ' + m.week + ' ' + m.day + ' ' + m.course).join(', ');
-        throw new Error(
-          missing.length + ' slot' + (missing.length===1?'':'s') + ' in this season point at recipes this device no longer has (' +
-          where + (missing.length>4 ? ', and ' + (missing.length-4) + ' more' : '') +
-          '). Uploading now would publish those slots as empty for every site. Refresh from live site first, or upload the season this device is actually complete for'
-        );
+      // uploadCurrentSeason does everything this used to do inline --
+      // the missing-recipes and empty-rotation guards, the actual save --
+      // plus now a three-way merge against whatever a colleague may have
+      // published since this device last synced, only ever surfacing
+      // openSeasonConflictModal (on top of this one) when the two of you
+      // genuinely touched the same slot differently. See its own comment.
+      const result = await uploadCurrentSeason(seasonKey);
+      if(result.cancelled){
+        statusEl.style.color = '';
+        statusEl.textContent = 'Nothing was published — pick again when you\'re ready.';
+        return;
       }
-      const out = buildSeasonExportJson(seasonKey);
-      /* Refuse to publish nothing. An empty rotation is never a menu
-         somebody meant to put live, and publishing one takes every
-         kitchen on this group down to a blank page with no way back
-         through the app. */
-      const dishCount = Object.keys(out).reduce((n, wk)=>
-        n + Object.keys(out[wk] || {}).reduce((m, day)=>
-          m + Object.keys(out[wk][day] || {}).length, 0), 0);
-      if(dishCount === 0){
-        throw new Error(
-          'This rotation is empty on this device, so publishing it would replace the live ' +
-          groupLabel + ' menu with nothing. Load the published version first, or import a week'
-        );
-      }
-      await saveSeasonToServer(group, seasonKey + '.json', out);
-      logUpload(seasonKey, group);
-      // This device's own local copy IS what was just published -- record
-      // it as the new agreed base so a later login's auto-sync recognises
-      // "nothing has changed here since" instead of treating this device
-      // as permanently diverged from the SEED_DATA it shipped with.
-      recordSeasonBase(seasonKey, group, seasonForGroup(group, seasonKey));
       statusEl.style.color = 'var(--sage-text)';
-      statusEl.textContent = 'Published. Every site on ' + groupLabel + ' is already showing this.';
-      toast('Uploaded ' + seasonKey + '.json to ' + groupLabel);
+      statusEl.textContent = result.merged
+        ? 'Published — merged with changes a colleague had already published. Every site on ' + groupLabel + ' is already showing this.'
+        : 'Published. Every site on ' + groupLabel + ' is already showing this.';
+      toast((result.merged ? 'Merged and uploaded ' : 'Uploaded ') + seasonKey + '.json to ' + groupLabel);
       render();
       setTimeout(()=> overlay.remove(), 1800);
     }catch(e){
@@ -14778,6 +15591,18 @@ async function rbShowAppShell(){
     SEASONS_ALIAS_READY = true;
   }
   render(); // immediate paint with whatever's already local -- never blocks on the network
+  /* FIX: SEASONS was only read when the kitchen page first loaded, so a
+     season a colleague added while this page sat open never reached the
+     picker until a full reload. Re-read it on every Staff admin open.
+     loadSeasonsConfig() returns SEASONS_DEFAULT itself on any failure --
+     never swap a real list for that fallback. */
+  // Not awaited: it must never hold up the recipe-bank pull below.
+  loadSeasonsConfig().then(freshSeasons=>{
+    if(freshSeasons && freshSeasons !== SEASONS_DEFAULT && freshSeasons.length){
+      SEASONS = freshSeasons;
+      render();
+    }
+  }).catch(()=>{});
   /* Pull the shared recipe bank before anything else touches recipes.
      autoSyncSeasonIfSafe below can import a season, and an import that
      runs first would mint local ids for recipes that already exist under

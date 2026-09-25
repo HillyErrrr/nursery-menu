@@ -1851,3 +1851,42 @@ On purpose, **none** of the following exist yet:
   (who approves what, what a parent report should contain, what counts as
   Ofsted evidence) that weren't in scope for this round — ask any time
   you'd like to scope one of these properly.
+
+## 25 September 2026: grid view, new-season picker, and three save fixes
+
+Built on `master` at `8e78c2f`. Everything below was checked against the existing test suites (all 149 checks pass) and against a new two-device harness, which is kept in `kitchen-prep-save-fixes.zip`.
+
+### Kitchen page: grid view and recipe screen
+
+A new **Grid view** button next to "Print prep sheets" switches the prep page to one card per dish for the day. Tapping a card opens that recipe full-screen, with Ingredients and Method side by side. Each side scrolls on its own and can be expanded to full width. **Back** or the Esc key returns to the grid.
+
+The list view is unchanged and is still the default. Ticks are shared between the two views, because both draw their ingredient rows from the same `buildIngRow()`. On narrow screens (680px wide or less) the recipe screen stacks Ingredients above Method.
+
+### Staff admin: a season added on one device now shows up on the other
+
+A season created with **+ Add season** was published correctly, but the other admin's season picker never listed it. The picker was built only from the seasons that browser already held (`DATA.seasons`).
+
+The picker now lists the shared season list first. Picking a season this device hasn't held yet pulls in its published rotation through the existing hydration path. The shared list is also re-read every time Staff admin opens, so a page left open picks up new seasons too.
+
+### Staff admin: allergens undone by a colleague
+
+The ingredient database's "what have I changed" baseline (`INGREDIENTS_BASE`) was kept only in memory. So after every reload, every product on the device counted as locally changed. The screen showed that browser's old allergens, and the next save of **any** product published them over a colleague's newer ones.
+
+The baseline is now saved on the device. A device with no baseline trusts the shared copy.
+
+### Staff admin: allergens lost straight after "+ Add new ingredient"
+
+After a save, the baseline used to be taken from whatever was on screen once the save finished, not from what was actually sent. An allergen ticked while that save was still in progress was treated as the colleague's value at the next merge, and was quietly replaced with the blank one, under the toast "Allergens saved".
+
+The baseline is now captured at the moment the request is sent.
+
+### Staff admin: recipe ingredient-table changes that never saved
+
+These actions now save immediately, through `commitRecipeEdit`:
+
+- the row allergen picker's **Save** (it used to only change what was on screen)
+- adding a row
+- re-linking a row
+- removing a row
+
+Typed changes to quantity, unit or preparation, and typed changes to the details form, turn the button amber ("unsaved changes"). Moving to another admin page now asks first. If the admin leaves anyway, the table goes back to what was last saved, rather than leaving half an edit in memory.
