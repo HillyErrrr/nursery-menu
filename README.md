@@ -1889,4 +1889,48 @@ These actions now save immediately, through `commitRecipeEdit`:
 - re-linking a row
 - removing a row
 
-Typed changes to quantity, unit or preparation, and typed changes to the details form, turn the button amber ("unsaved changes"). Moving to another admin page now asks first. If the admin leaves anyway, the table goes back to what was last saved, rather than leaving half an edit in memory.
+Typed changes to quantity, unit or preparation turn the **Save ingredients** button amber ("unsaved changes"). Moving to another admin page, switching season or menu, or closing Staff admin now asks first if the ingredient table or the details form has typed, unsaved changes. If the admin leaves anyway, the table goes back to what was last saved, rather than leaving half an edit in memory.
+
+### Second pass: fixes from reviewing this release
+
+A line-by-line review, followed by tests for each finding, turned up these problems. All are fixed.
+
+Kitchen page:
+
+- **Grid view:** it showed as a single column, because an inline style overrode the grid.
+- **Ticking:** each tick jumped the recipe screen back to the top of the ingredient list.
+- **Allergen popup:** tapping a badge on the recipe screen opened the popup underneath it.
+- **Page behind the recipe screen:** it could still scroll, and it could still be tabbed into. From there, changing the day left the screen showing a same-named dish from another day.
+- **Screen readers:** the recipe screen now works as a proper dialog: focus moves into it, and returns to the card afterwards.
+- **Day header:** it didn't update in grid view.
+- **Staff-entered names:** these are now escaped wherever the new screens show them.
+- **Dishes with no allergens:** these now say so in words.
+- **Phones:** the header now wraps instead of overflowing.
+
+Staff admin:
+
+- **Offline or first-load edits:** on the first load after this release, or when the shared database was unreachable at open, a product created on the device, or an allergen saved there, could be dropped. The ids saved on the device are now kept until they publish.
+- **Full browser storage:** a stale baseline could be left behind next to older data, which would bring back the colleague-overwrite bug. It is now removed instead.
+- **Half-typed details text:** removing, adding or re-linking an ingredient redrew the page and wiped any details-form text typed but not yet saved. That text is now kept.
+- **Unsaved-changes check:**
+  - It survived a background redraw only by forgetting the unsaved rows.
+  - It didn't cover Close and Lock.
+  - It asked twice after Duplicate.
+  - It fired for a recipe that had just been deleted.
+  - It let the season or menu picker switch before asking.
+- **Reordering ingredients:** this now counts as a save of the rows, and can't start while a row save is still in progress.
+- **Re-reading the season list:** this can no longer drop a season because of an old fallback file, and it no longer redraws the page someone is typing in.
+- **Picking a season this device hadn't held:** this no longer creates a blank copy before auto-sync, which would have stopped auto-sync from fetching the published rotation.
+
+### Third pass: a second review, plus a check of every site
+
+- **Every site checked:** all 15 sites were checked across every week and every day, in both list and grid view, opening every recipe screen (1,740 of them). No errors, blank quantities, missing dishes or stuck screens were found.
+- **Backup menu warning:** if the live menu can't be fetched within 4 seconds, the kitchen page falls back to the copy of the menu stored with the website. That copy can be out of date, and the copies in this repo have no allergen details on many dishes. The page now shows a red warning when this happens. It also stops saying "None recorded" for allergens, and says the details aren't available in the backup copy instead. This applies to the prep list, the recipe screen and the printed prep sheets.
+- **Weston-super-Mare menu on a new device:** switching to the WSM menu (or picking a season) on a device that had never held it gave a blank rotation. The rotation page created an empty copy before the automatic sync could see that the device had never held the menu, so the sync never fetched it. This bug was already in `8e78c2f`.
+- **Leaving a recipe could undo a colleague's ingredient change** after a background refresh. The unsaved-rows state is now tied to the exact recipe record it came from.
+- **Allergens saved offline:** an allergen saved with no connection and no baseline is now recorded before the save is attempted, so it still publishes once the connection is back.
+- **Typed recipe text:** text is no longer restored into a different recipe's page, and the page is locked while ingredient rows are being saved.
+- **"Continue anyway":** it now only covers what had been typed at that moment.
+- **Escape key:** with the allergen popup open, Escape now closes just the popup.
+- **Allergen popup in Staff admin:** the popup opened behind Staff admin. It now appears in front.
+- **Season list:** the real list is now used when the page had only the built-in fallback.

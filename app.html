@@ -443,7 +443,10 @@ table.shopListTable tr.shopCatRow td{
 .allergen-modal-backdrop{
   position:fixed;inset:0;background:rgba(20,30,40,.55);
   display:flex;align-items:center;justify-content:center;
-  z-index:1000;padding:20px;
+  /* above the kitchen recipe screen (#prepDetailOverlay, 8000) AND Staff
+     admin (9000) -- admin's week grid opens this popup too, and at 1000 it
+     sat invisibly underneath and blocked the next click */
+  z-index:9500;padding:20px;
 }
 .allergen-modal{
   background:#fff;border-radius:16px;max-width:360px;width:100%;
@@ -749,7 +752,18 @@ body.draggingIngredient{-webkit-user-select:none;user-select:none;}
 .pgExpandBtn{background:var(--paper-dim);border:1px solid var(--line-strong);color:var(--ink-soft);border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;}
 .pgExpandBtn:hover{color:var(--ink);}
 .pgScroll{flex:1 1 auto;min-height:0;overflow:auto;padding:10px;}
+body.pgDetailOpen{overflow:hidden;}
+.pgNoAllergens{font-size:12.5px;color:var(--ink-soft);margin-top:6px;}
+.pgCard .allergen-badge{pointer-events:none;}
+/* A <button> centres its content vertically, so in a row of equal-height
+   cards a two-line dish name started higher than its neighbours. */
+.pgCard{display:flex;flex-direction:column;justify-content:flex-start;align-items:stretch;}
 @media (max-width:680px){
+  .ticket-head-top{flex-wrap:wrap;gap:8px;}
+  #prepModeToggle{margin-left:0;}
+  /* both columns stack here and the expand buttons are hidden, so an
+     expanded state carried over from a wider screen must not hide one */
+  .pgSplitRow.pgExpanded-ing .pgMethodCol,.pgSplitRow.pgExpanded-method .pgIngCol{display:flex;}
   .pgPanelOuter{overflow:auto;}
   .pgSplitRow{display:block;overflow:visible;min-height:0;}
   .pgCol{margin-bottom:16px;min-height:0;}
@@ -1938,7 +1952,7 @@ function ingRowInnerHtml(ing, id, qtyText){
           <div class="checkbox ${state.checked[id]?'checked':''}">${state.checked[id]?'<i class="ti ti-check"></i>':''}</div>
           <div class="ing-body">
             <div class="ing-toprow">
-              <span class="ing-name">${ing.name}</span>
+              <span class="ing-name">${escapeHtml(ing.name)}</span>
               <span class="ing-qty">${qtyText}</span>
             </div>
             ${ing.prep ? `<div class="ing-prep">${escapeHtml(ing.prep)}</div>` : ''}
@@ -2069,7 +2083,7 @@ function renderCourses(){
       allergy.className = 'prep-allergy';
       allergy.innerHTML = `
         <div class="prep-sectionlabel">Allergy information</div>
-        <div class="prep-allergybody">${recipeAllergenBadgesHtml(recipe) || '<span class="prep-none">None recorded from the linked ingredients.</span>'}</div>
+        <div class="prep-allergybody">${recipeAllergenBadgesHtml(recipe) || '<span class="prep-none">' + noAllergensText() + '</span>'}</div>
       `;
       panel.appendChild(allergy);
 
@@ -2117,8 +2131,17 @@ function appendMethodSection(container, recipe, courseName, recipeName){
 
 /* ---------- prep grid + detail overlay (day-at-a-glance mode) ---------- */
 
+let LAST_PREP_DETAIL_KEY = null;
 function prepDetailKeyFor(courseName, recipeName){
-  return courseName + '||' + recipeName;
+  // Week and day are part of the key: a day or week change then finds
+  // nothing under it and the recipe screen closes, instead of silently
+  // showing a same-named dish from another day with no day on screen.
+  return state.week + '|' + state.day + '||' + courseName + '||' + recipeName;
+}
+/* A dish with no allergens recorded says so in words, like the list
+   view's allergy band -- a blank space is not the same statement. */
+function prepAllergensOrNoneHtml(recipe){
+  return recipeAllergenBadgesHtml(recipe) || '<div class="pgNoAllergens">' + noAllergensText() + '</div>';
 }
 
 function findRecipeByKey(dayCourses, key){
@@ -2145,9 +2168,30 @@ function applyPrepVisibility(){
   const detailEl = document.getElementById('prepDetailOverlay');
   const toggleBtn = document.getElementById('prepModeToggle');
   if(coursesEl) coursesEl.style.display = showList ? 'block' : 'none';
-  if(gridEl) gridEl.style.display = showGrid ? 'block' : 'none';
+  // '' not 'block': an inline block would override #prepGrid{display:grid}
+  // and stack the cards in one column.
+  if(gridEl) gridEl.style.display = showGrid ? '' : 'none';
   if(detailEl) detailEl.style.display = showDetail ? 'block' : 'none';
   if(toggleBtn) toggleBtn.style.display = isShop ? 'none' : '';
+
+  /* The recipe screen covers the page, so the page behind it must not
+     scroll, take keyboard focus, or be tappable through it (a day tab
+     reached by Tab used to change the day underneath an open recipe). */
+  const wasOpen = document.body.classList.contains('pgDetailOpen');
+  document.body.classList.toggle('pgDetailOpen', showDetail);
+  ['.ticket-head', '.tear', '#headcountPanel', '#prepGrid', '#courses', '#shopView', '.footer-contact'].forEach(sel=>{
+    const el = document.querySelector(sel);
+    if(!el) return;
+    if(showDetail) el.setAttribute('inert', ''); else el.removeAttribute('inert');
+  });
+  if(showDetail && !wasOpen){
+    const back = document.querySelector('#prepDetailOverlay .pgBackBtn');
+    if(back) back.focus();
+  }
+  if(!showDetail && wasOpen && LAST_PREP_DETAIL_KEY){
+    const card = [...document.querySelectorAll('#prepGrid .pgCard')].find(c=> c.dataset.key === LAST_PREP_DETAIL_KEY);
+    if(card) card.focus();
+  }
 }
 
 function renderActivePrep(){
@@ -2182,6 +2226,7 @@ function renderPrepGrid(){
 
   if(availableCourses.length===0){
     container.innerHTML = '<div class="empty"><i class="ti ti-toque"></i>No menu on file for this day.</div>';
+    document.getElementById('menuSummary').textContent = '';
     return;
   }
 
@@ -2198,6 +2243,7 @@ function renderPrepGrid(){
       const card = document.createElement('button');
       card.type = 'button';
       card.className = 'pgCard';
+      card.dataset.key = prepDetailKeyFor(courseName, recipeName);
 
       const stamp = document.createElement('div');
       stamp.className = 'stamp' + (allDone ? ' show' : '');
@@ -2208,13 +2254,17 @@ function renderPrepGrid(){
       head.className = 'course-head';
       head.innerHTML = `
         <div>
-          <div class="course-name">${courseName}</div>
-          <div class="course-recipe">${recipeName}</div>
+          <div class="course-name">${escapeHtml(courseName)}</div>
+          <div class="course-recipe">${escapeHtml(recipeName)}</div>
           <div class="course-servings">${base ? roundQty(servingsForCourse)+' servings (recipe serves '+base+')' : ''}</div>
-          ${recipeAllergenBadgesHtml(recipe)}
+          ${prepAllergensOrNoneHtml(recipe)}
         </div>
         <div class="progress-pill ${allDone?'done':''}">${numChecked}/${ids.length}</div>
       `;
+      // The whole card is one button; badges inside it must not be a
+      // second, nested control (tapping one used to open the allergen
+      // popup AND the recipe).
+      head.querySelectorAll('[tabindex],[role="button"]').forEach(el=>{ el.removeAttribute('tabindex'); el.removeAttribute('role'); });
       card.appendChild(head);
 
       card.addEventListener('click', ()=>{
@@ -2224,15 +2274,20 @@ function renderPrepGrid(){
       container.appendChild(card);
     });
   });
+
+  document.getElementById('menuSummary').textContent = 'Week '+state.week+' · '+state.day+' · '+availableCourses.length+' course'+(availableCourses.length===1?'':'s')+' on the menu';
 }
 
 function openPrepDetail(courseName, recipeName){
   state.prepDetailKey = prepDetailKeyFor(courseName, recipeName);
+  LAST_PREP_DETAIL_KEY = state.prepDetailKey;
   state.prepDetailExpanded = null;
   renderActivePrep();
 }
 
 function closePrepDetail(){
+  const overlay = document.getElementById('prepDetailOverlay');
+  if(overlay) delete overlay.dataset.key;
   state.prepDetailKey = null;
   state.prepDetailExpanded = null;
   renderActivePrep();
@@ -2246,10 +2301,19 @@ function toggleExpandSection(section){
 function renderPrepDetail(){
   const overlay = document.getElementById('prepDetailOverlay');
   if(!overlay) return;
+  /* Every tick redraws this screen; without this the cook was thrown back
+     to the first ingredient each time. Only kept for the same recipe. */
+  const q = sel=> overlay.querySelector(sel);
+  const keepScroll = overlay.dataset.key === state.prepDetailKey ? {
+    outer: q('.pgPanelOuter') ? q('.pgPanelOuter').scrollTop : 0,
+    ing: q('.pgIngCol .pgScroll') ? q('.pgIngCol .pgScroll').scrollTop : 0,
+    method: q('.pgMethodCol .pgScroll') ? q('.pgMethodCol .pgScroll').scrollTop : 0,
+  } : null;
   overlay.innerHTML = '';
   const dayCourses = (MENU[state.week] && MENU[state.week][state.day]) || {};
   const found = findRecipeByKey(dayCourses, state.prepDetailKey);
   if(!found){
+    delete overlay.dataset.key;
     state.prepDetailKey = null;
     state.prepDetailExpanded = null;
     renderActivePrep();
@@ -2272,6 +2336,9 @@ function renderPrepDetail(){
 
   const panel = document.createElement('div');
   panel.className = 'pgPanelOuter';
+  panel.setAttribute('role', 'dialog');
+  panel.setAttribute('aria-modal', 'true');
+  panel.setAttribute('aria-label', courseName + ': ' + recipeName);
 
   const backBtn = document.createElement('button');
   backBtn.type = 'button';
@@ -2284,10 +2351,10 @@ function renderPrepDetail(){
   head.className = 'course-head pgDetailHead';
   head.innerHTML = `
     <div>
-      <div class="course-name">${courseName}</div>
-      <div class="course-recipe">${recipeName}</div>
+      <div class="course-name">${escapeHtml(courseName)}</div>
+      <div class="course-recipe">${escapeHtml(recipeName)}</div>
       <div class="course-servings">${base ? roundQty(servingsForCourse)+' servings (recipe serves '+base+')' : ''}</div>
-      ${recipeAllergenBadgesHtml(recipe)}
+      ${prepAllergensOrNoneHtml(recipe)}
     </div>
     <div class="progress-pill ${allDone?'done':''}">${numChecked}/${ids.length}</div>
   `;
@@ -2345,6 +2412,12 @@ function renderPrepDetail(){
 
   panel.appendChild(splitRow);
   overlay.appendChild(panel);
+  overlay.dataset.key = state.prepDetailKey;
+  if(keepScroll){
+    panel.scrollTop = keepScroll.outer;
+    const ingS = q('.pgIngCol .pgScroll'); if(ingS) ingS.scrollTop = keepScroll.ing;
+    const mS = q('.pgMethodCol .pgScroll'); if(mS) mS.scrollTop = keepScroll.method;
+  }
 }
 
 /* ================= Printable prep sheets =================
@@ -2495,7 +2568,7 @@ function prepSheetCardHtml(c){
   </div>
   <div class="midBand">
     <div class="sectionLabel">Allergy information</div>
-    <div class="prepAllergens">${badges || '<span class="prepNoneNote">None recorded from the linked ingredients.</span>'}</div>
+    <div class="prepAllergens">${badges || '<span class="prepNoneNote">' + noAllergensText() + '</span>'}</div>
   </div>
   <div class="prepSig">
     <span class="prepSigLabel">Prepped by</span><span class="prepSigLine"></span>
@@ -3497,7 +3570,9 @@ document.getElementById('prepModeToggle').addEventListener('click', ()=>{
 });
 
 document.addEventListener('keydown', (e)=>{
-  if(e.key === 'Escape' && state.prepDetailKey){
+  // The allergen popup handles its own Escape; closing the recipe screen
+  // underneath it as well would lose the cook's place.
+  if(e.key === 'Escape' && state.prepDetailKey && !document.querySelector('.allergen-modal-backdrop')){
     closePrepDetail();
   }
 });
@@ -3638,6 +3713,7 @@ function showNoSiteMessage(text){
    a deployment that only ever gets updated by hand-editing the JSON and
    redeploying). */
 async function fetchSeasonJson(group, file){
+  let functionAnswered = false;
   try{
     const controller = new AbortController();
     const timeout = setTimeout(()=> controller.abort(), 4000);
@@ -3647,10 +3723,40 @@ async function fetchSeasonJson(group, file){
     );
     clearTimeout(timeout);
     if(res.ok) return res;
+    // 404 is the Function's own considered answer ("nothing saved, and no
+    // shipped copy either") -- not an outage, so not worth a warning.
+    if(res.status === 404) functionAnswered = true;
   }catch(e){
     /* function unreachable/erroring/timed out — fall through to the static file */
   }
-  return fetch('groups/'+encodeURIComponent(group)+'/seasons/'+encodeURIComponent(file));
+  const backup = await fetch('groups/'+encodeURIComponent(group)+'/seasons/'+encodeURIComponent(file));
+  // Marked so the kitchen page can say it is showing the backup copy (see
+  // applyBackupMenuBanner) -- that copy can be an old rotation and can be
+  // missing allergen details.
+  if(!functionAnswered){ try{ backup.__fromBackup = true; }catch(e){} }
+  return backup;
+}
+let MENU_FROM_BACKUP = false;
+let LAST_SEASONS_CONFIG_FROM_BACKUP = false;
+/* Allergen wording for a dish with nothing recorded. On the backup copy
+   "none" is not something the page can know, so it must not say it. */
+function noAllergensText(){
+  return MENU_FROM_BACKUP
+    ? 'Allergen details are not available in the backup menu — check the recipe card before serving.'
+    : 'None recorded from the linked ingredients.';
+}
+function applyBackupMenuBanner(){
+  const existing = document.getElementById('backupMenuBanner');
+  if(existing) existing.remove();
+  if(!MENU_FROM_BACKUP) return;
+  const banner = document.createElement('div');
+  banner.id = 'backupMenuBanner';
+  banner.setAttribute('role', 'alert');
+  banner.style.cssText = 'background:#9F383C;color:#fff;font-weight:600;font-size:13.5px;text-align:center;padding:9px 12px;';
+  banner.innerHTML = '<i class="ti ti-alert-triangle"></i> Couldn’t reach the live menu, so this is the backup copy saved with the website. It may be out of date and allergen details may be missing — check the recipe card before serving, and reload the page to try again.';
+  const wrap = document.querySelector('.ticket-head .wrap');
+  if(wrap) wrap.insertBefore(banner, wrap.firstChild);
+  else document.body.insertBefore(banner, document.body.firstChild);
 }
 
 /* The seasons list itself is stored the same way as any other season's
@@ -3664,8 +3770,10 @@ async function fetchSeasonJson(group, file){
    above, so a kitchen iPad can never fail to load its menu because of
    this feature. */
 async function loadSeasonsConfig(){
+  LAST_SEASONS_CONFIG_FROM_BACKUP = false;
   try{
     const res = await fetchSeasonJson('_config', 'seasons.json');
+    if(res.__fromBackup) LAST_SEASONS_CONFIG_FROM_BACKUP = true;
     if(res.ok){
       const data = await res.json();
       if(data && Array.isArray(data.seasons) && data.seasons.length){
@@ -3674,6 +3782,7 @@ async function loadSeasonsConfig(){
     }
   }catch(e){
     /* fall through to default below */
+    LAST_SEASONS_CONFIG_FROM_BACKUP = true;
   }
   return SEASONS_DEFAULT;
 }
@@ -3684,6 +3793,7 @@ async function loadSiteData(){
     throw new Error('__handled__');
   }
   SEASONS = await loadSeasonsConfig();
+  const seasonsFromBackup = LAST_SEASONS_CONFIG_FROM_BACKUP;
   const seasonParam = new URLSearchParams(location.search).get('season');
   const requestedSeason = seasonParam ? SEASONS.find(s=>s.key === seasonParam) : null;
   SEASON_OVERRIDDEN = !!requestedSeason;
@@ -3711,9 +3821,13 @@ async function loadSiteData(){
     throw new Error('__handled__');
   }
   MENU = await menuRes.json();
+  // The season LIST from the backup copy can also pick the wrong season
+  // (one added since the last deploy is simply missing).
+  MENU_FROM_BACKUP = !!menuRes.__fromBackup || seasonsFromBackup;
   SITE_CONFIG = Object.assign({}, SITE_CONFIG, await configRes.json());
   applySiteBranding();
   applySeasonPreviewBanner(activeSeason);
+  applyBackupMenuBanner();
   // Never allow a slow/missing/erroring alerts config to hold up the
   // kitchen page itself — this only ever adds a banner on top of a page
   // that's already finished loading everything it actually needs.
@@ -4298,7 +4412,13 @@ let DATA = loadData();
    it when persisting something that must NOT itself trigger another
    publish. */
 function saveLocalOnly(){
-  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(DATA)); }catch(e){ console.error('save failed', e); }
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(DATA)); saveLocalOnly.ok = true; }
+  catch(e){
+    saveLocalOnly.ok = false;
+    // See persistIngredientsBase: never leave a baseline beside stale DATA.
+    try{ localStorage.removeItem(STORAGE_KEY + '::ingredientsBase'); }catch(_){}
+    console.error('save failed', e);
+  }
 }
 function save(){
   saveLocalOnly();
@@ -4883,7 +5003,7 @@ function stopSeasonPresence(){
    parameter. Every read/write past that point uses seasonForGroup(group,
    seasonKey), which is pinned to the group captured at the top, never the
    DATA.seasons alias (which follows whatever EDITING_GROUP is RIGHT NOW). */
-async function autoSyncSeasonIfSafe(seasonKey){
+async function autoSyncSeasonIfSafe(seasonKey, opts){
   const group = EDITING_GROUP || 'general';
   // Checked BEFORE seasonForGroup below, which would otherwise silently
   // create an empty stub for a group that has genuinely never held this
@@ -4896,7 +5016,10 @@ async function autoSyncSeasonIfSafe(seasonKey){
   // as "touched" and refusing to ever auto-fetch -- silently regressing
   // the topbar's old, deliberate "a menu this device has never held is
   // empty until it is pulled" behaviour into a permanently blank rotation.
-  const neverHeldByThisGroup = !menuFor(group)[seasonKey];
+  // opts.neverHeld is decided by the caller BEFORE it paints: the rotation
+  // view's own ensureSeason() creates an empty stub first, after which
+  // this check alone could no longer see that the menu never held it.
+  const neverHeldByThisGroup = (opts && opts.neverHeld === true) || !menuFor(group)[seasonKey];
   const season = seasonForGroup(group, seasonKey);
   const untouched = neverHeldByThisGroup || seasonLooksUntouched(seasonKey, season);
   const atBase = !untouched && seasonMatchesRecordedBase(seasonKey, group, season);
@@ -6483,8 +6606,42 @@ function loadIngredientsBase(){
   return null;
 }
 function persistIngredientsBase(){
-  try{ localStorage.setItem(INGREDIENTS_BASE_KEY, JSON.stringify(INGREDIENTS_BASE || {})); }
-  catch(e){ /* quota: the next load then has no baseline and trusts the shared copy -- the safe direction */ }
+  /* A baseline is only meaningful next to the DATA it was measured
+     against. If this device's last DATA write failed (quota), a newer
+     baseline beside an older DATA would make stale records look like
+     local edits -- the very overwrite this exists to stop -- so store
+     none at all instead. A failed setItem also leaves the OLD value in
+     place, so remove it explicitly. */
+  try{
+    if(saveLocalOnly.ok === false) throw new Error('DATA not persisted');
+    localStorage.setItem(INGREDIENTS_BASE_KEY, JSON.stringify(INGREDIENTS_BASE || {}));
+  }catch(e){
+    try{ localStorage.removeItem(INGREDIENTS_BASE_KEY); }catch(_){}
+  }
+}
+/* Products this device saved while it had no baseline (first load after
+   this release, or the shared copy unreachable at open). Their ids are all
+   the no-baseline path can safely call "mine"; persisted so an offline
+   save still publishes after a reload. */
+const INGREDIENTS_NOBASE_KEY = STORAGE_KEY + '::ingredientsSavedWithoutBase';
+function noBaseTouched(){
+  try{ const v = JSON.parse(localStorage.getItem(INGREDIENTS_NOBASE_KEY) || '[]'); return Array.isArray(v) ? v : []; }catch(e){ return []; }
+}
+function setNoBaseTouched(ids){
+  try{
+    if(ids.length) localStorage.setItem(INGREDIENTS_NOBASE_KEY, JSON.stringify(ids));
+    else localStorage.removeItem(INGREDIENTS_NOBASE_KEY);
+  }catch(e){}
+}
+/* With no baseline: products that exist only on this device (e.g. just
+   added while offline) plus ones this device explicitly saved. Everything
+   else takes the shared copy. */
+function noBaseOverlayIds(sharedIngredients){
+  const shared = sharedIngredients || {};
+  const local = DATA.ingredients || {};
+  const ids = Object.keys(local).filter(id=> !shared[id]);
+  noBaseTouched().forEach(id=>{ if(local[id] && ids.indexOf(id) === -1) ids.push(id); });
+  return ids;
 }
 let INGREDIENTS_BASE = loadIngredientsBase();
 /* stableJson, not JSON.stringify, and it has to match the comparison used
@@ -6544,7 +6701,13 @@ function locallyChangedIngredientIds(){
    published at all -- the change stays on this device and the caller's
    catch tells the person it isn't shared yet. Writing an unmergeable
    snapshot is exactly the bug above. */
-async function saveIngredientsToServer(){
+async function saveIngredientsToServer(touchedIds){
+  // Recorded before anything can fail: an offline save with no baseline
+  // must still count as this device's change when the connection returns.
+  if(INGREDIENTS_BASE === null && (touchedIds || []).length){
+    const known = noBaseTouched();
+    setNoBaseTouched(known.concat((touchedIds || []).filter(id=> known.indexOf(id) === -1)));
+  }
   /* Deadlined like the merge read above it. Without this the two reads a
      single button press makes are a 4s one and a 12s-twice one, so a
      store that accepts the connection and then says nothing -- which is
@@ -6558,12 +6721,8 @@ async function saveIngredientsToServer(){
   // No baseline: this device has never read the shared copy, so it cannot
   // tell its own edits from stale records. Publishing would be the
   // overwrite described at INGREDIENTS_BASE_KEY; say so instead.
-  if(INGREDIENTS_BASE === null && fresh.ingredients){
-    INGREDIENTS_STALE = true;
-    throw new Error('This device has not loaded the shared ingredient database yet, so the change was kept here only.');
-  }
   if(fresh.ingredients){
-    const changedIds = locallyChangedIngredientIds();
+    const changedIds = INGREDIENTS_BASE === null ? noBaseOverlayIds(fresh.ingredients) : locallyChangedIngredientIds();
     const merged = Object.assign({}, fresh.ingredients);
     changedIds.forEach(id=>{
       if(DATA.ingredients[id]) merged[id] = DATA.ingredients[id];
@@ -6600,6 +6759,7 @@ async function saveIngredientsToServer(){
       await saveSeasonToServer('_config', 'ingredients.json', {ingredients: DATA.ingredients}, undefined, INGREDIENTS_ETAG);
       INGREDIENTS_BASE = sentBase;
       persistIngredientsBase();
+      setNoBaseTouched([]);
       INGREDIENTS_STALE = false;
       INGREDIENTS_LAST_SYNC = Date.now();
       return;
@@ -6610,7 +6770,7 @@ async function saveIngredientsToServer(){
       // and re-apply this device's own changes on top of it.
       const again = (await withSaveDeadline(fetchSharedIngredients(), 8000)) || {reachable: false, ingredients: null};
       if(!again.reachable || !again.ingredients) throw e;
-      const changedIds = locallyChangedIngredientIds();
+      const changedIds = INGREDIENTS_BASE === null ? noBaseOverlayIds(again.ingredients) : locallyChangedIngredientIds();
       const merged = Object.assign({}, again.ingredients);
       changedIds.forEach(id=>{
         if(DATA.ingredients[id]) merged[id] = DATA.ingredients[id];
@@ -6643,7 +6803,11 @@ async function ensureIngredientsLoaded(){
     // be silently discarded by the incoming shared copy.
     // No baseline yet: nothing here can be told apart from a stale copy,
     // so the shared database wins outright.
-    const pending = INGREDIENTS_BASE === null ? [] : locallyChangedIngredientIds();
+    const pending = INGREDIENTS_BASE === null ? noBaseOverlayIds(result.ingredients) : locallyChangedIngredientIds();
+    // They are kept below and, once the baseline is set, differ from it --
+    // ordinary pending changes. Holding them in the no-baseline list too
+    // would let them overwrite a colleague's newer version one day later.
+    setNoBaseTouched([]);
     const incoming = Object.assign({}, result.ingredients);
     pending.forEach(id=>{
       if(DATA.ingredients[id]) incoming[id] = DATA.ingredients[id];
@@ -7495,6 +7659,12 @@ function applyRecipeSave(recipeId, values, reviewerName, theirs, message, opts){
   live.version = Math.max(live.version || 0, (theirs && theirs.version) || 0) + 1;
   logChange(recipeId, (opts && opts.logSummary) || 'Recipe details updated');
   save();
+  // The whole record, rows included, has just been saved: typed rows are
+  // no longer "unsaved", and leaving must not put the old ones back.
+  if(RECIPE_ROW_STATE[recipeId] && RECIPE_ROW_STATE[recipeId].rec === live){
+    RECIPE_ROW_STATE[recipeId].saved = JSON.stringify(live.ingredients || []);
+    RECIPE_ROW_STATE[recipeId].touched = false;
+  }
   /* The ancestor is NOT advanced here, and the reason is worth recording.
 
      The obvious line at this point is "what we are about to publish
@@ -7656,7 +7826,7 @@ async function saveIngredientCard(ingredientId, opts){
   opts.stamp(rec);
   save();
   try{
-    await saveIngredientsToServer();
+    await saveIngredientsToServer([ingredientId]);
     toast(opts.savedToast);
   }catch(e){
     toast('Saved locally, but could not sync to the shared database — try again once online.');
@@ -9362,13 +9532,29 @@ let VIEW_PARAMS = {};
    table back. Leaving asks first -- a typed description or quantity used
    to be dropped silently, which reads exactly like "it didn't save". */
 let RECIPE_LEAVE_GUARD = null;
+/* Per recipe, survives a redraw of the recipe page: what its ingredient
+   rows looked like when last saved, and whether they've been edited
+   since. Kept outside the page's closure because any render() (a
+   background refresh, a colleague's merge) rebuilds that closure, and a
+   fresh closure used to decide the typed rows WERE the saved ones. */
+let RECIPE_ROW_STATE = {};
+function confirmLeaveRecipe(){
+  const guard = RECIPE_LEAVE_GUARD;
+  if(!guard) return true;
+  if(!DATA.recipeBank[guard.recipeId]){ RECIPE_LEAVE_GUARD = null; delete RECIPE_ROW_STATE[guard.recipeId]; return true; }
+  const unsaved = guard.acknowledged ? [] : guard.unsaved();
+  if(unsaved.length && !window.confirm('This recipe has changes that haven’t been saved (' + unsaved.join(', ') + '). Leave without saving them?')) return false;
+  guard.discard();
+  RECIPE_LEAVE_GUARD = null;
+  return true;
+}
 async function setView(view, params){
   if(RECIPE_LEAVE_GUARD && !(view === 'recipe' && params && params.recipeId === RECIPE_LEAVE_GUARD.recipeId)){
-    const guard = RECIPE_LEAVE_GUARD;
-    const unsaved = guard.unsaved();
-    if(unsaved.length && !window.confirm('This recipe has changes that haven’t been saved (' + unsaved.join(', ') + '). Leave without saving them?')) return;
-    guard.discard();
-    RECIPE_LEAVE_GUARD = null;
+    if(!confirmLeaveRecipe()) return;
+  }else if(view === 'recipe' && params && params.recipeId){
+    // Opening a recipe (again) starts its row state fresh, as before; only
+    // a redraw of the page that is already open (render()) keeps it.
+    delete RECIPE_ROW_STATE[params.recipeId];
   }
   VIEW = view; VIEW_PARAMS = params || {};
   /* Every admin view reads the recipe bank, so there is no subset to gate
@@ -9877,7 +10063,7 @@ function renderCleanupView(){
         rec.history.push({at: nowIso(), summary: 'Archived by Clean up — no Tesco link and not used by the kept rotation'});
       });
       save();
-      saveIngredientsToServer()
+      saveIngredientsToServer(a.archivable.map(r=> r.id))
         .then(()=> toast('Cleaned up. Ingredient archive published to every site.'))
         .catch(()=> toast('Recipes cleaned on this device, but the ingredient archive could not be published — try again once online.'));
       draw();
@@ -9952,6 +10138,8 @@ function renderTopbar(){
       menuSel.appendChild(opt);
     });
     menuSel.onchange = async ()=>{
+      if(!confirmLeaveRecipe()){ menuSel.value = EDITING_GROUP; return; }
+      const neverHeld = !menuFor(menuSel.value)[DATA.currentSeason];
       useEditingGroup(menuSel.value);
       setView('rotation'); // immediate paint with whatever's already local -- never blocks on the network
       /* Always attempted, not just when this menu has never been held on
@@ -9963,7 +10151,7 @@ function renderTopbar(){
          device's last known published base -- so it's always safe to try,
          and only ever silently no-ops when this device has its own
          unpublished edit sitting here instead. */
-      await autoSyncSeasonIfSafe(DATA.currentSeason);
+      await autoSyncSeasonIfSafe(DATA.currentSeason, {neverHeld});
       setView('rotation'); // repaint if the sync just filled in real content
       toast('Now editing ' + menuGroupLabel(EDITING_GROUP));
     };
@@ -9994,12 +10182,20 @@ function renderTopbar(){
     sel.appendChild(opt);
   });
   sel.onchange = async ()=>{
+    if(!confirmLeaveRecipe()){ sel.value = DATA.currentSeason; return; }
+    const neverHeld = !menuFor(EDITING_GROUP)[sel.value];
     DATA.currentSeason = sel.value;
-    const pickedMeta = (SEASONS || []).find(s=> s.key === sel.value);
-    if(pickedMeta) ensureSeason(sel.value).label = pickedMeta.label;
     save();
     setView('rotation'); // immediate paint with whatever's already local
-    await autoSyncSeasonIfSafe(DATA.currentSeason);
+    await autoSyncSeasonIfSafe(DATA.currentSeason, {neverHeld});
+    /* Label AFTER the sync: creating the season here first would make
+       autoSyncSeasonIfSafe's "never held by this menu" check read it as
+       held, and it would then refuse to fetch the published rotation. */
+    const pickedMeta = (SEASONS || []).find(s=> s.key === DATA.currentSeason);
+    if(pickedMeta && DATA.seasons[DATA.currentSeason] && DATA.seasons[DATA.currentSeason].label !== pickedMeta.label){
+      DATA.seasons[DATA.currentSeason].label = pickedMeta.label;
+      save();
+    }
     setView('rotation'); // repaint if hydration just filled in real content
   };
 
@@ -10973,7 +11169,12 @@ function renderRecipeView(recipeId, slotCtx){
   function withUnsavedCheck(actionLabel, proceed){
     const unsaved = unsavedDetailsFields();
     if(!unsaved.length){ proceed(); return; }
-    openUnsavedRecipeChangesModal(unsaved, actionLabel, proceed);
+    // Already asked here -- don't ask a second time when this action then
+    // opens another page (Duplicate).
+    openUnsavedRecipeChangesModal(unsaved, actionLabel, ()=>{
+      if(RECIPE_LEAVE_GUARD && RECIPE_LEAVE_GUARD.recipeId === recipeId) RECIPE_LEAVE_GUARD.acknowledged = true;
+      proceed();
+    });
   }
 
   const renameBtn = document.createElement('button');
@@ -11430,6 +11631,7 @@ function renderRecipeView(recipeId, slotCtx){
         recipe.ingredients = newOrder.map(i=> recipe.ingredients[i]);
         logChange(recipeId, 'Ingredients reordered');
         save();
+        clearIngredientRowsUnsaved();
       }
       // The full redraw (refreshing every row's dataset.idx and rebuilt
       // closures/handlers to match the now-committed order) is deferred
@@ -11451,25 +11653,49 @@ function renderRecipeView(recipeId, slotCtx){
      with unsaved typed row edits can put the record back instead of
      leaving half an edit in memory for the next pull to wipe or the next
      unrelated save to publish. */
-  let savedRowsJson = JSON.stringify(recipe.ingredients || []);
-  function markIngredientRowsUnsaved(){
-    ingredientsTouched = true;
+  // Row state is only valid for the exact record object it was taken
+  // from. A pull that swapped in a new object (carrying, say, a
+  // colleague's rows) starts afresh rather than replaying old "saved"
+  // rows over theirs.
+  if(!RECIPE_ROW_STATE[recipeId] || RECIPE_ROW_STATE[recipeId].rec !== recipe){
+    RECIPE_ROW_STATE[recipeId] = {rec: recipe, saved: JSON.stringify(recipe.ingredients || []), touched: false};
+  }
+  ingredientsTouched = RECIPE_ROW_STATE[recipeId].touched;
+  function rowState(){
+    if(!RECIPE_ROW_STATE[recipeId] || RECIPE_ROW_STATE[recipeId].rec !== recipe){
+      RECIPE_ROW_STATE[recipeId] = {rec: recipe, saved: JSON.stringify(recipe.ingredients || []), touched: false};
+    }
+    return RECIPE_ROW_STATE[recipeId];
+  }
+  function paintIngredientRowsUnsaved(){
     const btn = ingCard.querySelector('#saveIngBtn');
     if(btn && !btn.disabled){ btn.textContent = 'Save ingredients — unsaved changes'; btn.classList.add('hasUnsaved'); }
   }
+  function markIngredientRowsUnsaved(){
+    ingredientsTouched = true;
+    if(RECIPE_LEAVE_GUARD && RECIPE_LEAVE_GUARD.recipeId === recipeId) RECIPE_LEAVE_GUARD.acknowledged = false;
+    rowState().touched = true;
+    paintIngredientRowsUnsaved();
+  }
   function clearIngredientRowsUnsaved(){
     ingredientsTouched = false;
-    savedRowsJson = JSON.stringify(recipe.ingredients || []);
+    const st = rowState();
+    st.touched = false;
+    st.saved = JSON.stringify(recipe.ingredients || []);
     const btn = ingCard.querySelector('#saveIngBtn');
     if(btn){ btn.textContent = 'Save ingredients'; btn.classList.remove('hasUnsaved'); }
   }
+  if(ingredientsTouched) setTimeout(paintIngredientRowsUnsaved, 0);
   /* Only what the person actually typed counts. unsavedDetailsFields()
      compares the form with the record, and the record can move under the
      form without anyone typing (a merge, a script) -- that is not
      something to stop them leaving over. */
   let detailsTyped = false;
   root.addEventListener('input', (e)=>{
-    if(e.target && e.target.id && e.target.id.indexOf('f_') === 0) detailsTyped = true;
+    if(e.target && e.target.id && e.target.id.indexOf('f_') === 0){
+      detailsTyped = true;
+      if(RECIPE_LEAVE_GUARD && RECIPE_LEAVE_GUARD.recipeId === recipeId) RECIPE_LEAVE_GUARD.acknowledged = false;
+    }
   });
   RECIPE_LEAVE_GUARD = {
     recipeId,
@@ -11479,10 +11705,12 @@ function renderRecipeView(recipeId, slotCtx){
       return list;
     },
     discard: ()=>{
-      if(ingredientsTouched && DATA.recipeBank[recipeId] === recipe){
-        recipe.ingredients = JSON.parse(savedRowsJson);
+      const st = RECIPE_ROW_STATE[recipeId];
+      if(st && st.touched && st.rec === recipe && DATA.recipeBank[recipeId] === recipe){
+        recipe.ingredients = JSON.parse(st.saved);
       }
       ingredientsTouched = false;
+      delete RECIPE_ROW_STATE[recipeId];
     }
   };
   function drawIngredients(){
@@ -11558,6 +11786,8 @@ function renderRecipeView(recipeId, slotCtx){
       });
       tr.querySelector('.dragHandle').addEventListener('pointerdown', (e)=>{
         if(dragActive) return;
+        const saveBtn = ingCard.querySelector('#saveIngBtn');
+        if(saveBtn && saveBtn.disabled) return; // a row save is in flight
         startRowDrag(e, tr);
       });
       tbody.appendChild(tr);
@@ -11606,12 +11836,36 @@ function renderRecipeView(recipeId, slotCtx){
      add and the row allergen picker used to change the record without
      saving it), and so through commitRecipeEdit, per THE RULE. */
   async function commitIngredientRows(logSummary, savedMessage){
+    /* The save redraws the page, which rebuilt the details form from the
+       record and threw away anything typed there but not yet saved. Put
+       it back afterwards, and mark it typed so leaving still asks. */
+    const typedForm = {};
+    root.querySelectorAll('[id^="f_"]').forEach(el=>{
+      const def = el.tagName === 'SELECT'
+        ? (([...el.options].find(o=> o.defaultSelected) || el.options[0] || {}).value)
+        : el.defaultValue;
+      if(el.value !== def) typedForm[el.id] = el.value;
+    });
+    const restoreTypedForm = ()=>{
+      // Only onto this same recipe's page -- never another one opened
+      // while the save was in the air.
+      if(VIEW !== 'recipe' || !VIEW_PARAMS || VIEW_PARAMS.recipeId !== recipeId) return;
+      Object.keys(typedForm).forEach(id=>{
+        const el = document.getElementById(id);
+        if(el && el.value !== typedForm[id]){
+          el.value = typedForm[id];
+          el.dispatchEvent(new Event('input', {bubbles: true}));
+        }
+      });
+    };
     const btn = ingCard.querySelector('#saveIngBtn');
     const label = 'Save ingredients';
     const liveBefore = DATA.recipeBank[recipeId];
     const versionBefore = liveBefore ? liveBefore.version : undefined;
     btn.disabled = true; btn.textContent = 'Saving…';
-    const unlock = lockFormCard(ingCard);
+    // The whole page, not just this card: the save redraws it, so typing
+    // in the details form meanwhile would be lost.
+    const unlock = lockFormCard(root);
     // qty: keep numeric if parseable, else keep as string (as needed / to taste / selection)
     // Also drops any row that's neither linked nor legacy-named — the only
     // way to end up with one is cancelling the "+ Add ingredient" picker,
@@ -11640,6 +11894,7 @@ function renderRecipeView(recipeId, slotCtx){
     const liveAfter = DATA.recipeBank[recipeId];
     if(liveAfter && liveAfter.version !== versionBefore) clearIngredientRowsUnsaved();
     else markIngredientRowsUnsaved();
+    restoreTypedForm();
   }
 
   return root;
@@ -11878,7 +12133,7 @@ function openIngredientPicker(currentIngredientId, onPick, onCancel, excludeIds)
     rec.history.push({at: nowIso(), summary:'Created from a recipe\'s "+ Add new ingredient"'});
     DATA.ingredients[rec.id] = rec;
     save();
-    saveIngredientsToServer().catch(()=>{ toast('Saved locally, but could not sync to the shared database — try again once online.'); });
+    saveIngredientsToServer([rec.id]).catch(()=>{ toast('Saved locally, but could not sync to the shared database — try again once online.'); });
     overlay.remove();
     onPick(rec.id);
     toast('Added "' + rec.productName + '" to the ingredient database — fill in its details from the Ingredients tab when you get a chance.');
@@ -12255,7 +12510,7 @@ function renderIngredientsView(){
           rec.history.push({at: nowIso(), summary: rec.status==='archived' ? 'Archived' : 'Restored from archive'});
           save();
           toast((rec.status==='archived' ? 'Archived ' : 'Restored ') + (rec.productName||'ingredient'));
-          saveIngredientsToServer().catch(()=>{ toast('Saved locally, but could not sync to the shared database — try again once online.'); });
+          saveIngredientsToServer([rec.id]).catch(()=>{ toast('Saved locally, but could not sync to the shared database — try again once online.'); });
           draw();
         };
         list.appendChild(row);
@@ -15598,10 +15853,17 @@ async function rbShowAppShell(){
      never swap a real list for that fallback. */
   // Not awaited: it must never hold up the recipe-bank pull below.
   loadSeasonsConfig().then(freshSeasons=>{
-    if(freshSeasons && freshSeasons !== SEASONS_DEFAULT && freshSeasons.length){
-      SEASONS = freshSeasons;
-      render();
-    }
+    if(!freshSeasons || freshSeasons === SEASONS_DEFAULT || !freshSeasons.length) return;
+    // A slow Function falls back to the static file from the last deploy,
+    // which can be older than what this page already knows. Never let a
+    // re-read make a season disappear.
+    const keepsAll = (SEASONS || []).every(s=> freshSeasons.some(f=> f.key === s.key));
+    // The hard-coded fallback is a guess, not something to protect.
+    if(!keepsAll && SEASONS !== SEASONS_DEFAULT) return;
+    if(JSON.stringify(freshSeasons) === JSON.stringify(SEASONS)) return;
+    SEASONS = freshSeasons;
+    syncSeasonLabelsFromSeasonsList();
+    renderTopbar(); // not render(): that would rebuild a form mid-typing
   }).catch(()=>{});
   /* Pull the shared recipe bank before anything else touches recipes.
      autoSyncSeasonIfSafe below can import a season, and an import that
@@ -15637,6 +15899,7 @@ function openRecipeBankAdmin(){
 }
 
 function closeRecipeBankAdmin(){
+  if(!confirmLeaveRecipe()) return;
   document.getElementById('rbAdminRoot').style.display = 'none';
   document.body.style.overflow = '';
 }
