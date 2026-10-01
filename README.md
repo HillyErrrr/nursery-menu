@@ -2021,3 +2021,17 @@ The 4-week rotation length was written into about 25 places in Staff admin. Each
   - the switch being remembered, prep sheets, the list view and the combined shopping list;
   - no switch at Penarth, and the preview link.
 - Her 11 suites, T1–T8, the season check, the station and today's-menu checks, the second- and third-pass checks, and the all-sites sweep still pass.
+
+### Holiday club menu pack
+
+The Holiday club prints in its own, lighter style.
+
+- **One page for the menu:** both weeks go on one A4 landscape page. A longer rotation takes one page per two weeks.
+- **Header:** the menu name, its sites and ages, and Little Adventures' own rainbow, paper plane and suitcase illustrations.
+- **Available all day:** the all-day line sits under the header.
+- **The weeks:** each week is a coloured table. It shows the course names and times, every dish's description, and its allergen icons.
+- **Allergen key:** the 14-allergen key runs along the bottom, as on the nursery menu.
+- **Allergen matrix:** its pages follow the menu page.
+- **No weaning page:** the weaning-stages page is left out.
+
+The nursery menu pack is unchanged. Checked: both weeks and the key fit on the page, no description is cut off, Download PDF works, and the nursery pack still has its weaning page and four week pages.
