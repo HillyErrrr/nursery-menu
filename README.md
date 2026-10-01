@@ -1973,3 +1973,51 @@ The kitchen page now opens on today's menu instead of the last week and day the 
 - **A season with no start date:** a season with no start date can't be placed in the rotation, so the page falls back to the last week and day the device showed. Give every season a start date in Staff admin to avoid this.
 
 Checked: 13 date checks covering the season start, the wrap back to Week 1, a weekend, reloading, looking ahead, the midnight rollover, the list view, a season with no start date and a 1024-wide iPad. Her 11 suites, T1–T8, the season check, the station checks and the all-sites sweep still pass.
+
+## 1 October 2026: extra menus (Holiday club)
+
+An **extra menu** runs alongside the nursery menu, on set dates, at chosen sites. The Holiday club at Cheddar and Taunton is the first one. It is not a season: the nursery menu carries on as normal, and on holiday club days the kitchen has both.
+
+### Staff admin
+
+- **Choosing it:** extra menus appear in the **Editing** list at the top ("Editing: Holiday club"). The same list has **+ Add an extra menu…** for new ones. When an extra menu is being edited, the season picker is hidden, because an extra menu has one rotation and no seasons.
+- **Menu settings** (a new tab under Build, shown only for an extra menu) holds:
+  - the name;
+  - the rotation length, from 1 to 6 weeks;
+  - the courses it serves, each with its own name and time on this menu (Main is "Lunch, from 11.15am" and Snack is "Afternoon snack, 2.00pm" for the Holiday club; there is no breakfast);
+  - the "Available all day" line ("Fruit bowl and crudités");
+  - the sites;
+  - the dates it runs;
+  - "Who's eating": children aged 4–10, one serving each, with no staff portions.
+- **Saving settings:** settings are saved to the shared `_config/extra-menus.json`. A save re-reads that file and replaces only the menu being edited, so two admins working on different extra menus don't undo each other. The copy built into `app.html` is only the starting point before anything has been saved there.
+- **The rotation:** it is planned in **The rotation**, the same as the nursery menus, using the same recipe bank. The week grid shows only the courses this menu serves, under its own names. It is published with **Publish changes** to `holiday-club/holiday-club.json`, with the usual three-way merge.
+- **Recipes:** an extra menu can use any recipe in the bank. The "Available at" setting on a recipe is still about the two nursery menus.
+- **Clean-up:** it always keeps the dishes an extra menu uses.
+- **Menu pack:** for an extra menu, the menu pack prints its own courses, names, times and descriptions, plus the all-day line, for however many weeks it has. It leaves out the weaning-stages page.
+- **Preview:** **Preview kitchen page** opens the menu at one of its sites on any date, marked as a preview (`?xmenu=holiday-club`).
+
+### Kitchen page
+
+- **When it shows:** during one of its runs, or from three days before a run starts so the kitchen can prep ahead. At those times the sites it is set up for get a **Nursery | Holiday club** switch, in the station's top bar and above the week tabs in the list view.
+- **The holiday club screen:** a green strip names the holiday, its dates and which week of the rotation it is. The course list starts with an "Available all day" card. Courses use the menu's own names and times. Each dish shows its description.
+- **Weeks:** each run starts again at Week 1, and the page opens on today's day in the run.
+- **Separate state:** each menu keeps its own week and day, ticks, headcount and shopping grid. The menu chosen today is remembered on that device until midnight.
+- **Shopping list:** the weekly shopping list adds the other menu in, from that menu's own grid and for the week it is on. A note says it has done so, or says that the other menu is running but has no numbers yet.
+- **Prep sheets:** they use the menu's course names and include the menu name.
+- **Midnight:** a tablet left on overnight reloads if a run has started or ended.
+
+The 4-week rotation length was written into about 25 places in Staff admin. Each place now reads the rotation's own length. Nursery seasons are still 4 weeks and publish exactly as before.
+
+### Checked
+
+- 23 new checks (`extra.js`) cover:
+  - the settings: dates, sites, courses, the all-day line and the children-only headcount;
+  - planning and publishing a 2-week rotation;
+  - the week grid, the menu pack and clean-up;
+  - changing the rotation length;
+  - switching back to a nursery menu;
+  - adding a second extra menu;
+  - the kitchen switch, strip, all-day card, course names, today in the run, descriptions and separate ticks and headcounts;
+  - the switch being remembered, prep sheets, the list view and the combined shopping list;
+  - no switch at Penarth, and the preview link.
+- Her 11 suites, T1–T8, the season check, the station and today's-menu checks, the second- and third-pass checks, and the all-sites sweep still pass.

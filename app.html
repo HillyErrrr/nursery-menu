@@ -730,6 +730,31 @@ body.draggingIngredient{-webkit-user-select:none;user-select:none;}
 .rbAdminTriggerBtn:hover{color:var(--ink, #1F3C55);}
 #rbAdminRoot .btn.hasUnsaved{background:#B8860B;border-color:#B8860B;color:#fff;}
 
+/* ---- extra menus (Menu settings) ---- */
+.rbExtraNote{font-size:12.5px;color:#C9D2DA;}
+#rbAdminRoot .xmGrid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px;align-items:start;}
+#rbAdminRoot .xmCol{display:flex;flex-direction:column;gap:16px;}
+#rbAdminRoot .xmCard h3{margin:0 0 4px;}
+#rbAdminRoot .xmTable{width:100%;border-collapse:collapse;margin-top:8px;}
+#rbAdminRoot .xmTable th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-faint);padding:0 8px 6px 0;border-bottom:1px solid var(--line-strong);}
+#rbAdminRoot .xmTable td{padding:7px 8px 7px 0;border-bottom:1px solid var(--line);vertical-align:middle;}
+#rbAdminRoot .xmTable input[type=text],#rbAdminRoot .xmTable input[type=date],#rbAdminRoot .xmTable input[type=number]{width:100%;box-sizing:border-box;padding:6px 8px;border:1px solid var(--line-strong);border-radius:8px;background:#fff;color:var(--ink);}
+#rbAdminRoot .xmTable input:disabled{background:var(--paper-dim);color:var(--ink-faint);}
+#rbAdminRoot .xmCheck{display:flex;align-items:center;gap:8px;font-size:13.5px;min-height:30px;}
+#rbAdminRoot .xmCheck input{width:18px;height:18px;margin:0;accent-color:var(--ink);}
+#rbAdminRoot .xmSites{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;margin-top:2px;}
+#rbAdminRoot .xmBrand{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:700;margin-top:10px;}
+#rbAdminRoot .xmWeeks{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px;}
+#rbAdminRoot .xmWeeks button{width:44px;height:40px;border-radius:8px;border:1px solid var(--line-strong);background:#fff;color:var(--ink);font-weight:700;font-size:14px;}
+#rbAdminRoot .xmWeeks button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff;}
+#rbAdminRoot .xmChip{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--sage-light);color:var(--sage-text);white-space:nowrap;}
+#rbAdminRoot .xmChip.next{background:var(--ink);color:#fff;}
+#rbAdminRoot .xmKitchen{background:var(--sage-light);border-color:#D3D9C9;}
+#rbAdminRoot .xmKitchen ul{margin:6px 0 0;padding-left:18px;font-size:13px;color:var(--sage-text);display:flex;flex-direction:column;gap:5px;}
+#rbAdminRoot .xmSaveRow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+#rbAdminRoot .xmDirty{font-size:12.5px;font-weight:700;color:#7A5B00;}
+@media (max-width:900px){ #rbAdminRoot .xmGrid{grid-template-columns:1fr;} }
+
 /* ---------- prep station (the iPad layout) ----------
    One screen that does not scroll as a page: a navy bar with the day, the
    day's courses down the left, and the chosen dish's ingredients and method
@@ -911,6 +936,27 @@ body.hcSheetOpen .hcSheetFoot{display:flex;justify-content:flex-end;padding:0 16
   font-size:15px;font-weight:700;
 }
 
+/* extra menus (Holiday club) */
+.stMenuSwitch{display:flex;gap:2px;padding:3px;border-radius:23px;background:rgba(255,255,255,0.10);flex:none;}
+.stMenuSeg{height:40px;border-radius:20px;border:0;background:transparent;color:#D5DCE2;font-size:14px;font-weight:700;padding:0 15px;white-space:nowrap;}
+.stMenuSeg.on{background:#fff;color:var(--ink);}
+.stTop.hasSwitch .stShopLabel{display:none;}
+.stTop.hasSwitch .stBtn.shop{padding:0;width:44px;}
+.stTop.hasSwitch .stDay{min-width:50px;}
+.stTop.hasSwitch .stSite{max-width:170px;}
+.stExtraStrip{flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:8px 20px;background:var(--sage-light);color:var(--sage-text);font-size:14px;border-bottom:1px solid #D3D9C9;}
+.stExtraStrip .stIco{flex:none;}
+.stExtraNote{margin-left:auto;color:var(--ink-soft);font-size:13px;}
+.stAllDay{flex:none;display:flex;gap:10px;align-items:center;border:1.5px dashed var(--sage);background:#F7F8F4;border-radius:11px;padding:10px 12px;color:var(--sage-text);}
+.stAllDay .stIco{width:24px;height:24px;flex:none;}
+.stAllDay > span{display:flex;flex-direction:column;gap:1px;min-width:0;}
+.stAllDayLabel{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
+.stAllDayText{font-family:'Roca','Space Grotesk',sans-serif;font-weight:700;font-size:15.5px;line-height:1.2;}
+.stDishDesc{font-size:14.5px;font-style:italic;color:var(--ink-soft);}
+.menuTabs .tab.active{background:#fff;border-color:#fff;color:var(--ink);}
+.allDayNote{margin:18px 0 0;padding:12px 16px;border:1.5px dashed var(--sage);border-radius:var(--radius);background:#F7F8F4;color:var(--sage-text);font-size:15px;}
+.allDayLabel{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-right:6px;}
+.shopOtherNote{margin:0 16px 12px;padding:10px 14px;border-radius:8px;background:var(--sage-light);color:var(--sage-text);font-size:13px;line-height:1.45;}
 @media (max-width:1120px){
   .stShopLabel{display:none;}
   .stTop{gap:10px 12px;}
@@ -973,6 +1019,7 @@ body.hcSheetOpen .hcSheetFoot{display:flex;justify-content:flex-end;padding:0 16
     </div>
     <h1 id="pageTitle">Nursery kitchen prep list</h1>
     <div class="ticket-sub" id="menuSummary"></div>
+    <div class="tabrow menuTabs" id="menuTabs" role="group" aria-label="Menu"></div>
     <div class="tabrow" id="weekTabs"></div>
     <div class="tabrow" id="dayTabs"></div>
   </div>
@@ -1039,6 +1086,7 @@ body.hcSheetOpen .hcSheetFoot{display:flex;justify-content:flex-end;padding:0 16
       <div class="brand">🧑‍🍳 Recipe Bank</div>
       <select id="rbMenuSelect" title="Which of the two menus you are editing. They are separate rotations — editing one never changes the other."></select>
       <select id="rbSeasonSelect"></select>
+      <span id="rbExtraNote" class="rbExtraNote" hidden>Runs on its own dates, not by season</span>
       <button type="button" id="rbPreviewBtn" class="rbTopbarBtn" title="Open the kitchen page for the menu you are editing, in a new tab — never affects the live kitchen iPad">👁 Preview kitchen page ↗</button>
       <select id="rbPreviewSiteSelect" class="rbHiddenAction" hidden></select>
       <span class="navspacer"></span>
@@ -1049,6 +1097,7 @@ body.hcSheetOpen .hcSheetFoot{display:flex;justify-content:flex-end;padding:0 16
           <button data-view="ingredients">Ingredients</button>
           <button data-view="bank">Recipes</button>
           <button data-view="rotation">The rotation</button>
+          <button data-view="menuSettings" id="rbMenuSettingsTab" hidden>Menu settings</button>
         </div></div>
         <div class="navdiv"></div>
         <div class="navgroup"><span class="glabel">Check</span><div class="tabs">
@@ -1207,6 +1256,58 @@ const SEASONS_DEFAULT = [
   {key:'autumn-winter-2025', label:'Autumn/Winter 2026', file:'autumn-winter-2025.json', startDate:'2026-09-07'},
 ];
 let SEASONS = SEASONS_DEFAULT;
+
+/* ---------- extra menus ----------
+   A menu that runs ALONGSIDE the nursery menu, on set dates, at chosen
+   sites -- the Holiday club at Cheddar and Taunton is the first. Each has
+   its own rotation length (any number of weeks), its own names and times
+   for the courses, an "available all day" line, and its own headcount
+   groups. Its rotation is planned and published from Staff admin like any
+   other menu, under a menu group named after its key, in one file
+   (<key>/<key>.json). The settings themselves live in the shared
+   '_config/extra-menus.json'; the copy below is only the starting point
+   used before anything has been saved there. */
+const EXTRA_MENUS_DEFAULT = {
+  'holiday-club': {
+    label: 'Holiday club',
+    weeks: 2,
+    sites: ['little-adventures-cheddar', 'little-adventures-taunton'],
+    courses: {
+      'Main': {name: 'Lunch', time: 'from 11.15am'},
+      'Vegetarian Option': {name: 'Vegetarian option', time: ''},
+      'Dessert': {name: 'Dessert', time: ''},
+      'Snack': {name: 'Afternoon snack', time: '2.00pm'},
+      'Tea': {name: 'Light tea', time: 'from 3.15pm'}
+    },
+    allDay: 'Fruit bowl and crudités',
+    groups: [{key: 'k1', label: 'Children 4–10 years', mult: 1}],
+    runs: []
+  }
+};
+let EXTRA_MENUS = EXTRA_MENUS_DEFAULT;
+function isExtraMenu(key){
+  return !!key && !!EXTRA_MENUS && Object.prototype.hasOwnProperty.call(EXTRA_MENUS, key);
+}
+function extraMenuWeeks(cfg){
+  const n = Math.round(Number(cfg && cfg.weeks) || 0);
+  return Math.min(6, Math.max(1, n || 2));
+}
+function extraMenuGroups(cfg){
+  const gs = (cfg && Array.isArray(cfg.groups) ? cfg.groups : [])
+    .filter(g=> g && g.key && g.label)
+    .map(g=> ({key: String(g.key), label: String(g.label), mult: Number(g.mult) > 0 ? Number(g.mult) : 1}));
+  return gs.length ? gs : [{key: 'k1', label: 'Children', mult: 1}];
+}
+async function loadExtraMenusConfig(){
+  try{
+    const res = await fetchSeasonJson('_config', 'extra-menus.json');
+    if(res.ok){
+      const data = await res.json();
+      if(data && data.menus && typeof data.menus === 'object' && !Array.isArray(data.menus)) return data.menus;
+    }
+  }catch(e){}
+  return EXTRA_MENUS_DEFAULT;
+}
 let SEASON_KEY = '';
 let SEASON_OVERRIDDEN = false;
 function pickSeasonForDate(seasons, dateKey){
@@ -1244,12 +1345,14 @@ const ALLERGEN_COLORS = {
   treenuts: '#5C3A15', sesame: '#DCB987', soybean: '#28A237',
   celery: '#8FBF63', mustard: '#F8CA16', lupin: '#9C4795', so2: '#455560',
 };
-const GROUPS = [
+let GROUPS = [
   {key:'c1', label:'Children 1-2 years', mult:0.75},
   {key:'c2', label:'Children 2-3 years', mult:0.9},
   {key:'c3', label:'Children 3-4 years', mult:1},
   {key:'staff', label:'Staff', mult:1.8}
 ];
+// The nursery's own groups. An extra menu brings its own (see extraMenuGroups).
+const NURSERY_GROUPS = GROUPS;
 const WHOLE_UNITS = new Set(['ind','tins','tin','cans','can','packs','pack','slices','sheets','sheet','tube','tubes','cup','cups','tsp each','cloves','clove','wraps','wrap','rolls','roll','bunches','bunch','punnets','punnet','loaves','loaf']);
 
 /* ---------- Tesco pack-size reference ----------
@@ -1850,7 +1953,7 @@ function todayKey(){
 let CHECKED_DAY = null;
 
 function checkedStorageKey(){
-  return 'prep:'+SITE_SLUG+':'+SEASON_KEY+':'+todayKey()+':'+state.week+':'+state.day;
+  return 'prep:'+SITE_SLUG+':'+storeKey()+':'+todayKey()+':'+state.week+':'+state.day;
 }
 /* The calendar week this shop belongs to, ISO-style (Monday-based), so a
    list stays put from Monday to Friday and a new cycle starts clean. */
@@ -1864,9 +1967,9 @@ function shopCycleKeyFor(d){
   const week = Math.ceil((((t - yearStart) / 86400000) + 1) / 7);
   return t.getUTCFullYear() + '-W' + String(week).padStart(2, '0');
 }
-function shopGridKey(){ return 'shopgrid:'+SITE_SLUG+':'+SEASON_KEY+':'+shopCycleKey()+':'+state.week; }
-function shopCheckedKey(){ return 'shopchecked:'+SITE_SLUG+':'+SEASON_KEY+':'+shopCycleKey()+':'+state.week; }
-function shopOrderKey(){ return 'shoporder:'+SITE_SLUG+':'+SEASON_KEY+':'+shopCycleKey()+':'+state.week; }
+function shopGridKey(){ return 'shopgrid:'+SITE_SLUG+':'+storeKey()+':'+shopCycleKey()+':'+state.week; }
+function shopCheckedKey(){ return 'shopchecked:'+SITE_SLUG+':'+storeKey()+':'+shopCycleKey()+':'+state.week; }
+function shopOrderKey(){ return 'shoporder:'+SITE_SLUG+':'+storeKey()+':'+shopCycleKey()+':'+state.week; }
 
 /* ---------- today's menu ----------
    The rotation runs in whole weeks from the season's start date: the
@@ -1885,11 +1988,11 @@ function mondayOf(d){
   x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
   return x;
 }
-function todaysMenuSlot(now){
+function nurseryMenuSlot(menu, now){
   now = now || new Date();
   const season = SEASONS.find(s=> s.key === SEASON_KEY);
   const start = season && localDateFromKey(season.startDate);
-  const weeks = Object.keys(MENU).sort((a,b)=> a - b);
+  const weeks = Object.keys(menu || {}).sort((a,b)=> a - b);
   if(!start || !weeks.length) return null;
   let day = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const weekend = day.getDay() === 0 || day.getDay() === 6;
@@ -1898,10 +2001,174 @@ function todaysMenuSlot(now){
   const weeksIn = Math.round((mondayOf(day) - mondayOf(start)) / 86400000 / 7);
   const idx = weeksIn < 0 ? 0 : weeksIn % weeks.length;
   const week = Number(weeks[idx]);
-  const dayName = weeksIn < 0 ? Object.keys(MENU[weeks[0]])[0] : DAY_NAMES[day.getDay()];
-  if(!MENU[week] || !MENU[week][dayName]) return null;
+  const dayName = weeksIn < 0 ? Object.keys(menu[weeks[0]])[0] : DAY_NAMES[day.getDay()];
+  if(!menu[week] || !menu[week][dayName]) return null;
   return { week, day: dayName, weekend, beforeStart: weeksIn < 0 };
 }
+function todaysMenuSlot(now){
+  return ACTIVE_EXTRA ? extraMenuSlot(ACTIVE_EXTRA, now) : nurseryMenuSlot(MENU, now);
+}
+
+/* ---------- extra menus on the kitchen page ----------
+   Shown only at the sites an extra menu is set up for, while one of its
+   runs is on (or starts within the next three days, so the kitchen can
+   prep ahead). A "Nursery | Holiday club" switch then appears; each menu
+   keeps its own week and day, ticks, headcount and shopping grid. */
+let ACTIVE_EXTRA = null;      // {key, cfg, run, menu, preview} while an extra menu is showing
+let EXTRAS_HERE = [];          // the extra menus this page can switch to
+let NURSERY_MENU = {};
+let EXTRAS_RUNNING_AT_LOAD = '';
+let OTHER_SHOP = [];           // the other menus' shopping grids for this week
+function storeKey(){ return ACTIVE_EXTRA ? 'xm-' + ACTIVE_EXTRA.key : SEASON_KEY; }
+function kitchenMenuKey(){ return 'kitchenMenu:' + SITE_SLUG; }
+function addDays(d, n){ const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() + n); return x; }
+function localToday(now){ now = now || new Date(); return new Date(now.getFullYear(), now.getMonth(), now.getDate()); }
+function dateKeyOf(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function shortDate(key){
+  const d = localDateFromKey(key);
+  return d ? d.toLocaleDateString('en-GB', {weekday: 'short', day: 'numeric', month: 'short'}) : '';
+}
+function extraRunFor(cfg, now){
+  const today = localToday(now);
+  const runs = (cfg && Array.isArray(cfg.runs)) ? cfg.runs : [];
+  for(const run of runs){
+    const from = localDateFromKey(run && run.from), to = localDateFromKey(run && run.to);
+    if(!from || !to || to < from) continue;
+    if(today >= addDays(from, -3) && today <= to) return run;
+  }
+  return null;
+}
+function extraMenusRunningHere(now){
+  return Object.keys(EXTRA_MENUS || {}).filter(k=>{
+    const cfg = EXTRA_MENUS[k];
+    return cfg && Array.isArray(cfg.sites) && cfg.sites.indexOf(SITE_SLUG) !== -1 && !!extraRunFor(cfg, now);
+  }).sort();
+}
+/* A preview opened from Staff admin on a day the menu isn't running: show
+   it as its next run would, or from this Monday if it has none. */
+function previewRunFor(cfg){
+  const today = localToday();
+  const runs = ((cfg && cfg.runs) || []).filter(r=> localDateFromKey(r.from) && localDateFromKey(r.to));
+  const next = runs.find(r=> localDateFromKey(r.to) >= today) || runs[0];
+  if(next) return next;
+  const mon = mondayOf(today);
+  return {name: 'Preview', from: dateKeyOf(mon), to: dateKeyOf(addDays(mon, 7 * extraMenuWeeks(cfg) - 3))};
+}
+/* Within a run, Week 1 is the week the run starts in, and the weeks go
+   round from there; every run starts again at Week 1. Saturday and Sunday
+   show the coming Monday, if the run carries on to it. */
+function extraMenuSlot(x, now){
+  const menu = x && x.menu;
+  const weeks = Object.keys(menu || {}).sort((a,b)=> a - b);
+  const from = x && x.run ? localDateFromKey(x.run.from) : null;
+  const to = x && x.run ? localDateFromKey(x.run.to) : null;
+  if(!weeks.length || !from) return null;
+  const today = localToday(now);
+  let day = today;
+  const beforeStart = day < from;
+  if(beforeStart) day = new Date(from.getTime());
+  let weekend = day.getDay() === 0 || day.getDay() === 6;
+  if(weekend) day = addDays(day, day.getDay() === 6 ? 2 : 1);
+  if(to && day > to) return null;
+  const weeksIn = Math.max(0, Math.round((mondayOf(day) - mondayOf(from)) / 86400000 / 7));
+  const week = Number(weeks[weeksIn % weeks.length]);
+  const dayName = DAY_NAMES[day.getDay()];
+  if(!menu[week] || !menu[week][dayName]) return null;
+  return { week, day: dayName, weekend: weekend || beforeStart, beforeStart };
+}
+/* The name and serving time an extra menu gives a course ("Lunch · from
+   11.15am" for Main); the nursery menu shows course names as they are. */
+function courseLabel(courseName){
+  const c = ACTIVE_EXTRA && ACTIVE_EXTRA.cfg && ACTIVE_EXTRA.cfg.courses && ACTIVE_EXTRA.cfg.courses[courseName];
+  if(!c) return courseName;
+  const name = String(c.name || '').trim() || courseName;
+  return c.time ? name + ' · ' + String(c.time).trim() : name;
+}
+function defaultHeadcounts(){ const o = {}; GROUPS.forEach(g=> o[g.key] = 0); o.veg = 0; return o; }
+async function loadExtraMenusHere(configPromise){
+  EXTRA_MENUS = await configPromise;
+  const forced = new URLSearchParams(location.search).get('xmenu');
+  const keys = extraMenusRunningHere();
+  EXTRAS_RUNNING_AT_LOAD = keys.join(',');
+  if(forced && isExtraMenu(forced) && keys.indexOf(forced) === -1) keys.push(forced);
+  const found = await Promise.all(keys.map(async key=>{
+    const cfg = EXTRA_MENUS[key];
+    const preview = key === forced;
+    let menu = null;
+    try{
+      const res = await fetchSeasonJson(key, key + '.json');
+      if(res.ok) menu = await res.json();
+    }catch(e){}
+    if(!menu || typeof menu !== 'object' || !Object.keys(menu).length){
+      if(!preview) return null;
+      menu = {};
+    }
+    const run = extraRunFor(cfg) || (preview ? previewRunFor(cfg) : null);
+    return {key, cfg, run, menu, preview};
+  }));
+  EXTRAS_HERE = found.filter(Boolean);
+  if(EXTRAS_HERE.some(x=> x.preview)) applyExtraPreviewBanner(EXTRAS_HERE.find(x=> x.preview));
+}
+function applyExtraPreviewBanner(x){
+  const banner = document.createElement('div');
+  banner.id = 'extraPreviewBanner';
+  banner.style.cssText = 'background:#F4C542;color:#1A303C;font-weight:600;font-size:13.5px;text-align:center;padding:8px 12px;';
+  banner.textContent = 'Preview only — showing the ' + (x.cfg.label || x.key) + ' menu. The kitchen iPad is not affected by this link.';
+  const head = document.querySelector('.ticket-head');
+  if(head) head.parentNode.insertBefore(banner, head);
+}
+function setKitchenContext(key){
+  ACTIVE_EXTRA = (key && key !== 'nursery') ? (EXTRAS_HERE.find(x=> x.key === key) || null) : null;
+  MENU = ACTIVE_EXTRA ? ACTIVE_EXTRA.menu : NURSERY_MENU;
+  GROUPS = ACTIVE_EXTRA ? extraMenuGroups(ACTIVE_EXTRA.cfg) : NURSERY_GROUPS;
+  state.headcounts = defaultHeadcounts();
+  state.stationSel = null;
+  state.hcSheetOpen = false;
+}
+async function useKitchenMenu(key){
+  const current = ACTIVE_EXTRA ? ACTIVE_EXTRA.key : 'nursery';
+  if(key === current) return;
+  await saveSelection();
+  setKitchenContext(key);
+  try{ await window.storage.set(kitchenMenuKey(), JSON.stringify({key: ACTIVE_EXTRA ? ACTIVE_EXTRA.key : 'nursery', day: todayKey()})); }catch(e){}
+  await loadContextState();
+  renderAll();
+}
+/* The other menus' shopping grids for this week, so the shopping list can
+   add them in: each menu's own numbers, on the week that menu is on. */
+async function loadOtherShopContexts(){
+  const ctxs = [];
+  if(ACTIVE_EXTRA) ctxs.push({label: 'Nursery', menu: NURSERY_MENU, groups: NURSERY_GROUPS, store: SEASON_KEY, slot: nurseryMenuSlot(NURSERY_MENU)});
+  EXTRAS_HERE.forEach(x=>{
+    if(x === ACTIVE_EXTRA || x.preview || !x.run) return;
+    ctxs.push({label: x.cfg.label || x.key, menu: x.menu, groups: extraMenuGroups(x.cfg), store: 'xm-' + x.key, slot: extraMenuSlot(x)});
+  });
+  const out = [];
+  for(const c of ctxs){
+    let week = c.slot ? c.slot.week : null;
+    if(week == null){
+      try{
+        const sel = await window.storage.get('lastSelection:' + SITE_SLUG + ':' + c.store);
+        if(sel){ const v = JSON.parse(sel.value); if(v.week) week = v.week; }
+      }catch(e){}
+    }
+    if(week == null || !c.menu[week]) continue;
+    let grid = {};
+    try{
+      const g = await window.storage.get('shopgrid:' + SITE_SLUG + ':' + c.store + ':' + shopCycleKey() + ':' + week);
+      grid = g ? JSON.parse(g.value) : {};
+    }catch(e){}
+    out.push({label: c.label, menu: c.menu, week, grid, groups: c.groups});
+  }
+  OTHER_SHOP = out;
+}
+function otherShopServings(o){
+  return Object.keys(o.menu[o.week] || {}).reduce((sum, day)=>{
+    const hc = o.grid[day] || {};
+    return sum + o.groups.reduce((t, g)=> t + (Number(hc[g.key]) || 0) * g.mult, 0);
+  }, 0);
+}
+
 function isTodaysSlot(week, day){
   const t = todaysMenuSlot();
   return !!t && !t.weekend && !t.beforeStart && Number(t.week) === Number(week) && t.day === day;
@@ -1923,6 +2190,11 @@ async function goToTodaysMenu(){
 }
 async function checkDateRolledOver(){
   if(TODAY_SHOWN_FOR === null || TODAY_SHOWN_FOR === todayKey()) return;
+  // An extra menu's run may have started or ended overnight.
+  if(!EXTRAS_HERE.some(x=> x.preview) && extraMenusRunningHere().join(',') !== EXTRAS_RUNNING_AT_LOAD){
+    location.reload();
+    return;
+  }
   // A new season may have started overnight; that needs its own menu file.
   if(!SEASON_OVERRIDDEN && pickSeasonForDate(SEASONS, todayKey()).key !== SEASON_KEY){
     location.reload();
@@ -1934,9 +2206,11 @@ setInterval(checkDateRolledOver, 60000);
 document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) checkDateRolledOver(); });
 window.addEventListener('focus', checkDateRolledOver);
 
-async function loadState(){
+/* Everything kept per menu: the week and day shown, the headcount, today's
+   ticks and this week's shopping grid. Re-read when the menu changes. */
+async function loadContextState(){
   try{
-    const sel = await window.storage.get('lastSelection:'+SITE_SLUG+':'+SEASON_KEY);
+    const sel = await window.storage.get('lastSelection:'+SITE_SLUG+':'+storeKey());
     if(sel){
       const v = JSON.parse(sel.value);
       if(v.week && MENU[v.week]) state.week = v.week;
@@ -1946,8 +2220,14 @@ async function loadState(){
   // Today's menu wins over the last one shown; the saved one is only the
   // fallback for a season with no start date.
   applyTodaysMenu();
+  // Never leave the page on a week or day this menu doesn't have (a 2-week
+  // holiday menu has no Week 4).
+  const weeks = Object.keys(MENU).sort((a,b)=> a - b);
+  if(weeks.length && !MENU[state.week]) state.week = Number(weeks[0]);
+  const days = MENU[state.week] ? Object.keys(MENU[state.week]) : [];
+  if(days.length && days.indexOf(state.day) === -1) state.day = days[0];
   try{
-    const hc = await window.storage.get('headcounts:'+SITE_SLUG+':'+SEASON_KEY);
+    const hc = await window.storage.get('headcounts:'+SITE_SLUG+':'+storeKey());
     if(hc){
       const v = JSON.parse(hc.value);
       state.headcounts = Object.assign(state.headcounts, v);
@@ -1957,6 +2237,23 @@ async function loadState(){
   await loadShopGrid();
   await loadShopChecked();
   await loadShopOrder();
+  await loadOtherShopContexts();
+}
+
+async function loadState(){
+  // Which menu: the one chosen earlier today, if it is still here.
+  let pick = 'nursery';
+  try{
+    const km = await window.storage.get(kitchenMenuKey());
+    if(km){
+      const v = JSON.parse(km.value);
+      if(v && v.key && v.day === todayKey()) pick = v.key;
+    }
+  }catch(e){}
+  const forced = EXTRAS_HERE.find(x=> x.preview);
+  if(forced) pick = forced.key;
+  setKitchenContext(pick);
+  await loadContextState();
   let chosen = null;
   try{
     const pm = await window.storage.get(prepModeKey());
@@ -1977,7 +2274,7 @@ async function loadChecked(){
   }
 }
 
-function emptyDayHC(){ return {c1:0,c2:0,c3:0,staff:0,veg:0}; }
+function emptyDayHC(){ const o = {}; GROUPS.forEach(g=> o[g.key] = 0); o.veg = 0; return o; }
 
 async function loadShopGrid(){
   try{
@@ -2016,14 +2313,14 @@ async function loadShopOrder(){
 }
 
 async function saveSelection(){
-  try{ await window.storage.set('lastSelection:'+SITE_SLUG+':'+SEASON_KEY, JSON.stringify({week:state.week, day:state.day})); }catch(e){}
+  try{ await window.storage.set('lastSelection:'+SITE_SLUG+':'+storeKey(), JSON.stringify({week:state.week, day:state.day})); }catch(e){}
 }
 async function saveHeadcounts(){
-  try{ await window.storage.set('headcounts:'+SITE_SLUG+':'+SEASON_KEY, JSON.stringify(state.headcounts)); }catch(e){}
+  try{ await window.storage.set('headcounts:'+SITE_SLUG+':'+storeKey(), JSON.stringify(state.headcounts)); }catch(e){}
 }
 async function saveChecked(){
   // CHECKED_DAY, not todayKey(): see the note above loadChecked.
-  const key = 'prep:'+SITE_SLUG+':'+SEASON_KEY+':'+(CHECKED_DAY || todayKey())+':'+state.week+':'+state.day;
+  const key = 'prep:'+SITE_SLUG+':'+storeKey()+':'+(CHECKED_DAY || todayKey())+':'+state.week+':'+state.day;
   try{ await window.storage.set(key, JSON.stringify(state.checked)); }catch(e){}
 }
 async function saveShopGrid(){
@@ -2097,6 +2394,20 @@ function renderDateLabel(){
 }
 
 function renderTabs(){
+  const menuTabs = document.getElementById('menuTabs');
+  if(menuTabs){
+    menuTabs.innerHTML = '';
+    menuTabs.style.display = EXTRAS_HERE.length ? '' : 'none';
+    [{key: 'nursery', label: 'Nursery'}].concat(EXTRAS_HERE.map(x=> ({key: x.key, label: x.cfg.label || x.key}))).forEach(m=>{
+      const b = document.createElement('button');
+      const on = (ACTIVE_EXTRA ? ACTIVE_EXTRA.key : 'nursery') === m.key;
+      b.className = 'tab menuTab' + (on ? ' active' : '');
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      b.textContent = m.label;
+      b.onclick = ()=> useKitchenMenu(m.key);
+      menuTabs.appendChild(b);
+    });
+  }
   const weekTabs = document.getElementById('weekTabs');
   weekTabs.innerHTML = '';
   Object.keys(MENU).sort((a,b)=>a-b).forEach(wk=>{
@@ -2264,7 +2575,7 @@ function renderCourses(){
       const allDone = ids.length>0 && numChecked===ids.length;
       head.innerHTML = `
         <div>
-          <div class="course-name">${escapeHtml(courseName)}</div>
+          <div class="course-name">${escapeHtml(courseLabel(courseName))}</div>
           <div class="course-recipe">${escapeHtml(recipeName)}</div>
           <div class="course-servings">${base ? roundQty(servingsForCourse)+' servings (recipe serves '+base+')' : ''}</div>
           ${recipeAllergenBadgesHtml(recipe)}
@@ -2352,7 +2663,13 @@ function renderCourses(){
     });
   });
 
-  document.getElementById('menuSummary').textContent = 'Week '+state.week+' · '+state.day+' · '+availableCourses.length+' course'+(availableCourses.length===1?'':'s')+' on the menu';
+  document.getElementById('menuSummary').textContent = (ACTIVE_EXTRA ? (ACTIVE_EXTRA.cfg.label || ACTIVE_EXTRA.key) + ' · ' : '') + 'Week '+state.week+' · '+state.day+' · '+availableCourses.length+' course'+(availableCourses.length===1?'':'s')+' on the menu';
+  if(ACTIVE_EXTRA && ACTIVE_EXTRA.cfg.allDay){
+    const allDay = document.createElement('div');
+    allDay.className = 'allDayNote';
+    allDay.innerHTML = '<span class="allDayLabel">Available all day</span> ' + escapeHtml(ACTIVE_EXTRA.cfg.allDay);
+    container.insertBefore(allDay, container.firstChild);
+  }
 }
 
 function renderMethodStep(step){
@@ -2562,6 +2879,8 @@ const ST_ICONS = {
   print: '<path d="M7 9V3.5h10V9"/><rect x="3.5" y="9" width="17" height="8" rx="2"/><path d="M7 14h10v6.5H7z"/>',
   clear: '<path d="M19 20H8.5l-4.2-4.2a1.5 1.5 0 010-2.1L13.6 4.4a1.5 1.5 0 012.1 0l4.2 4.2a1.5 1.5 0 010 2.1L11 20"/><path d="M17.5 13.5l-6.5-6.5"/>',
   pencil: '<path d="M4 20h4L19 9a2.8 2.8 0 00-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/>',
+  calendar: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  bowl: '<path d="M3 12h18a9 9 0 01-18 0z"/><path d="M8.5 12a3 3 0 015.6-1.5M16 12a2.2 2.2 0 013.6-1.2"/>',
   cart: '<circle cx="9" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/><path d="M3 4h2.5l2.2 11h10.6l2-8H6.4"/>',
 };
 function stIcon(name){
@@ -2571,7 +2890,9 @@ function stIcon(name){
 function stationWhoLine(){
   const hc = state.headcounts || {};
   const n = k=> Number(hc[k]) || 0;
-  const parts = [`1–2s ${n('c1')}`, `2–3s ${n('c2')}`, `3–4s ${n('c3')}`, `staff ${n('staff')}`];
+  const parts = ACTIVE_EXTRA
+    ? GROUPS.map(g=> `${g.label}: ${n(g.key)}`)
+    : [`1–2s ${n('c1')}`, `2–3s ${n('c2')}`, `3–4s ${n('c3')}`, `staff ${n('staff')}`];
   const dayCourses = (MENU[state.week] && MENU[state.week][state.day]) || {};
   if(VEG_SWAP_PAIRS.some(p=> dayCourses[p.veg])) parts.push(`veg ${n('veg')}`);
   return parts;
@@ -2602,13 +2923,29 @@ function renderPrepStation(){
   const weeks = Object.keys(MENU).sort((a,b)=> a - b);
   const days = MENU[state.week] ? Object.keys(MENU[state.week]) : [];
   const todaySlot = todaysMenuSlot();
-  const season = (SEASONS.find(s=> s.key === SEASON_KEY) || {}).label || '';
+  const season = ACTIVE_EXTRA
+    ? (ACTIVE_EXTRA.cfg.label || ACTIVE_EXTRA.key)
+    : ((SEASONS.find(s=> s.key === SEASON_KEY) || {}).label || '');
+  const xcfg = ACTIVE_EXTRA ? ACTIVE_EXTRA.cfg : null;
+  const menuSwitch = EXTRAS_HERE.length
+    ? `<div class="stMenuSwitch" role="group" aria-label="Menu">${[{key: 'nursery', label: 'Nursery'}].concat(EXTRAS_HERE.map(x=> ({key: x.key, label: x.cfg.label || x.key}))).map(m=>{
+        const on = (ACTIVE_EXTRA ? ACTIVE_EXTRA.key : 'nursery') === m.key;
+        return `<button type="button" class="stMenuSeg${on ? ' on' : ''}" data-act="menu" data-menu="${escapeHtml(String(m.key))}" data-focus="menu:${escapeHtml(String(m.key))}" aria-pressed="${on}">${escapeHtml(m.label)}</button>`;
+      }).join('')}</div>`
+    : '';
+  const run = ACTIVE_EXTRA && ACTIVE_EXTRA.run;
+  const strip = ACTIVE_EXTRA
+    ? `<div class="stExtraStrip">${stIcon('calendar')}<span><b>${escapeHtml(xcfg.label || ACTIVE_EXTRA.key)}${run && run.name ? ' — ' + escapeHtml(run.name) : ''}</b>${run ? ' · ' + escapeHtml(shortDate(run.from)) + ' to ' + escapeHtml(shortDate(run.to)) : ''} · Week ${escapeHtml(state.week)} of ${weeks.length}</span>${ACTIVE_EXTRA.preview ? '<span class="stExtraNote">Preview</span>' : (OTHER_SHOP.length ? '<span class="stExtraNote">Its own ticks and headcount</span>' : '')}</div>`
+    : '';
+  const allDay = xcfg && xcfg.allDay
+    ? `<div class="stAllDay">${stIcon('bowl')}<span><span class="stAllDayLabel">Available all day</span><span class="stAllDayText">${escapeHtml(xcfg.allDay)}</span></span></div>`
+    : '';
   const site = SITE_CONFIG.siteName || SITE_CONFIG.subBrand || SITE_CONFIG.brand || 'Kitchen';
   const totalServ = totalServings();
   const fa = s=> escapeHtml(String(s));
 
   const top = `
-    <div class="stTop">
+    <div class="stTop${menuSwitch ? ' hasSwitch' : ''}">
       <div class="stBrand">
         <span class="stLogo"><img alt=""></span>
         <div class="stBrandText">
@@ -2620,6 +2957,7 @@ function renderPrepStation(){
           </label>
         </div>
       </div>
+      ${menuSwitch}
       <div class="stNav" role="group" aria-label="Day">
         <button type="button" class="stBtn icon" data-act="prev" data-focus="prev" aria-label="Previous day" title="Previous day">${stIcon('prev')}</button>
         ${days.map(d=> `<button type="button" class="stDay${d === state.day ? ' on' : ''}${isTodaysSlot(state.week, d) ? ' today' : ''}" data-act="day" data-day="${fa(d)}" data-focus="day:${fa(d)}" aria-pressed="${d === state.day}" aria-label="${fa(d)}${isTodaysSlot(state.week, d) ? ' (today)' : ''}">${escapeHtml(d.slice(0, 3))}</button>`).join('')}
@@ -2634,16 +2972,17 @@ function renderPrepStation(){
         <button type="button" class="stBtn icon" data-act="print" data-focus="print" aria-label="Print prep sheets" title="Print prep sheets">${stIcon('print')}</button>
         <button type="button" class="stBtn icon" data-act="clear" data-focus="clear" aria-label="Clear today's ticks" title="Clear today's ticks">${stIcon('clear')}</button>
       </div>
-    </div>`;
+    </div>${strip}`;
 
   const rail = `
     <nav class="stRail" aria-label="${fa(state.day)} courses">
+      ${allDay}
       <div class="stRailList">
         ${items.map(it=>{
           const on = sel && it.key === sel.key;
           const pill = it.ids.length ? (it.allDone ? 'Prepped' : it.done + '/' + it.ids.length) : '—';
           return `<button type="button" class="stRailItem${on ? ' on' : ''}" data-act="dish" data-key="${fa(it.key)}" data-focus="rail:${fa(it.key)}"${on ? ' aria-current="true"' : ''}>
-            <span class="stRailTop"><span class="stRailCourse">${escapeHtml(it.courseName)}</span><span class="stPill${it.allDone ? ' done' : ''}">${pill}</span></span>
+            <span class="stRailTop"><span class="stRailCourse">${escapeHtml(courseLabel(it.courseName))}</span><span class="stPill${it.allDone ? ' done' : ''}">${pill}</span></span>
             <span class="stRailDish">${escapeHtml(it.recipeName)}</span>
             <span class="stRailAl">${stationRailAllergensHtml(it.recipe)}</span>
           </button>`;
@@ -2651,7 +2990,7 @@ function renderPrepStation(){
       </div>
       <button type="button" class="stWho${totalServ > 0 ? '' : ' empty'}" data-act="hc" data-focus="hc" aria-label="Who's eating: ${fa(stationWhoLine().join(', '))}. Change">
         <span class="stWhoText">
-          <span class="stWhoLabel">Who's eating</span>
+          <span class="stWhoLabel">${ACTIVE_EXTRA ? escapeHtml(xcfg.label || ACTIVE_EXTRA.key) + ' eating' : 'Who\'s eating'}</span>
           <span class="stWhoLine">${totalServ > 0 ? stationWhoLine().map(x=> `<span class="stNoWrap">${escapeHtml(x)}</span>`).join(' · ') : 'Add today’s numbers to scale the recipes'}</span>
         </span>
         <span class="stWhoNum"><b>${roundQty(totalServ)}</b><small>servings</small></span>
@@ -2677,8 +3016,9 @@ function renderPrepStation(){
       <main class="stMain">
         <div class="stHead">
           <div class="stHeadText">
-            <div class="stEyebrow">${isTodaysSlot(state.week, state.day) ? 'Today · ' : ''}${escapeHtml(state.day)} · ${escapeHtml(sel.courseName)}</div>
+            <div class="stEyebrow">${isTodaysSlot(state.week, state.day) ? 'Today · ' : ''}${escapeHtml(state.day)} · ${escapeHtml(courseLabel(sel.courseName))}</div>
             <h2 class="stDish">${escapeHtml(sel.recipeName)}</h2>
+            ${ACTIVE_EXTRA && r.description ? `<div class="stDishDesc">${escapeHtml(r.description)}</div>` : ''}
             ${make}
           </div>
           <div class="stAllergens" aria-label="Allergens">${stationAllergensHtml(r)}</div>
@@ -2870,7 +3210,7 @@ function prepSheetCardHtml(c){
 
   return `<div class="card">
   <div class="idStrip">
-    <div class="idLeft"><span class="chip meal">${escapeHtml(c.courseName)}</span><span class="chip week">Week ${state.week} &middot; ${escapeHtml(state.day)}</span></div>
+    <div class="idLeft"><span class="chip meal">${escapeHtml(courseLabel(c.courseName))}</span><span class="chip week">${ACTIVE_EXTRA ? escapeHtml(ACTIVE_EXTRA.cfg.label || ACTIVE_EXTRA.key) + ' &middot; ' : ''}Week ${state.week} &middot; ${escapeHtml(state.day)}</span></div>
     <div class="idRight">${escapeHtml(SITE_CONFIG.subBrand || SITE_CONFIG.brand || 'Family Adventures Group')}${SITE_CONFIG.siteName ? ' &mdash; ' + escapeHtml(SITE_CONFIG.siteName) : ''}</div>
   </div>
   <div class="titleRow">
@@ -3418,15 +3758,15 @@ function categorize(name){
   return 'Fruit & Veg';
 }
 
-function aggregateShoppingList(){
-  const days = MENU[state.week] ? Object.keys(MENU[state.week]) : [];
+function aggregateShoppingFor(menu, week, grid, groups){
+  const days = menu[week] ? Object.keys(menu[week]) : [];
   const totals = {};
   const asNeeded = {};
   const staples = {};
   days.forEach(day=>{
-    const dayHC = state.shopGrid[day] || emptyDayHC();
-    const totalServ = GROUPS.reduce((s,g)=> s + (Number(dayHC[g.key])||0)*g.mult, 0);
-    const dayCourses = MENU[state.week][day] || {};
+    const dayHC = grid[day] || {};
+    const totalServ = groups.reduce((s,g)=> s + (Number(dayHC[g.key])||0)*g.mult, 0);
+    const dayCourses = menu[week][day] || {};
 
     Object.keys(dayCourses).forEach(courseName=>{
       const recipes = dayCourses[courseName];
@@ -3495,6 +3835,35 @@ function aggregateShoppingList(){
         });
       });
     });
+  });
+  return {totals, asNeeded, staples};
+}
+
+/* This menu's list, plus any other menu running at this site this week
+   (Holiday club alongside the nursery), each from its own grid. */
+function aggregateShoppingList(){
+  const parts = [aggregateShoppingFor(MENU, state.week, state.shopGrid, GROUPS)];
+  OTHER_SHOP.forEach(o=>{
+    if(otherShopServings(o) > 0) parts.push(aggregateShoppingFor(o.menu, o.week, o.grid, o.groups));
+  });
+  const totals = {}, asNeeded = {}, staples = {};
+  const take = (into, entry, key, add)=>{
+    if(!into[key]){
+      into[key] = Object.assign({}, entry, {allergens: new Set(entry.allergens)});
+      return;
+    }
+    const t = into[key];
+    if(add) add(t, entry);
+    entry.allergens.forEach(x=> t.allergens.add(x));
+    if(entry._dbRecSeen && entry.dbRec == null){ t.dbRec = null; t._dbRecSeen = true; }
+    else mergeDbRecInto(t, entry.dbRec);
+  };
+  parts.forEach(p=>{
+    Object.keys(p.totals).forEach(k=> take(totals, p.totals[k], k, (t, e)=>{
+      if(t.kind === 'measured') t.amount += e.amount; else t.qty += e.qty;
+    }));
+    Object.keys(p.staples).forEach(k=> take(staples, p.staples[k], k));
+    Object.keys(p.asNeeded).forEach(k=> take(asNeeded, p.asNeeded[k], k));
   });
   /* The same product can be measured a specific way in one recipe (goes
      into totals) and referenced as a small tsp/tbsp "staple" or a vague
@@ -3633,6 +4002,20 @@ function renderShopList(){
   head.className = 'shop-list-head';
   head.innerHTML = `<h3>Shopping list</h3><span class="count">${totalCount} item${totalCount===1?'':'s'}</span>`;
   card.appendChild(head);
+  if(OTHER_SHOP.length){
+    const inc = OTHER_SHOP.filter(o=> otherShopServings(o) > 0);
+    const skip = OTHER_SHOP.filter(o=> otherShopServings(o) <= 0);
+    const note = document.createElement('div');
+    note.className = 'shopOtherNote';
+    note.textContent = (inc.length
+        ? 'Includes ' + inc.map(o=> o.label + ' (Week ' + o.week + ')').join(' and ') + ', from its own numbers. '
+        : '') +
+      (skip.length
+        ? skip.map(o=> o.label).join(' and ') + ' ' + (skip.length === 1 ? 'is' : 'are') + ' running this week but ' + (skip.length === 1 ? 'has' : 'have') + ' no numbers in ' + (skip.length === 1 ? 'its' : 'their') + ' grid yet, so ' + (skip.length === 1 ? 'it is' : 'they are') + ' not included. '
+        : '') +
+      'Switch menus at the top to change ' + (OTHER_SHOP.length === 1 ? 'its' : 'their') + ' numbers.';
+    card.appendChild(note);
+  }
 
   /* Nobody is eating this week as far as the grid is concerned, so there
      is nothing to buy. Checked BEFORE totalCount, because "as needed"
@@ -3640,7 +4023,7 @@ function renderShopList(){
      grid used to present a two-line list as though it were the week's
      shop, and a cook could shop from it. */
   const anyServings = (MENU[state.week] ? Object.keys(MENU[state.week]) : [])
-    .some(day=> shopTotalsForDay(day) > 0);
+    .some(day=> shopTotalsForDay(day) > 0) || OTHER_SHOP.some(o=> otherShopServings(o) > 0);
   if(!anyServings){
     const empty = document.createElement('div');
     empty.className = 'empty';
@@ -3857,7 +4240,7 @@ function setView(view){
   document.getElementById('headcountPanel').style.display = isShop ? 'none' : '';
   document.getElementById('shopView').style.display = isShop ? 'block' : 'none';
   document.getElementById('prepPrintBtn').style.display = isShop ? 'none' : 'inline-flex';
-  document.getElementById('pageTitle').textContent = isShop ? 'Weekly shopping list' : 'Nursery kitchen prep list';
+  document.getElementById('pageTitle').textContent = isShop ? 'Weekly shopping list' : (ACTIVE_EXTRA ? (ACTIVE_EXTRA.cfg.label || ACTIVE_EXTRA.key) + ' prep list' : 'Nursery kitchen prep list');
   document.getElementById('resetBtn').innerHTML = isShop
     ? '<i class="ti ti-eraser"></i>Clear ticks'
     : '<i class="ti ti-eraser"></i>Clear ticks';
@@ -3898,6 +4281,7 @@ document.getElementById('prepStation').addEventListener('click', async (e)=>{
   if(!b || !e.currentTarget.contains(b)) return;
   switch(b.dataset.act){
     case 'prev': stationStepDay(-1); break;
+    case 'menu': useKitchenMenu(b.dataset.menu); break;
     case 'today': goToTodaysMenu(); break;
     case 'next': stationStepDay(1); break;
     case 'day':
@@ -4164,6 +4548,8 @@ async function loadSiteData(){
   SEASON_OVERRIDDEN = !!requestedSeason;
   const activeSeason = requestedSeason || pickSeasonForDate(SEASONS, todayKey());
   SEASON_KEY = activeSeason.key;
+  // Started now so it runs alongside the menu fetch below.
+  const extraConfigPromise = loadExtraMenusConfig();
 
   let menuRes, configRes;
   try{
@@ -4186,6 +4572,8 @@ async function loadSiteData(){
     throw new Error('__handled__');
   }
   MENU = await menuRes.json();
+  NURSERY_MENU = MENU;
+  await loadExtraMenusHere(extraConfigPromise);
   // The season LIST from the backup copy can also pick the wrong season
   // (one added since the last deploy is simply missing).
   MENU_FROM_BACKUP = !!menuRes.__fromBackup || seasonsFromBackup;
@@ -4494,6 +4882,8 @@ function recipeMenus(r){
   return kept.length ? kept : all.slice();
 }
 function recipeAvailableIn(r, group){
+  // An extra menu may use any recipe in the bank.
+  if(isExtraMenu(group)) return true;
   return recipeMenus(r).indexOf(group) !== -1;
 }
 function recipeMenusAreDefault(r){
@@ -4515,11 +4905,11 @@ function recipeAvailabilityLabel(r){
 function findRecipeUsageAllMenus(recipeId){
   const out = [];
   const store = menusStore();
-  allMenuGroups().forEach(group=>{
+  everyMenuGroup().forEach(group=>{
     const seasons = store[group] || {};
     Object.keys(seasons).forEach(seasonKey=>{
       const season = seasons[seasonKey] || {};
-      ['1','2','3','4'].forEach(wk=>{
+      Object.keys(season.weeks || {}).forEach(wk=>{
         const week = (season.weeks||{})[wk] || {};
         Object.keys(week).forEach(day=>{
           const courses = week[day] || {};
@@ -4540,6 +4930,7 @@ function findRecipeUsageAllMenus(recipeId){
    -- see the comment above renderWeekView's flag for why these are shown
    rather than cleared. */
 function slotsWithUnavailableRecipe(group, seasonKey){
+  if(isExtraMenu(group)) return [];
   const seasons = menusStore()[group] || {};
   const keys = seasonKey ? [seasonKey] : Object.keys(seasons);
   const out = [];
@@ -4572,11 +4963,65 @@ function allMenuGroups(){
   return order;
 }
 function menuGroupLabel(key){
+  if(isExtraMenu(key)) return EXTRA_MENUS[key].label || key;
   return MENU_GROUP_FRIENDLY_NAMES[key] || key;
+}
+/* Extra menus (Holiday club) sit beside the nursery menus but are not part
+   of the season machinery: allMenuGroups() stays the nursery menus, which
+   is what seasons, imports and recipe availability are about; this is
+   every menu with a rotation, which is what usage and clean-up need. */
+function extraMenuKeys(){ return Object.keys(EXTRA_MENUS || {}).filter(k=> allMenuGroups().indexOf(k) === -1); }
+function everyMenuGroup(){ return allMenuGroups().concat(extraMenuKeys()); }
+/* An extra menu has one rotation, filed under its own key. */
+function seasonMetaFor(key){
+  const m = (SEASONS || []).find(x=> x.key === key);
+  if(m) return m;
+  if(isExtraMenu(key)) return {key, label: EXTRA_MENUS[key].label || key, file: key + '.json', startDate: null};
+  return null;
+}
+/* The weeks a rotation has. Nursery seasons are 4 weeks; an extra menu's
+   rotation records its own length. */
+function seasonWeekKeys(season){
+  const n = (season && season.weekCount) ? Math.min(6, Math.max(1, Math.round(Number(season.weekCount)) || 4)) : 4;
+  const out = [];
+  for(let i = 1; i <= n; i++) out.push(String(i));
+  return out;
+}
+function newSeasonShape(key){
+  const extra = isExtraMenu(key);
+  const n = extra ? extraMenuWeeks(EXTRA_MENUS[key]) : 4;
+  const season = {label: extra ? (EXTRA_MENUS[key].label || key) : key, weeks: emptyWeeks(n), notes: emptyNotes(n), importedAt: {}};
+  for(let i = 1; i <= n; i++) season.importedAt[String(i)] = null;
+  if(extra) season.weekCount = n;
+  return season;
+}
+/* Keep an extra menu's local rotation the length its settings say. Weeks
+   past the end are kept on this device (nothing is deleted by shortening
+   the rotation) but are not shown or published. */
+function fitExtraSeason(key, season){
+  if(!season || !isExtraMenu(key)) return season;
+  const n = extraMenuWeeks(EXTRA_MENUS[key]);
+  season.weekCount = n;
+  season.weeks = season.weeks || {}; season.notes = season.notes || {}; season.importedAt = season.importedAt || {};
+  for(let i = 1; i <= n; i++){
+    const wk = String(i);
+    if(!season.weeks[wk]){ season.weeks[wk] = {}; DAYS.forEach(d=>{ season.weeks[wk][d] = {}; }); }
+    if(!season.notes[wk]) season.notes[wk] = [];
+    if(!(wk in season.importedAt)) season.importedAt[wk] = null;
+  }
+  return season;
+}
+function extraCourseLabel(group, course){
+  const c = isExtraMenu(group) && EXTRA_MENUS[group].courses && EXTRA_MENUS[group].courses[course];
+  if(!c) return course;
+  const name = String(c.name || '').trim();
+  const time = String(c.time || '').trim();
+  return (name && name !== course ? course + ' — ' + name : course) + (time ? ' · ' + time : '');
 }
 /* How many nurseries a menu actually reaches -- worth saying next to a
    publish button, but not inside every label. */
 function menuGroupSiteCount(key){
+  if(isExtraMenu(key)) return (EXTRA_MENUS[key].sites || []).length;
   return SITE_SLUGS.filter(s=> menuGroupForSite(s) === key).length;
 }
 function menuGroupLabelWithCount(key){
@@ -4704,17 +5149,18 @@ function canonicalIngredientName(name){
 function uid(prefix){ return (prefix||'r_') + Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
 function nowIso(){ return new Date().toISOString(); }
 
-function emptyWeeks(){
+function emptyWeeks(n){
   const w = {};
-  ['1','2','3','4'].forEach(wk=>{
+  const count = n || 4;
+  Array.from({length: count}, (_, i)=> String(i + 1)).forEach(wk=>{
     w[wk] = {};
     DAYS.forEach(d=>{ w[wk][d] = {}; });
   });
   return w;
 }
-function emptyNotes(){
+function emptyNotes(count){
   const n = {};
-  ['1','2','3','4'].forEach(wk=> n[wk] = []);
+  Array.from({length: count || 4}, (_, i)=> String(i + 1)).forEach(wk=> n[wk] = []);
   return n;
 }
 
@@ -4844,6 +5290,22 @@ function useEditingGroup(group){
   EDITING_GROUP = group || 'general';
   menuFor(EDITING_GROUP);
   saveLocalOnly();
+}
+/* The rotation shown for a menu: an extra menu's own, or for a nursery
+   menu the season that was being edited before an extra menu was opened. */
+function editingSeasonFor(group){
+  if(isExtraMenu(group)) return group;
+  if(!isExtraMenu(EDITING_GROUP) && !isExtraMenu(DATA.currentSeason)) return DATA.currentSeason;
+  const last = DATA.lastNurserySeason;
+  if(last && !isExtraMenu(last) && seasonMetaFor(last)) return last;
+  return pickSeasonForDate(SEASONS, todayKey()).key;
+}
+function enterEditingMenu(group){
+  const season = editingSeasonFor(group);
+  if(!isExtraMenu(DATA.currentSeason)) DATA.lastNurserySeason = DATA.currentSeason;
+  useEditingGroup(group);
+  DATA.currentSeason = season;
+  save();
 }
 function installSeasonsAlias(){
   Object.defineProperty(DATA, 'seasons', {
@@ -5020,9 +5482,9 @@ async function uploadCurrentSeason(seasonKey){
 
 function ensureSeason(key){
   if(!DATA.seasons[key]){
-    DATA.seasons[key] = { label:key, weeks: emptyWeeks(), notes: emptyNotes(), importedAt:{"1":null,"2":null,"3":null,"4":null} };
+    DATA.seasons[key] = newSeasonShape(key);
   }
-  return DATA.seasons[key];
+  return fitExtraSeason(key, DATA.seasons[key]);
 }
 /* The group-explicit twin of ensureSeason above: reads/creates a season
    under WHATEVER group is passed in, never through the DATA.seasons alias
@@ -5036,9 +5498,9 @@ function ensureSeason(key){
 function seasonForGroup(group, key){
   const m = menuFor(group);
   if(!m[key]){
-    m[key] = { label:key, weeks: emptyWeeks(), notes: emptyNotes(), importedAt:{"1":null,"2":null,"3":null,"4":null} };
+    m[key] = newSeasonShape(key);
   }
-  return m[key];
+  return fitExtraSeason(key, m[key]);
 }
 
 /* A season's DISPLAY label can change later without its key/file changing
@@ -5108,9 +5570,9 @@ function seasonLooksUntouched(seasonKey, season){
   if(seed){
     return seasonFingerprint(season) === seasonFingerprint(seed);
   }
-  const everImported = ['1','2','3','4'].some(wk => season.importedAt && season.importedAt[wk]);
+  const everImported = seasonWeekKeys(season).some(wk => season.importedAt && season.importedAt[wk]);
   if(everImported) return false;
-  const hasHandEnteredContent = ['1','2','3','4'].some(wk=>{
+  const hasHandEnteredContent = seasonWeekKeys(season).some(wk=>{
     const days = (season.weeks && season.weeks[wk]) || {};
     return Object.keys(days).some(day => Object.keys(days[day] || {}).length > 0);
   });
@@ -5131,7 +5593,7 @@ function seasonLooksUntouched(seasonKey, season){
    anything else (network failure, timeout, bad JSON) -- callers decide
    what each means for them rather than this guessing on their behalf. */
 async function fetchLiveSeasonFromFunction(seasonKey, group){
-  const meta = SEASONS.find(s=> s.key === seasonKey);
+  const meta = seasonMetaFor(seasonKey);
   if(!meta) return {status: 'error'};
   /* The group being EDITED, not the group of the ?site= this panel was
      opened from. Those are the same only until someone uses the Editing
@@ -5611,7 +6073,7 @@ function findRecipeUsage(recipeId){
   const usage = [];
   Object.keys(DATA.seasons).forEach(seasonKey=>{
     const season = DATA.seasons[seasonKey];
-    ['1','2','3','4'].forEach(wk=>{
+    Object.keys(season.weeks || {}).forEach(wk=>{
       const week = (season.weeks||{})[wk] || {};
       Object.keys(week).forEach(day=>{
         const courses = week[day] || {};
@@ -7772,7 +8234,8 @@ function mergeSeasonExportThreeWay(baseJson, mineJson, theirsJson){
    publishing a half-built entry. */
 function rebuildSeasonExportFromFlat(flatNames, mineJson, theirsJson){
   const out = {};
-  ['1','2','3','4'].forEach(wk=>{ out[wk] = {}; });
+  const wks = Array.from(new Set(Object.keys(mineJson || {}).concat(Object.keys(theirsJson || {}))));
+  (wks.length ? wks : ['1','2','3','4']).forEach(wk=>{ out[wk] = {}; });
   Object.keys(flatNames).forEach(k=>{
     const name = flatNames[k];
     if(!name) return; // cleared slot -- omit entirely, same as buildSeasonExportJson does
@@ -8820,7 +9283,7 @@ function renderAllergenMatrixWeekTable(recipes, query){
    badges, same click-through to the recipe page) is unchanged. */
 function renderAllergenMatrixView(){
   const season = ensureSeason(DATA.currentSeason);
-  const weekKeys = ['1','2','3','4'];
+  const weekKeys = seasonWeekKeys(season);
   const recipesByWeek = {};
   weekKeys.forEach(wk=>{
     recipesByWeek[wk] = recipeIdsInWeek(season, wk).map(id=> DATA.recipeBank[id]).filter(Boolean)
@@ -9215,7 +9678,7 @@ function renderMenuNutritionView(){
   const weekRow = document.createElement('div');
   weekRow.className = 'actionsRow';
   weekRow.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px;';
-  ['1','2','3','4'].forEach(wk=>{
+  seasonWeekKeys(season).forEach(wk=>{
     const btn = document.createElement('button');
     btn.className = 'btn small';
     btn.textContent = 'Week ' + wk;
@@ -9302,7 +9765,7 @@ function findRepeatedMealsAcrossWeeks(season){
   DAYS.forEach(day=>{
     COURSE_ORDER.forEach(courseName=>{
       const byRecipe = {};
-      ['1','2','3','4'].forEach(wk=>{
+      seasonWeekKeys(season).forEach(wk=>{
         const recipeId = ((season.weeks[wk]||{})[day]||{})[courseName];
         if(!recipeId) return;
         (byRecipe[recipeId] = byRecipe[recipeId] || []).push(wk);
@@ -9330,7 +9793,7 @@ function findRepeatedMealsAcrossWeeks(season){
 const MAIN_MEAL_COURSES = ['Breakfast','Main','Vegetarian Option','Tea','Tea Vegetarian Option'];
 function daysMissingFruitVeg(season){
   const flagged = [];
-  ['1','2','3','4'].forEach(wk=>{
+  seasonWeekKeys(season).forEach(wk=>{
     DAYS.forEach(day=>{
       const dayCourses = (season.weeks[wk]||{})[day] || {};
       MAIN_MEAL_COURSES.forEach(courseName=>{
@@ -9363,7 +9826,7 @@ const OILY_FISH_KEYWORDS = ['salmon','mackerel','sardine','trout','herring','pil
 function findOilyFishMentions(season){
   const found = [];
   const seenRecipeIds = new Set();
-  ['1','2','3','4'].forEach(wk=>{
+  seasonWeekKeys(season).forEach(wk=>{
     DAYS.forEach(day=>{
       COURSE_ORDER.forEach(courseName=>{
         const recipeId = ((season.weeks[wk]||{})[day]||{})[courseName];
@@ -9774,7 +10237,7 @@ function renderShoppingListView(){
   controls.innerHTML = `
     <div class="actionsRow" style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;">
       <div class="field" style="margin:0;"><label>Week</label>
-        <select id="slWeek">${['1','2','3','4'].map(wk=>`<option value="${wk}">Week ${wk}</option>`).join('')}</select>
+        <select id="slWeek">${seasonWeekKeys(ensureSeason(DATA.currentSeason)).map(wk=>`<option value="${wk}">Week ${wk}</option>`).join('')}</select>
       </div>
       <div class="field" style="margin:0;"><label>Total headcount</label><input type="number" id="slHeadcount" min="0" value="20"></div>
       <div class="field" style="margin:0;"><label>…of which, vegetarian option</label><input type="number" id="slVegcount" min="0" value="0"></div>
@@ -10083,6 +10546,16 @@ function cleanupRecipeIdsInSeason(seasonKey){
   const store = menusStore();
   allMenuGroups().forEach(group=>{
     const season = (store[group] || {})[seasonKey];
+    if(!season) return;
+    Object.values(season.weeks || {}).forEach(days => {
+      Object.values(days || {}).forEach(courses => {
+        Object.values(courses || {}).forEach(id => { if(id) ids.add(id); });
+      });
+    });
+  });
+  // An extra menu has no seasons; its dishes are always in use.
+  extraMenuKeys().forEach(key=>{
+    const season = (store[key] || {})[key];
     if(!season) return;
     Object.values(season.weeks || {}).forEach(days => {
       Object.values(days || {}).forEach(courses => {
@@ -10480,6 +10953,8 @@ function render(){
     app.appendChild(INGREDIENTS_LOADED ? renderCleanupView() : loadingCard('Loading ingredient database…'));
   } else if(VIEW === 'maintenance'){
     app.appendChild(renderMaintenanceView());
+  } else if(VIEW === 'menuSettings'){
+    app.appendChild(renderMenuSettingsView());
   } else if(VIEW === 'menuPack'){
     app.appendChild(INGREDIENTS_LOADED ? renderMenuPackView() : loadingCard('Loading ingredient database…'));
   }
@@ -10499,17 +10974,28 @@ function renderTopbar(){
   const menuSel = document.getElementById('rbMenuSelect');
   if(menuSel){
     menuSel.innerHTML = '';
-    allMenuGroups().forEach(g=>{
+    everyMenuGroup().forEach(g=>{
       const opt = document.createElement('option');
       opt.value = g;
       opt.textContent = 'Editing: ' + menuGroupLabel(g);
       if(g === EDITING_GROUP) opt.selected = true;
       menuSel.appendChild(opt);
     });
+    const addOpt = document.createElement('option');
+    addOpt.value = '__newExtraMenu';
+    addOpt.textContent = '+ Add an extra menu…';
+    menuSel.appendChild(addOpt);
     menuSel.onchange = async ()=>{
+      if(menuSel.value === '__newExtraMenu'){
+        menuSel.value = EDITING_GROUP;
+        if(!confirmLeaveRecipe()) return;
+        openNewExtraMenuModal();
+        return;
+      }
       if(!confirmLeaveRecipe()){ menuSel.value = EDITING_GROUP; return; }
-      const neverHeld = !menuFor(menuSel.value)[DATA.currentSeason];
-      useEditingGroup(menuSel.value);
+      const targetSeason = editingSeasonFor(menuSel.value);
+      const neverHeld = !menuFor(menuSel.value)[targetSeason];
+      enterEditingMenu(menuSel.value);
       setView('rotation'); // immediate paint with whatever's already local -- never blocks on the network
       /* Always attempted, not just when this menu has never been held on
          this device before: a menu this device DOES already hold locally
@@ -10527,6 +11013,14 @@ function renderTopbar(){
   }
 
   const sel = document.getElementById('rbSeasonSelect');
+  /* An extra menu has one rotation and no seasons: the picker would only
+     offer seasons that have nothing to do with it. */
+  const editingExtra = isExtraMenu(EDITING_GROUP);
+  sel.hidden = editingExtra;
+  const extraNote = document.getElementById('rbExtraNote');
+  if(extraNote) extraNote.hidden = !editingExtra;
+  const settingsTab = document.getElementById('rbMenuSettingsTab');
+  if(settingsTab) settingsTab.hidden = !editingExtra;
   sel.innerHTML = '';
   /* FIX (new season invisible to colleagues): this used to list only the
      seasons THIS device already held locally (DATA.seasons). A season added
@@ -10632,6 +11126,12 @@ function renderTopbar(){
      thing anyone wants to do. */
   previewBtn.title = 'Open the kitchen page for ' + menuGroupLabel(EDITING_GROUP) + ', in a new tab';
   previewBtn.onclick = ()=>{
+    if(isExtraMenu(EDITING_GROUP)){
+      // Opens at one of its sites, forced on whatever the date.
+      const xs = (EXTRA_MENUS[EDITING_GROUP].sites || [])[0] || SITE_SLUG || SITE_SLUGS[0];
+      window.open(location.pathname + '?site=' + encodeURIComponent(xs) + '&xmenu=' + encodeURIComponent(EDITING_GROUP), '_blank');
+      return;
+    }
     PREVIEW_SITE_SLUG = (SITE_SLUGS.find(sl=> menuGroupForSite(sl) === EDITING_GROUP) || SITE_SLUG);
     const seasonKey = DATA.currentSeason;
     // DATA.currentSeason/DATA.seasons is this browser's own locally-saved
@@ -10662,6 +11162,449 @@ function renderTopbar(){
   });
 }
 
+/* ================= Extra menus: Menu settings =================
+   An extra menu (the Holiday club is the first) is edited here: its name,
+   rotation length, the courses it serves and what they are called on its
+   menu, the "available all day" line, which sites run it, the dates it
+   runs, and who the kitchen counts for it. Its rotation itself is planned
+   on The rotation, like any other menu.
+
+   Settings are shared in '_config/extra-menus.json'. A save re-reads that
+   file and replaces only this menu in it, so two admins working on two
+   different extra menus never undo each other. */
+function shortSiteLabel(slug){
+  return siteSlugLabel(slug).replace(/^(Little Adventures|Green Giraffe)\s+/, '');
+}
+function extraMenuSitesText(key){
+  const sites = (EXTRA_MENUS[key] && EXTRA_MENUS[key].sites) || [];
+  if(!sites.length) return 'no sites yet';
+  const names = sites.map(shortSiteLabel);
+  return names.length === 1 ? names[0] : names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1];
+}
+function extraRunDates(run){
+  const from = localDateFromKey(run && run.from), to = localDateFromKey(run && run.to);
+  return (from && to && to >= from) ? {from, to} : null;
+}
+function extraMenuNextRunText(key){
+  const runs = ((EXTRA_MENUS[key] && EXTRA_MENUS[key].runs) || []).filter(extraRunDates);
+  const today = localToday();
+  const next = runs.filter(r=> extraRunDates(r).to >= today)
+    .sort((a, b)=> extraRunDates(a).from - extraRunDates(b).from)[0];
+  if(!next) return runs.length ? 'No dates still to come.' : 'No dates set yet.';
+  const d = extraRunDates(next);
+  const on = d.from <= today;
+  return (on ? 'Running now: ' : 'Next: ') + (next.name || 'Holiday') + ', ' + shortDate(next.from) + ' to ' + shortDate(next.to) + '.';
+}
+/* Which weeks of the rotation a run uses, e.g. "Weeks 1 and 2". */
+function extraRunWeeksText(run, weeks){
+  const d = extraRunDates(run);
+  if(!d) return '';
+  const span = Math.round((mondayOf(d.to) - mondayOf(d.from)) / 86400000 / 7) + 1;
+  const seq = [];
+  for(let i = 0; i < span; i++) seq.push((i % weeks) + 1);
+  if(seq.length === 1) return 'Week ' + seq[0];
+  return 'Weeks ' + seq.slice(0, -1).join(', ') + ' and ' + seq[seq.length - 1];
+}
+/* The course rows the rotation editor shows for the menu being edited: a
+   nursery menu shows them all; an extra menu shows the ones it serves,
+   plus any that still hold a dish. */
+function editingCourses(season, wk){
+  if(!isExtraMenu(EDITING_GROUP)) return COURSE_ORDER;
+  const cfg = EXTRA_MENUS[EDITING_GROUP] || {};
+  const days = (season.weeks || {})[wk] || {};
+  return COURSE_ORDER.filter(c=> (cfg.courses && cfg.courses[c]) || DAYS.some(d=> (days[d] || {})[c]));
+}
+
+const EXTRA_COURSE_DEFAULT_NAMES = {
+  'Breakfast': 'Breakfast', 'Main': 'Lunch', 'Vegetarian Option': 'Vegetarian option', 'Dessert': 'Dessert',
+  'Snack': 'Afternoon snack', 'Tea': 'Light tea', 'Tea Vegetarian Option': 'Vegetarian option (tea)'
+};
+function newExtraMenuSettings(name){
+  return {
+    label: name, weeks: 2, sites: [],
+    courses: {
+      'Main': {name: 'Lunch', time: ''}, 'Vegetarian Option': {name: 'Vegetarian option', time: ''},
+      'Dessert': {name: 'Dessert', time: ''}, 'Snack': {name: 'Afternoon snack', time: ''}, 'Tea': {name: 'Light tea', time: ''}
+    },
+    allDay: '', groups: [{key: 'k1', label: 'Children', mult: 1}], runs: []
+  };
+}
+
+async function fetchExtraMenusLive(){
+  let res;
+  try{
+    res = await fetch('/.netlify/functions/get-season?group=_config&file=extra-menus.json', {cache: 'no-store'});
+  }catch(e){ return {status: 'error'}; }
+  if(res.status === 404) return {status: 'empty'};
+  if(!res.ok) return {status: 'error'};
+  if(res.headers.get('X-RB-Source') === 'static-fallback') return {status: 'error'};
+  const etag = res.headers.get('X-RB-Etag') || null;
+  let body = null;
+  try{ body = await res.json(); }catch(e){ return {status: 'error'}; }
+  const menus = (body && body.menus && typeof body.menus === 'object' && !Array.isArray(body.menus)) ? body.menus : {};
+  return {status: 'ok', menus, etag};
+}
+/* Saves one extra menu's settings without touching any other's. */
+async function publishExtraMenu(key, cfg){
+  for(let attempt = 1; attempt <= 3; attempt++){
+    const live = await fetchExtraMenusLive();
+    if(live.status === 'error'){
+      throw new Error("Couldn't read the saved menu settings just now, so nothing was saved. Try again in a moment.");
+    }
+    const base = live.status === 'ok' ? live.menus : JSON.parse(JSON.stringify(EXTRA_MENUS || {}));
+    const next = Object.assign({}, base);
+    next[key] = cfg;
+    try{
+      await saveSeasonToServer('_config', 'extra-menus.json', {menus: next}, undefined, live.etag || undefined);
+      EXTRA_MENUS = next;
+      return;
+    }catch(e){
+      if(!e || !e.conflict) throw e;
+    }
+  }
+  throw new Error('Someone else saved menu settings at the same moment. Try again.');
+}
+
+function validateExtraMenu(cfg){
+  const problems = [];
+  if(!String(cfg.label || '').trim()) problems.push('Give the menu a name.');
+  if(!Object.keys(cfg.courses || {}).length) problems.push('Tick at least one course.');
+  (cfg.runs || []).forEach((r, i)=>{
+    const what = (r.name || '').trim() || 'Dates ' + (i + 1);
+    if(!r.from || !r.to) problems.push(what + ': fill in both dates.');
+    else if(!extraRunDates(r)) problems.push(what + ': the end date is before the start date.');
+  });
+  (cfg.groups || []).forEach(g=>{
+    if(!String(g.label || '').trim()) problems.push('Every "Who\'s eating" group needs a name.');
+    if(!(Number(g.mult) > 0)) problems.push((g.label || 'A group') + ': servings each must be more than 0.');
+  });
+  if(!(cfg.groups || []).length) problems.push('Add at least one "Who\'s eating" group.');
+  return problems;
+}
+
+let XM_DRAFT = null;      // the settings being edited, kept across redraws
+let XM_DRAFT_KEY = null;
+let XM_DRAFT_DIRTY = false;
+function extraMenuDraft(){
+  if(XM_DRAFT_KEY !== EDITING_GROUP || !XM_DRAFT){
+    XM_DRAFT = JSON.parse(JSON.stringify(EXTRA_MENUS[EDITING_GROUP] || {}));
+    XM_DRAFT.courses = XM_DRAFT.courses || {};
+    XM_DRAFT.sites = XM_DRAFT.sites || [];
+    XM_DRAFT.runs = XM_DRAFT.runs || [];
+    XM_DRAFT.groups = (XM_DRAFT.groups && XM_DRAFT.groups.length) ? XM_DRAFT.groups : [{key: 'k1', label: 'Children', mult: 1}];
+    XM_DRAFT.weeks = extraMenuWeeks(XM_DRAFT);
+    XM_DRAFT_KEY = EDITING_GROUP;
+    XM_DRAFT_DIRTY = false;
+  }
+  return XM_DRAFT;
+}
+
+function renderMenuSettingsView(){
+  const root = document.createElement('div');
+  if(!isExtraMenu(EDITING_GROUP)){
+    root.className = 'card emptyState';
+    root.textContent = 'Menu settings are for extra menus, like the Holiday club. Pick one from the "Editing" list at the top, or add one there.';
+    return root;
+  }
+  const key = EDITING_GROUP;
+  const d = extraMenuDraft();
+  const season = ensureSeason(key);
+  const dirty = ()=>{
+    XM_DRAFT_DIRTY = true;
+    const flag = root.querySelector('#xmDirty');
+    if(flag) flag.hidden = false;
+  };
+  const redraw = ()=>{ dirty(); render(); };
+
+  const head = document.createElement('div');
+  head.className = 'pageHead';
+  head.innerHTML = `
+    <div>
+      <div class="crumb">Extra menu</div>
+      <h1>${escapeHtml(d.label || key)}</h1>
+      <div class="sub">A ${d.weeks}-week menu served alongside the nursery menu, at the sites and on the dates below.</div>
+    </div>
+    <div class="actions xmSaveRow">
+      <span class="xmDirty" id="xmDirty"${XM_DRAFT_DIRTY ? '' : ' hidden'}>Unsaved changes</span>
+      <button class="btn" id="xmPlan">Plan the rotation</button>
+      <button class="btn primary" id="xmSave">Save menu settings</button>
+    </div>`;
+  root.appendChild(head);
+
+  const grid = document.createElement('div');
+  grid.className = 'xmGrid';
+  const left = document.createElement('div'); left.className = 'xmCol';
+  const right = document.createElement('div'); right.className = 'xmCol';
+  grid.appendChild(left); grid.appendChild(right);
+  root.appendChild(grid);
+
+  /* --- the menu --- */
+  const basics = document.createElement('section');
+  basics.className = 'card xmCard';
+  basics.innerHTML = `
+    <h3>The menu</h3>
+    <div style="display:grid;grid-template-columns:minmax(0,260px) 1fr;gap:18px;align-items:start;margin-top:8px;">
+      <div class="field"><label for="xmName">Name</label><input type="text" id="xmName" value="${escapeHtml(d.label || '')}"></div>
+      <div>
+        <div style="font-weight:700;font-size:12.5px;">Rotation length</div>
+        <div class="xmWeeks" role="group" aria-label="Rotation length in weeks">
+          ${[1,2,3,4,5,6].map(n=> `<button type="button" data-weeks="${n}" aria-pressed="${n === d.weeks}">${n}</button>`).join('')}
+          <span class="tinyNote" style="margin:0 0 0 6px;">weeks &middot; each run starts again at Week 1</span>
+        </div>
+      </div>
+    </div>
+    <div style="font-weight:700;font-size:12.5px;margin-top:14px;">Courses served <span style="font-weight:400;color:var(--ink-faint);">&middot; the name and time shown on the kitchen iPad and the printed menu</span></div>
+    <table class="xmTable">
+      <thead><tr><th style="width:32%">Course</th><th>Name on the menu</th><th style="width:150px">Time</th></tr></thead>
+      <tbody>${COURSE_ORDER.map(c=>{
+        const on = !!d.courses[c];
+        const v = d.courses[c] || {};
+        return `<tr>
+          <td><label class="xmCheck"><input type="checkbox" data-course="${escapeHtml(c)}"${on ? ' checked' : ''}>${escapeHtml(c)}</label></td>
+          <td><input type="text" data-cname="${escapeHtml(c)}" aria-label="Name on the menu for ${escapeHtml(c)}" value="${escapeHtml(on ? (v.name || '') : '')}"${on ? '' : ' disabled'}></td>
+          <td><input type="text" data-ctime="${escapeHtml(c)}" aria-label="Time for ${escapeHtml(c)}" placeholder="e.g. 2.00pm" value="${escapeHtml(on ? (v.time || '') : '')}"${on ? '' : ' disabled'}></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>
+    <div class="field" style="margin-top:14px;"><label for="xmAllDay">Available all day</label>
+      <input type="text" id="xmAllDay" value="${escapeHtml(d.allDay || '')}" placeholder="e.g. Fruit bowl and crudités">
+      <div class="tinyNote">Shown on the kitchen iPad every day this menu runs, and on its printed menu.</div>
+    </div>`;
+  left.appendChild(basics);
+
+  /* --- when it runs --- */
+  const today = localToday();
+  const upcoming = (d.runs || []).filter(r=> extraRunDates(r) && extraRunDates(r).to >= today)
+    .sort((a, b)=> extraRunDates(a).from - extraRunDates(b).from)[0];
+  const runsCard = document.createElement('section');
+  runsCard.className = 'card xmCard';
+  runsCard.innerHTML = `
+    <h3>When it runs</h3>
+    <div class="tinyNote">Each run starts again at Week 1. Weekends are skipped. A run longer than the rotation goes round again. The kitchen sees the menu from three days before a run starts, so it can prep ahead.</div>
+    ${(d.runs || []).length ? `<table class="xmTable">
+      <thead><tr><th style="width:34%">Name</th><th>From</th><th>To</th><th>Uses</th><th style="width:40px"><span class="sr-only">Remove</span></th></tr></thead>
+      <tbody>${d.runs.map((r, i)=>{
+        const dates = extraRunDates(r);
+        const daysToGo = dates ? Math.round((dates.from - today) / 86400000) : null;
+        const chip = (r === upcoming)
+          ? ` <span class="xmChip next">${daysToGo > 0 ? 'Next · in ' + daysToGo + ' day' + (daysToGo === 1 ? '' : 's') : 'Running now'}</span>` : '';
+        return `<tr>
+          <td><input type="text" data-run="${i}" data-field="name" aria-label="Name of these dates" value="${escapeHtml(r.name || '')}" placeholder="e.g. October half term"></td>
+          <td><input type="date" data-run="${i}" data-field="from" aria-label="From" value="${escapeHtml(r.from || '')}"></td>
+          <td><input type="date" data-run="${i}" data-field="to" aria-label="To" value="${escapeHtml(r.to || '')}"></td>
+          <td style="white-space:nowrap;">${escapeHtml(extraRunWeeksText(r, d.weeks))}${chip}</td>
+          <td><button type="button" class="btn small danger" data-remove-run="${i}" aria-label="Remove ${escapeHtml(r.name || 'these dates')}">✕</button></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>` : '<div class="tinyNote" style="margin-top:8px;"><b>No dates yet.</b> The menu only appears in the kitchen during its dates.</div>'}
+    <div style="margin-top:10px;"><button type="button" class="btn" id="xmAddRun">+ Add dates</button></div>`;
+  left.appendChild(runsCard);
+
+  /* --- the rotation --- */
+  const rotCard = document.createElement('section');
+  rotCard.className = 'card xmCard';
+  const servedCourses = COURSE_ORDER.filter(c=> d.courses[c] && !VEG_COURSES.has(c));
+  const slotsPerWeek = servedCourses.length * DAYS.length;
+  rotCard.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+      <h3>The rotation</h3><button type="button" class="btn small" id="xmPlan2">Plan the rotation</button>
+    </div>
+    <div class="tinyNote">Planned in the same rotation editor as the nursery menus, from the same recipe bank, so allergens come from the linked ingredients as usual. Publish it from The rotation.</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:10px;">
+      ${Array.from({length: d.weeks}, (_, i)=> String(i + 1)).map(wk=>{
+        const days = (season.weeks || {})[wk] || {};
+        const filled = DAYS.reduce((n, day)=> n + servedCourses.filter(c=> (days[day] || {})[c]).length, 0);
+        return `<div style="border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <b>Week ${wk}</b><span class="xmChip"${filled < slotsPerWeek ? ' style="background:var(--butter-light);color:var(--butter-dark);"' : ''}>${filled} of ${slotsPerWeek} planned</span></div>`;
+      }).join('')}
+    </div>`;
+  left.appendChild(rotCard);
+
+  /* --- sites --- */
+  const sitesCard = document.createElement('section');
+  sitesCard.className = 'card xmCard';
+  sitesCard.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:baseline;"><h3>Sites</h3><span class="tinyNote" style="margin:0;">${d.sites.length} of ${SITE_SLUGS.length}</span></div>
+    ${['Little Adventures', 'Green Giraffe'].map(brand=>{
+      const slugs = SITE_SLUGS.filter(sl=> siteSlugLabel(sl).indexOf(brand) === 0).sort((a, b)=> shortSiteLabel(a).localeCompare(shortSiteLabel(b)));
+      if(!slugs.length) return '';
+      return `<div class="xmBrand">${escapeHtml(brand)}</div><div class="xmSites">${slugs.map(slug=>
+        `<label class="xmCheck"><input type="checkbox" data-site="${escapeHtml(slug)}"${d.sites.indexOf(slug) !== -1 ? ' checked' : ''}>${escapeHtml(shortSiteLabel(slug))}</label>`).join('')}</div>`;
+    }).join('')}
+    ${SITE_SLUGS.filter(sl=> !/^(Little Adventures|Green Giraffe)/.test(siteSlugLabel(sl))).length ? `<div class="xmSites">${SITE_SLUGS.filter(sl=> !/^(Little Adventures|Green Giraffe)/.test(siteSlugLabel(sl))).map(slug=>
+      `<label class="xmCheck"><input type="checkbox" data-site="${escapeHtml(slug)}"${d.sites.indexOf(slug) !== -1 ? ' checked' : ''}>${escapeHtml(siteSlugLabel(slug))}</label>`).join('')}</div>` : ''}`;
+  right.appendChild(sitesCard);
+
+  /* --- who's eating --- */
+  const whoCard = document.createElement('section');
+  whoCard.className = 'card xmCard';
+  whoCard.innerHTML = `
+    <h3>Who's eating</h3>
+    <div class="tinyNote">The groups the kitchen counts for this menu, and how many servings each person is. The nursery's own groups are unchanged.</div>
+    <table class="xmTable">
+      <thead><tr><th>Group</th><th style="width:80px">Servings each</th><th style="width:40px"><span class="sr-only">Remove</span></th></tr></thead>
+      <tbody>${d.groups.map((g, i)=> `<tr>
+        <td><input type="text" data-group="${i}" data-field="label" aria-label="Group name" value="${escapeHtml(g.label || '')}"></td>
+        <td><input type="number" min="0.1" step="0.1" data-group="${i}" data-field="mult" aria-label="Servings each for ${escapeHtml(g.label || 'this group')}" value="${escapeHtml(g.mult)}"></td>
+        <td>${d.groups.length > 1 ? `<button type="button" class="btn small danger" data-remove-group="${i}" aria-label="Remove ${escapeHtml(g.label || 'this group')}">✕</button>` : ''}</td>
+      </tr>`).join('')}</tbody>
+    </table>
+    <div style="margin-top:10px;"><button type="button" class="btn" id="xmAddGroup">+ Add a group</button></div>`;
+  right.appendChild(whoCard);
+
+  /* --- what the kitchen sees --- */
+  const kit = document.createElement('section');
+  kit.className = 'card xmCard xmKitchen';
+  const siteText = d.sites.length ? d.sites.map(shortSiteLabel).join(' and ') : 'the sites ticked above';
+  kit.innerHTML = `
+    <h3 style="color:var(--sage-text);">On the kitchen iPad</h3>
+    <ul>
+      <li>During its dates, ${escapeHtml(siteText)} see a <b>Nursery | ${escapeHtml(d.label || key)}</b> switch.</li>
+      <li>It keeps its own ticks and its own headcount.</li>
+      <li>The weekly shopping list adds both menus together.</li>
+      ${d.allDay ? `<li>&ldquo;${escapeHtml(d.allDay)}&rdquo; shows as available all day.</li>` : ''}
+      <li>Prep sheets, recipe cards, the allergen matrix and the menu pack print for this menu too.</li>
+    </ul>
+    <div class="tinyNote" style="margin-top:8px;">Use <b>Preview kitchen page</b> at the top to see it at any time.</div>`;
+  right.appendChild(kit);
+
+  /* --- wiring --- */
+  root.querySelector('#xmName').addEventListener('input', e=>{ d.label = e.target.value; dirty(); });
+  root.querySelector('#xmAllDay').addEventListener('input', e=>{ d.allDay = e.target.value; dirty(); });
+  root.querySelectorAll('.xmWeeks button[data-weeks]').forEach(btn=> btn.addEventListener('click', ()=>{
+    d.weeks = Number(btn.dataset.weeks);
+    redraw();
+  }));
+  root.querySelectorAll('input[data-course]').forEach(cb=> cb.addEventListener('change', ()=>{
+    const c = cb.dataset.course;
+    if(cb.checked) d.courses[c] = {name: EXTRA_COURSE_DEFAULT_NAMES[c] || c, time: ''};
+    else delete d.courses[c];
+    redraw();
+  }));
+  root.querySelectorAll('input[data-cname]').forEach(inp=> inp.addEventListener('input', ()=>{
+    const c = inp.dataset.cname; if(d.courses[c]){ d.courses[c].name = inp.value; dirty(); }
+  }));
+  root.querySelectorAll('input[data-ctime]').forEach(inp=> inp.addEventListener('input', ()=>{
+    const c = inp.dataset.ctime; if(d.courses[c]){ d.courses[c].time = inp.value; dirty(); }
+  }));
+  root.querySelectorAll('input[data-run]').forEach(inp=> inp.addEventListener(inp.type === 'date' ? 'change' : 'input', ()=>{
+    const r = d.runs[Number(inp.dataset.run)];
+    if(!r) return;
+    r[inp.dataset.field] = inp.value;
+    if(inp.type === 'date') redraw(); else dirty();
+  }));
+  root.querySelectorAll('[data-remove-run]').forEach(btn=> btn.addEventListener('click', ()=>{
+    d.runs.splice(Number(btn.dataset.removeRun), 1);
+    redraw();
+  }));
+  root.querySelector('#xmAddRun').addEventListener('click', ()=>{
+    d.runs.push({name: '', from: '', to: ''});
+    redraw();
+  });
+  root.querySelectorAll('input[data-site]').forEach(cb=> cb.addEventListener('change', ()=>{
+    const slug = cb.dataset.site;
+    d.sites = d.sites.filter(x=> x !== slug);
+    if(cb.checked) d.sites.push(slug);
+    redraw();
+  }));
+  root.querySelectorAll('input[data-group]').forEach(inp=> inp.addEventListener('input', ()=>{
+    const g = d.groups[Number(inp.dataset.group)];
+    if(!g) return;
+    g[inp.dataset.field] = inp.dataset.field === 'mult' ? Number(inp.value) : inp.value;
+    dirty();
+  }));
+  root.querySelectorAll('[data-remove-group]').forEach(btn=> btn.addEventListener('click', ()=>{
+    d.groups.splice(Number(btn.dataset.removeGroup), 1);
+    redraw();
+  }));
+  root.querySelector('#xmAddGroup').addEventListener('click', ()=>{
+    let n = d.groups.length + 1;
+    while(d.groups.some(g=> g.key === 'k' + n)) n++;
+    d.groups.push({key: 'k' + n, label: '', mult: 1});
+    redraw();
+  });
+  const plan = ()=> setView('rotation');
+  root.querySelector('#xmPlan').addEventListener('click', plan);
+  root.querySelector('#xmPlan2').addEventListener('click', plan);
+  root.querySelector('#xmSave').addEventListener('click', async ()=>{
+    const cfg = JSON.parse(JSON.stringify(d));
+    cfg.label = String(cfg.label || '').trim();
+    cfg.allDay = String(cfg.allDay || '').trim();
+    cfg.weeks = extraMenuWeeks(cfg);
+    cfg.runs = (cfg.runs || []).map(r=> ({name: String(r.name || '').trim(), from: r.from || '', to: r.to || ''}));
+    cfg.groups = (cfg.groups || []).map(g=> ({key: g.key, label: String(g.label || '').trim(), mult: Number(g.mult)}));
+    Object.keys(cfg.courses).forEach(c=>{
+      cfg.courses[c] = {name: String(cfg.courses[c].name || '').trim(), time: String(cfg.courses[c].time || '').trim()};
+    });
+    const problems = validateExtraMenu(cfg);
+    if(problems.length){ alert('Nothing was saved yet:\n\n' + problems.join('\n')); return; }
+    // Shortening the rotation keeps the dishes in the weeks it drops on
+    // this device, but they stop being published; say so first.
+    const dropping = Object.keys(season.weeks || {}).filter(wk=> Number(wk) > cfg.weeks &&
+      Object.values(season.weeks[wk] || {}).some(c=> Object.keys(c || {}).length));
+    if(dropping.length && !confirm('Week ' + dropping.join(' and ') + ' of this rotation still has dishes in it. With a ' + cfg.weeks + '-week rotation ' +
+      (dropping.length === 1 ? 'it is' : 'they are') + ' kept on this device but no longer published.\n\nSave anyway?')) return;
+    const btn = root.querySelector('#xmSave');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try{
+      await publishExtraMenu(key, cfg);
+      XM_DRAFT = null; XM_DRAFT_DIRTY = false;
+      ensureSeason(key).label = cfg.label;
+      save();
+      toast('Saved. Kitchens pick up the new settings the next time their page loads.');
+      render();
+    }catch(e){
+      btn.disabled = false; btn.textContent = 'Save menu settings';
+      alert(e.message || String(e));
+    }
+  });
+  return root;
+}
+
+/* "+ Add an extra menu…" in the Editing list. */
+function openNewExtraMenuModal(){
+  const overlay = document.createElement('div');
+  overlay.className = 'modalOverlay';
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.innerHTML = `
+    <h3>Add an extra menu</h3>
+    <div class="tinyNote">A menu served alongside the nursery menu on set dates, such as a holiday club. You choose its sites, dates, length and courses next.</div>
+    <div class="field" style="margin-top:12px;"><label for="xmNewName">Name</label><input type="text" id="xmNewName" placeholder="e.g. Holiday club"></div>
+    <div id="xmNewErr" class="warnNote" style="display:none;margin-top:8px;"></div>
+    <div class="closeRow">
+      <button class="btn" id="xmNewCancel">Cancel</button>
+      <button class="btn primary" id="xmNewCreate">Create</button>
+    </div>`;
+  overlay.appendChild(modal);
+  document.getElementById('rbAdminRoot').appendChild(overlay);
+  const input = modal.querySelector('#xmNewName');
+  const err = modal.querySelector('#xmNewErr');
+  setTimeout(()=> input.focus(), 30);
+  modal.querySelector('#xmNewCancel').onclick = ()=> overlay.remove();
+  modal.querySelector('#xmNewCreate').onclick = async ()=>{
+    const name = input.value.trim();
+    const showErr = t=>{ err.textContent = t; err.style.display = 'block'; };
+    if(!name){ showErr('Give it a name.'); return; }
+    const key = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'extra-menu';
+    const taken = key === '_config' || allMenuGroups().indexOf(key) !== -1 || isExtraMenu(key) ||
+      (SEASONS || []).some(x=> x.key === key) || Object.keys(EXTRA_MENUS || {}).some(k=> (EXTRA_MENUS[k].label || '').toLowerCase() === name.toLowerCase());
+    if(taken){ showErr('There is already a menu with that name. Pick another.'); return; }
+    const btn = modal.querySelector('#xmNewCreate');
+    btn.disabled = true; btn.textContent = 'Creating…';
+    try{
+      await publishExtraMenu(key, newExtraMenuSettings(name));
+      overlay.remove();
+      enterEditingMenu(key);
+      toast('Created ' + name + '. Set its sites, dates and courses here.');
+      setView('menuSettings');
+    }catch(e){
+      btn.disabled = false; btn.textContent = 'Create';
+      showErr(e.message || String(e));
+    }
+  };
+}
+
 /* ================= Rotation view ================= */
 function renderRotationView(){
   const season = ensureSeason(DATA.currentSeason);
@@ -10682,6 +11625,8 @@ function renderRotationView(){
   importBtn.className = 'btn primary';
   importBtn.textContent = '⬆ Import a week';
   importBtn.onclick = ()=> openImportModal();
+  // Importing reads the nursery menus' shipped files; an extra menu is planned here.
+  if(isExtraMenu(EDITING_GROUP)) importBtn.hidden = true;
   const searchBtn = document.createElement('button');
   searchBtn.className = 'btn';
   searchBtn.textContent = '🔍 Search recipes';
@@ -10706,7 +11651,8 @@ function renderRotationView(){
   const menuBar = document.createElement('div');
   menuBar.className = 'card';
   menuBar.style.cssText = 'margin-bottom:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;';
-  const others = allMenuGroups().filter(g=> g !== EDITING_GROUP);
+  // Copy only between nursery menus: an extra menu's rotation is a different length and shape.
+  const others = isExtraMenu(EDITING_GROUP) ? [] : allMenuGroups().filter(g=> g !== EDITING_GROUP);
   const up = (DATA.uploads || {})[DATA.currentSeason];
   /* Counted across the whole season rather than per week, because the fix
      is usually one recipe setting that stranded several slots at once --
@@ -10718,7 +11664,9 @@ function renderRotationView(){
       escapeHtml(season.label || DATA.currentSeason) + '</b>' +
     '<div class="tinyNote" style="margin-top:2px;">' +
       (up ? 'Last published <b>' + escapeHtml(new Date(up.at).toLocaleString()) + '</b>. ' : 'Not published from this device yet. ') +
-      'This rotation is separate from the other menu &mdash; editing it here changes nothing anywhere else until you publish.</div></div>';
+      (isExtraMenu(EDITING_GROUP)
+        ? 'A ' + seasonWeekKeys(season).length + '-week rotation for ' + escapeHtml(extraMenuSitesText(EDITING_GROUP)) + '. ' + escapeHtml(extraMenuNextRunText(EDITING_GROUP)) + ' Dates, sites and course names are in <b>Menu settings</b>.</div></div>'
+        : 'This rotation is separate from the other menu &mdash; editing it here changes nothing anywhere else until you publish.</div></div>');
 
 
   /* Both halves of the sync, together, on the thing they act on.
@@ -10786,7 +11734,7 @@ function renderRotationView(){
 
   const cards = document.createElement('div');
   cards.className = 'weekCards';
-  ['1','2','3','4'].forEach(wk=>{
+  seasonWeekKeys(season).forEach(wk=>{
     cards.appendChild(renderWeekCard(season, wk));
   });
   root.appendChild(cards);
@@ -10878,12 +11826,12 @@ function renderWeekView(wk){
   thead.innerHTML = `<tr><th></th>${DAYS.map(d=>`<th>${d}</th>`).join('')}</tr>`;
   table.appendChild(thead);
   const tbody = document.createElement('tbody');
-  COURSE_ORDER.forEach(course=>{
+  editingCourses(season, wk).forEach(course=>{
     const tr = document.createElement('tr');
     if(VEG_COURSES.has(course)) tr.className = 'vegRow';
     const labelTd = document.createElement('td');
     labelTd.className = 'courseLabel';
-    labelTd.textContent = course;
+    labelTd.textContent = extraCourseLabel(EDITING_GROUP, course);
     tr.appendChild(labelTd);
     DAYS.forEach(day=>{
       const td = document.createElement('td');
@@ -11148,7 +12096,7 @@ function recipeCardsSlotEntries(seasonKey){
   const season = DATA.seasons[seasonKey];
   if(!season) return [];
   const entries = [];
-  ['1','2','3','4'].forEach(wk=>{
+  seasonWeekKeys(season).forEach(wk=>{
     const week = (season.weeks||{})[wk] || {};
     DAYS.forEach(day=>{
       const courses = week[day] || {};
@@ -11197,7 +12145,7 @@ function renderRecipeCardsPickerView(){
   toolbar.className = 'pkToolbar';
   toolbar.innerHTML = `
     <input class="pkSearch" id="pkSearch" type="text" placeholder="Search recipes…">
-    <select id="pkWeek" class="pkSelect"><option value="all">All weeks</option>${['1','2','3','4'].map(w=> `<option value="${w}">Week ${w}</option>`).join('')}</select>
+    <select id="pkWeek" class="pkSelect"><option value="all">All weeks</option>${seasonWeekKeys(ensureSeason(DATA.currentSeason)).map(w=> `<option value="${w}">Week ${w}</option>`).join('')}</select>
     <select id="pkMeal" class="pkSelect"><option value="all">All courses</option>${COURSE_ORDER.map(c=> `<option value="${escapeHtml(c)}">${escapeHtml(recipeCardCourseLabel(c))}</option>`).join('')}</select>
     <select id="pkDiet" class="pkSelect">
       <option value="all">All diets</option>
@@ -11678,7 +12626,7 @@ function renderRecipeView(recipeId, slotCtx){
     const isBoth = current.length === groups.length;
     const options = [{key: '*', label: 'Both menus'}].concat(groups.map(g=> ({key: g, label: menuGroupLabel(g)})));
     const selected = isBoth ? '*' : (current.length === 1 ? current[0] : '*');
-    const usage = findRecipeUsageAllMenus(recipeId);
+    const usage = findRecipeUsageAllMenus(recipeId).filter(u=> !isExtraMenu(u.group));
     const stranded = usage.filter(u=> current.indexOf(u.group) === -1);
     availCard.innerHTML = `
       <h3>Available at</h3>
@@ -11706,7 +12654,7 @@ function renderRecipeView(recipeId, slotCtx){
     // Only the slots that this change would strand -- usage on a menu the
     // recipe is KEEPING is not affected and must not be listed, or the
     // warning stops meaning anything.
-    const losing = findRecipeUsageAllMenus(recipeId).filter(u=> next.indexOf(u.group) === -1);
+    const losing = findRecipeUsageAllMenus(recipeId).filter(u=> !isExtraMenu(u.group) && next.indexOf(u.group) === -1);
     const commit = ()=>{
       recipe.menus = next.slice();
       logChange(recipeId, 'Available at: ' + recipeAvailabilityLabel(recipe));
@@ -13435,7 +14383,7 @@ async function importSeasonJson(json, seasonKeyHint, groupHint){
   // captured at the top, once, closes that: seasonForGroup(groupHint, ...)
   // resolves the same way seasonForGroup/seasonForGroup-based callers
   // elsewhere in this file already do, ignoring EDITING_GROUP entirely.
-  const seasonKey = SEASONS.some(s=>s.key===seasonKeyHint) ? seasonKeyHint : DATA.currentSeason;
+  const seasonKey = seasonMetaFor(seasonKeyHint) ? seasonKeyHint : DATA.currentSeason;
   const season = groupHint ? seasonForGroup(groupHint, seasonKey) : ensureSeason(seasonKey);
   // Make sure the ingredient database is loaded (and as fresh as possible)
   // before matching newly-imported recipes against it below — importing can
@@ -13450,7 +14398,8 @@ async function importSeasonJson(json, seasonKeyHint, groupHint){
   });
 
   const importNotes = {};
-  ['1','2','3','4'].forEach(wk=> importNotes[wk] = []);
+  const importWeeks = Array.from(new Set(seasonWeekKeys(season).concat(Object.keys(json || {}))));
+  importWeeks.forEach(wk=> importNotes[wk] = []);
   // How many ingredient rows this import repointed at the record the
   // published file names. Worth surfacing: on the first import after this
   // change it is the count of links that were silently wrong on this
@@ -13650,7 +14599,7 @@ async function importSeasonJson(json, seasonKeyHint, groupHint){
       });
     });
   });
-  ['1','2','3','4'].forEach(wk=>{
+  importWeeks.forEach(wk=>{
     season.importedAt[wk] = nowIso();
     if(!season.notes[wk]) season.notes[wk] = [];
   });
@@ -13686,7 +14635,7 @@ async function importSeasonJson(json, seasonKeyHint, groupHint){
 function seasonSlotsMissingRecipes(seasonKey){
   const season = ensureSeason(seasonKey);
   const missing = [];
-  ['1','2','3','4'].forEach(wk=>{
+  seasonWeekKeys(season).forEach(wk=>{
     const days = season.weeks[wk] || {};
     DAYS.forEach(day=>{
       const courses = days[day] || {};
@@ -13704,7 +14653,7 @@ function seasonSlotsMissingRecipes(seasonKey){
 function buildSeasonExportJson(seasonKey){
   const season = ensureSeason(seasonKey);
   const out = {};
-  ['1','2','3','4'].forEach(wk=>{
+  seasonWeekKeys(season).forEach(wk=>{
     out[wk] = {};
     const days = season.weeks[wk] || {};
     DAYS.forEach(day=>{
@@ -14040,6 +14989,27 @@ function menuPackMealCellHtml(recipeBank, recipeId, showDescription, bgKey){
    -- just constant text every day/week (see MENU_PACK_MIDMORNING/
    MENU_PACK_LATESNACK above) -- and dropping the Vegetarian Option row
    entirely for a week where no day actually uses it. */
+/* An extra menu's printed rows: its own courses, in order, under its own
+   names and times, every dish with its description, then the all-day line. */
+function extraMenuPackRowSequence(key, season, wk){
+  const cfg = EXTRA_MENUS[key] || {};
+  const days = season.weeks[wk] || {};
+  const seq = [];
+  COURSE_ORDER.forEach(course=>{
+    const c = cfg.courses && cfg.courses[course];
+    const used = DAYS.some(d=> (days[d]||{})[course]);
+    if(!c && !used) return;
+    if(VEG_COURSES.has(course) && !used) return;
+    seq.push({type: 'meal', row: {
+      course, slug: course.toLowerCase().replace(/[^a-z]+/g, ''),
+      label: (c && String(c.name || '').trim()) || course, time: (c && String(c.time || '').trim()) || '',
+      band: course === 'Snack' ? 'green' : 'tan', showDescription: true, afterText: null, afterIcon: null
+    }});
+  });
+  if(cfg.allDay) seq.push({type: 'static', row: {slug: 'allday', label: 'Available all day', time: '', band: 'green', text: String(cfg.allDay)}});
+  return seq;
+}
+
 function menuPackBuildRowSequence(season, wk){
   const days = season.weeks[wk] || {};
   const seq = [];
@@ -14052,9 +15022,9 @@ function menuPackBuildRowSequence(season, wk){
   return seq;
 }
 
-function menuPackWeekTableHtml(season, wk){
+function menuPackWeekTableHtml(season, wk, extraKey){
   const days = season.weeks[wk] || {};
-  const seq = menuPackBuildRowSequence(season, wk);
+  const seq = extraKey ? extraMenuPackRowSequence(extraKey, season, wk) : menuPackBuildRowSequence(season, wk);
   let rowsHtml = '';
   seq.forEach(item=>{
     const r = item.row;
@@ -14234,10 +15204,11 @@ function menuPackIntroPageHtml(seasonLabel){
   </div>`;
 }
 
-function menuPackWeekPageHtml(season, wk, seasonLabel){
+function menuPackWeekPageHtml(season, wk, seasonLabel, seasonKey){
+  const extra = isExtraMenu(seasonKey);
   return `<div class="mpPage">
-    ${menuPackHeaderHtml(seasonLabel, 'Stage 3 - Menu Week ' + wk)}
-    ${menuPackWeekTableHtml(season, wk)}
+    ${menuPackHeaderHtml(seasonLabel, (extra ? 'Menu Week ' : 'Stage 3 - Menu Week ') + wk)}
+    ${menuPackWeekTableHtml(season, wk, extra ? seasonKey : null)}
     ${menuPackAllergenKeyHtml()}
   </div>`;
 }
@@ -14928,7 +15899,7 @@ const MENU_PACK_PDF_SCRIPT = `
 function buildAllergenMatrixHtml(seasonKey, weeks){
   const season = ensureSeason(seasonKey);
   const seasonLabel = season.label;
-  const wanted = (weeks && weeks.length) ? weeks : ['1','2','3','4'];
+  const wanted = (weeks && weeks.length) ? weeks : seasonWeekKeys(season);
   const sources = wanted.map(wk=>{
     const recipes = recipeIdsInWeek(season, wk).map(id=> DATA.recipeBank[id]).filter(Boolean)
       .filter(r=> !isRotationPlaceholderRecipe(r))
@@ -14936,7 +15907,7 @@ function buildAllergenMatrixHtml(seasonKey, weeks){
     return menuPackAllergenSourceHtml(recipes, wk, seasonLabel);
   }).join('');
   const css = MENU_PACK_CSS + MENU_PACK_TIGHT1_CSS + MENU_PACK_TIGHT2_CSS + MENU_PACK_ALLERGEN_CSS;
-  const weekWord = wanted.length === 4 ? 'all 4 weeks' :
+  const weekWord = wanted.length === seasonWeekKeys(season).length ? 'all ' + wanted.length + ' weeks' :
     (wanted.length === 1 ? 'week ' + wanted[0] : 'weeks ' + wanted.join(', '));
   return `<!DOCTYPE html><html><head><meta charset="utf-8">
 <title>Allergen matrix — ${escapeHtml(seasonLabel)}</title>
@@ -14967,14 +15938,15 @@ function openAllergenMatrixPrint(seasonKey, weeks){
 function buildMenuPackHtml(seasonKey, opts){
   const season = ensureSeason(seasonKey);
   const seasonLabel = season.label;
-  const pages = [menuPackIntroPageHtml(seasonLabel)];
-  ['1','2','3','4'].forEach(wk=> pages.push(menuPackWeekPageHtml(season, wk, seasonLabel)));
+  // The weaning-stages page is about the nursery menu, not an extra one.
+  const pages = isExtraMenu(seasonKey) ? [] : [menuPackIntroPageHtml(seasonLabel)];
+  seasonWeekKeys(season).forEach(wk=> pages.push(menuPackWeekPageHtml(season, wk, seasonLabel, seasonKey)));
   // Phase 32: the Allergen Matrix is appended after the 4 week menu pages,
   // in this same download, per John's choice -- one .mpAllergenSource
   // staging block per week (see that function's own comment), which
   // MENU_PACK_ALLERGEN_PAGINATE_SCRIPT expands into 1+ real pages once the
   // pack has loaded and real row heights can be measured.
-  const allergenSources = ['1','2','3','4'].map(wk=>{
+  const allergenSources = seasonWeekKeys(season).map(wk=>{
     const recipes = recipeIdsInWeek(season, wk).map(id=> DATA.recipeBank[id]).filter(Boolean)
       .filter(r=> !isRotationPlaceholderRecipe(r))
       .sort((a,b)=> (a.name||'').localeCompare(b.name||''));
@@ -16214,6 +17186,18 @@ async function rbShowAppShell(){
     migrateSeasonsIntoMenus(menuGroupForSite(openedFrom) || 'general');
     SEASONS_ALIAS_READY = true;
   }
+  if(!isExtraMenu(EDITING_GROUP) && isExtraMenu(DATA.currentSeason)){
+    DATA.currentSeason = editingSeasonFor(EDITING_GROUP);
+  }
+  /* Extra menu settings, re-read on every open like the season list, and
+     never replaced by the built-in starting point once real ones exist. */
+  loadExtraMenusConfig().then(fresh=>{
+    if(!fresh || (fresh === EXTRA_MENUS_DEFAULT && EXTRA_MENUS !== EXTRA_MENUS_DEFAULT)) return;
+    if(JSON.stringify(fresh) === JSON.stringify(EXTRA_MENUS)) return;
+    EXTRA_MENUS = fresh;
+    if(isExtraMenu(EDITING_GROUP)) ensureSeason(DATA.currentSeason);
+    renderTopbar();
+  }).catch(()=>{});
   render(); // immediate paint with whatever's already local -- never blocks on the network
   /* FIX: SEASONS was only read when the kitchen page first loaded, so a
      season a colleague added while this page sat open never reached the
