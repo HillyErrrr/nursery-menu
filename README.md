@@ -2067,3 +2067,13 @@ Removing always asks first. The confirm box says:
 A device that was left editing the removed menu goes back to a real nursery season the next time Staff admin opens, rather than showing a blank rotation. Kitchens stop showing the menu the next time their page loads.
 
 Checked: 6 new checks (`remove.js`), plus all the earlier suites and her 11.
+
+## 1 October 2026: "Same as above" stays off the kitchen page
+
+A slot holding "Same as Above" (usually a vegetarian option that is the same as the main) is an instruction, not a dish. The kitchen page now leaves it out of the station's course list, the list view and the prep sheets.
+
+On a day where the vegetarian option is "Same as Above", the veg children eat the main. So the main is made for everyone, and the "how many are having the vegetarian option" box only appears when there is a real veg dish. Before this, the main was made for everyone except the veg children, and nobody cooked their portion. The shopping list follows the same rule.
+
+Staff admin's rotation grid and the printed menu pack still show "Same as Above", where it is the message.
+
+Checked: 6 new checks (`same.js`, including a real veg dish still taking its children from the main), the station, today's-menu, extra-menu and site checks, the all-sites sweep, and her kitchen, menus, prepnotes and props suites.

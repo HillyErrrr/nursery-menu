@@ -1231,10 +1231,18 @@ const VEG_SWAP_PAIRS = [
    alternative on the menu that day) just gets the full total. Both the
    prep-list rendering and the shopping-list aggregation call this, so the
    two always agree on how servings are split. */
+/* "Same as above" in a slot means "the dish in the slot above" -- usually a
+   vegetarian option that is the same as the main. It is an instruction, not
+   a dish: nothing to prep, nothing to tick. The kitchen page leaves it out,
+   and treats that day as having no separate veg dish, so the veg children
+   are counted in the dish they actually eat. */
+function isSameAsAbove(name){ return /^same\s*as\s*above\b/i.test(String(name || '').trim()); }
+function realDishNames(recipes){ return Object.keys(recipes || {}).filter(n=> !isSameAsAbove(n)); }
+function courseHasRealDish(recipes){ return realDishNames(recipes).length > 0; }
 function servingsForCourseName(courseName, dayCourses, totalServ, vegCount){
   const pair = VEG_SWAP_PAIRS.find(p=> p.base===courseName || p.veg===courseName);
   if(!pair) return totalServ;
-  const pairHasVeg = !!dayCourses[pair.veg];
+  const pairHasVeg = courseHasRealDish(dayCourses[pair.veg]);
   const vegForPair = pairHasVeg ? Math.min(Number(vegCount)||0, totalServ) : 0;
   return courseName === pair.veg ? vegForPair : Math.max(0, totalServ - vegForPair);
 }
@@ -2479,7 +2487,7 @@ function renderHeadcount(){
   body.appendChild(total);
 
   const dayCourses = (MENU[state.week] && MENU[state.week][state.day]) || {};
-  const dayHasVegSwap = VEG_SWAP_PAIRS.some(p=>dayCourses[p.veg]);
+  const dayHasVegSwap = VEG_SWAP_PAIRS.some(p=> courseHasRealDish(dayCourses[p.veg]));
   if(dayHasVegSwap){
     const vegRow = document.createElement('div');
     vegRow.className = 'veg-row';
@@ -2542,7 +2550,7 @@ function renderCourses(){
   const totalServ = totalServings();
 
   const summaryParts = [];
-  const availableCourses = COURSE_ORDER.filter(c=>dayCourses[c]);
+  const availableCourses = COURSE_ORDER.filter(c=> courseHasRealDish(dayCourses[c]));
   if(availableCourses.length===0){
     container.innerHTML = '<div class="empty"><i class="ti ti-toque"></i>No menu on file for this day.</div>';
     document.getElementById('menuSummary').textContent = '';
@@ -2551,7 +2559,7 @@ function renderCourses(){
 
   availableCourses.forEach(courseName=>{
     const recipes = dayCourses[courseName];
-    Object.keys(recipes).forEach(recipeName=>{
+    realDishNames(recipes).forEach(recipeName=>{
       const recipe = recipes[recipeName];
       const servingsForCourse = servingsForCourseName(courseName, dayCourses, totalServ, state.headcounts.veg);
 
@@ -2820,8 +2828,8 @@ function stationDayItems(){
   const dayCourses = (MENU[state.week] && MENU[state.week][state.day]) || {};
   const totalServ = totalServings();
   const out = [];
-  COURSE_ORDER.filter(c=> dayCourses[c]).forEach(courseName=>{
-    Object.keys(dayCourses[courseName]).forEach(recipeName=>{
+  COURSE_ORDER.filter(c=> courseHasRealDish(dayCourses[c])).forEach(courseName=>{
+    realDishNames(dayCourses[courseName]).forEach(recipeName=>{
       const recipe = dayCourses[courseName][recipeName];
       const servings = servingsForCourseName(courseName, dayCourses, totalServ, state.headcounts.veg);
       const base = recipe.baseServings;
@@ -2894,7 +2902,7 @@ function stationWhoLine(){
     ? GROUPS.map(g=> `${g.label}: ${n(g.key)}`)
     : [`1–2s ${n('c1')}`, `2–3s ${n('c2')}`, `3–4s ${n('c3')}`, `staff ${n('staff')}`];
   const dayCourses = (MENU[state.week] && MENU[state.week][state.day]) || {};
-  if(VEG_SWAP_PAIRS.some(p=> dayCourses[p.veg])) parts.push(`veg ${n('veg')}`);
+  if(VEG_SWAP_PAIRS.some(p=> courseHasRealDish(dayCourses[p.veg]))) parts.push(`veg ${n('veg')}`);
   return parts;
 }
 
@@ -3177,9 +3185,9 @@ function prepSheetCourses(){
   const dayCourses = (MENU[state.week] && MENU[state.week][state.day]) || {};
   const totalServ = totalServings();
   const out = [];
-  COURSE_ORDER.filter(c=> dayCourses[c]).forEach(courseName=>{
+  COURSE_ORDER.filter(c=> courseHasRealDish(dayCourses[c])).forEach(courseName=>{
     const recipes = dayCourses[courseName];
-    Object.keys(recipes).forEach(recipeName=>{
+    realDishNames(recipes).forEach(recipeName=>{
       const recipe = recipes[recipeName];
       const need = servingsForCourseName(courseName, dayCourses, totalServ, state.headcounts.veg);
       const base = recipe.baseServings;
@@ -3297,12 +3305,12 @@ function renderShopGrid(){
     body.appendChild(tr);
   });
 
-  const hasAnyVeg = days.some(day=> VEG_SWAP_PAIRS.some(p=>MENU[state.week][day][p.veg]));
+  const hasAnyVeg = days.some(day=> VEG_SWAP_PAIRS.some(p=> courseHasRealDish(MENU[state.week][day][p.veg])));
   if(hasAnyVeg){
     const tr = document.createElement('tr');
     let cells = `<td>Veg option<span class="mult-note">of the above</span></td>`;
     days.forEach(day=>{
-      const has = VEG_SWAP_PAIRS.some(p=>MENU[state.week][day][p.veg]);
+      const has = VEG_SWAP_PAIRS.some(p=> courseHasRealDish(MENU[state.week][day][p.veg]));
       if(has){
         cells += `<td><input type="number" min="0" class="hc-input" data-day="${day}" data-key="veg" value="${(state.shopGrid[day]&&state.shopGrid[day].veg)||0}"></td>`;
       }else{
@@ -3573,7 +3581,7 @@ function daysWithNoBaseServings(){
     if(totalServ <= 0) return;
     const veg = Number(dayHC.veg) || 0;
     VEG_SWAP_PAIRS.forEach(pair=>{
-      if(!dayCourses[pair.base] || !dayCourses[pair.veg]) return;
+      if(!dayCourses[pair.base] || !courseHasRealDish(dayCourses[pair.veg])) return;
       if(servingsForCourseName(pair.base, dayCourses, totalServ, veg) <= 0){
         out.push({day, course: pair.base, veg, totalServ});
       }
@@ -9144,9 +9152,10 @@ function computeRecipeNutrition(recipe){
    for a slot that isn't actually missing anything.
 
    So every screen that asks "what are the real recipes here" filters it
-   out through this one predicate. The rotation grid, the kitchen page and
-   the Menu Pack's own menu pages deliberately do NOT -- there the
-   placeholder is the message.
+   out through this one predicate. The rotation grid and the Menu Pack's
+   own menu pages deliberately do NOT -- there the placeholder is the
+   message. (The kitchen page hides it too since October 2026: John asked
+   for it to stay off the iPad's course list. See isSameAsAbove.)
 
    Anchored to the start of the name so a real recipe that merely mentions
    the phrase somewhere can't be swallowed by this. */
