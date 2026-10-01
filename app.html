@@ -11265,6 +11265,102 @@ async function publishExtraMenu(key, cfg){
   throw new Error('Someone else saved menu settings at the same moment. Try again.');
 }
 
+/* Takes one extra menu out of the shared settings, leaving every other
+   menu as it was saved. The recipes it used stay in the recipe bank; the
+   nursery menus are untouched. */
+async function removeExtraMenu(key){
+  for(let attempt = 1; attempt <= 3; attempt++){
+    const live = await fetchExtraMenusLive();
+    if(live.status === 'error'){
+      throw new Error("Couldn't read the saved menu settings just now, so nothing was removed. Try again in a moment.");
+    }
+    const next = Object.assign({}, live.status === 'ok' ? live.menus : JSON.parse(JSON.stringify(EXTRA_MENUS || {})));
+    delete next[key];
+    try{
+      await saveSeasonToServer('_config', 'extra-menus.json', {menus: next}, undefined, live.etag || undefined);
+      EXTRA_MENUS = next;
+      return;
+    }catch(e){
+      if(!e || !e.conflict) throw e;
+    }
+  }
+  throw new Error('Someone else saved menu settings at the same moment. Try again.');
+}
+
+/* The confirm step. Says what removing does, and whether the menu is
+   running now or has dates to come, before anything is changed. */
+function openRemoveExtraMenuModal(key){
+  const cfg = EXTRA_MENUS[key] || {};
+  const name = cfg.label || key;
+  const today = localToday();
+  const runs = (cfg.runs || []).filter(extraRunDates);
+  const runningNow = runs.some(r=> extraRunDates(r).from <= today && extraRunDates(r).to >= today);
+  const toCome = runs.filter(r=> extraRunDates(r).from > today).length;
+  const season = (menusStore()[key] || {})[key];
+  const dishes = season ? Object.values(season.weeks || {}).reduce((n, days)=>
+    n + Object.values(days || {}).reduce((m, c)=> m + Object.keys(c || {}).length, 0), 0) : 0;
+  const overlay = document.createElement('div');
+  overlay.className = 'modalOverlay';
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', 'xmRemoveTitle');
+  modal.innerHTML = `
+    <h3 id="xmRemoveTitle">Remove “${escapeHtml(name)}”?</h3>
+    ${runningNow ? `<div class="warnNote" style="margin-top:8px;"><b>This menu is running now.</b> ${escapeHtml(extraMenuSitesText(key))} will stop seeing it the next time their kitchen page loads.</div>` : ''}
+    ${!runningNow && toCome ? `<div class="warnNote" style="margin-top:8px;"><b>It has ${toCome} set of dates still to come.</b> Kitchens will not see it on those dates.</div>` : ''}
+    <ul style="margin:10px 0 0;padding-left:18px;font-size:13px;line-height:1.5;">
+      <li>It comes off the Editing list for everyone, and off the kitchen iPads at ${escapeHtml(extraMenuSitesText(key))}.</li>
+      <li>Its settings and its ${dishes ? dishes + '-dish ' : ''}rotation go with it. This can't be undone from here.</li>
+      <li>The recipes it used stay in the recipe bank, and the nursery menus are not changed.</li>
+    </ul>
+    <div id="xmRemoveErr" class="warnNote" style="display:none;margin-top:10px;"></div>
+    <div class="closeRow">
+      <button class="btn" id="xmRemoveCancel">Cancel</button>
+      <button class="btn danger" id="xmRemoveConfirm">Yes, remove this menu</button>
+    </div>`;
+  overlay.appendChild(modal);
+  document.getElementById('rbAdminRoot').appendChild(overlay);
+  let busy = false;
+  const close = ()=>{ if(!busy) overlay.remove(); };
+  modal.querySelector('#xmRemoveCancel').onclick = close;
+  overlay.addEventListener('click', e=>{ if(e.target === overlay) close(); });
+  setTimeout(()=> modal.querySelector('#xmRemoveCancel').focus(), 30);
+  modal.querySelector('#xmRemoveConfirm').onclick = async ()=>{
+    if(busy) return;
+    busy = true;
+    const btn = modal.querySelector('#xmRemoveConfirm');
+    btn.disabled = true; btn.textContent = 'Removing…';
+    try{
+      await removeExtraMenu(key);
+      // Back to the nursery menu this admin was opened from.
+      const home = menuGroupForSite(SITE_SLUG) || 'general';
+      if(EDITING_GROUP === key || DATA.currentSeason === key){
+        // The removed menu is no longer an extra menu, so pick the nursery
+        // season explicitly rather than letting it carry over.
+        const last = DATA.lastNurserySeason;
+        const season = (last && last !== key && (SEASONS || []).some(x=> x.key === last)) ? last : pickSeasonForDate(SEASONS, todayKey()).key;
+        useEditingGroup(allMenuGroups().indexOf(home) !== -1 ? home : allMenuGroups()[0]);
+        DATA.currentSeason = season;
+      }
+      delete menusStore()[key];
+      if(XM_DRAFT_KEY === key){ XM_DRAFT = null; XM_DRAFT_KEY = null; XM_DRAFT_DIRTY = false; }
+      save();
+      busy = false;
+      overlay.remove();
+      toast('Removed ' + name + '.');
+      setView('rotation');
+    }catch(e){
+      busy = false;
+      btn.disabled = false; btn.textContent = 'Yes, remove this menu';
+      const err = modal.querySelector('#xmRemoveErr');
+      err.textContent = e.message || String(e);
+      err.style.display = 'block';
+    }
+  };
+}
+
 function validateExtraMenu(cfg){
   const problems = [];
   if(!String(cfg.label || '').trim()) problems.push('Give the menu a name.');
@@ -11468,6 +11564,15 @@ function renderMenuSettingsView(){
     <div class="tinyNote" style="margin-top:8px;">Use <b>Preview kitchen page</b> at the top to see it at any time.</div>`;
   right.appendChild(kit);
 
+  /* --- remove --- */
+  const removeCard = document.createElement('section');
+  removeCard.className = 'card xmCard';
+  removeCard.innerHTML = `
+    <h3>Remove this menu</h3>
+    <div class="tinyNote">Takes ${escapeHtml(d.label || key)} off the Editing list and off the kitchen iPads. Its recipes stay in the recipe bank. You'll be asked to confirm.</div>
+    <div style="margin-top:10px;"><button type="button" class="btn danger" id="xmRemove">Remove menu…</button></div>`;
+  right.appendChild(removeCard);
+
   /* --- wiring --- */
   root.querySelector('#xmName').addEventListener('input', e=>{ d.label = e.target.value; dirty(); });
   root.querySelector('#xmAllDay').addEventListener('input', e=>{ d.allDay = e.target.value; dirty(); });
@@ -11523,6 +11628,7 @@ function renderMenuSettingsView(){
     d.groups.push({key: 'k' + n, label: '', mult: 1});
     redraw();
   });
+  root.querySelector('#xmRemove').addEventListener('click', ()=> openRemoveExtraMenuModal(key));
   const plan = ()=> setView('rotation');
   root.querySelector('#xmPlan').addEventListener('click', plan);
   root.querySelector('#xmPlan2').addEventListener('click', plan);
@@ -17308,6 +17414,14 @@ async function rbShowAppShell(){
   }
   if(!isExtraMenu(EDITING_GROUP) && isExtraMenu(DATA.currentSeason)){
     DATA.currentSeason = editingSeasonFor(EDITING_GROUP);
+  }
+  /* Last edited an extra menu that has since been removed (on this device
+     or another): it is neither an extra menu nor a season this nursery
+     menu holds, so go back to a real season instead of a blank one. */
+  if(!isExtraMenu(EDITING_GROUP) && !isExtraMenu(DATA.currentSeason) &&
+     !(SEASONS || []).some(x=> x.key === DATA.currentSeason) && !menuFor(EDITING_GROUP)[DATA.currentSeason]){
+    const last = DATA.lastNurserySeason;
+    DATA.currentSeason = (last && (SEASONS || []).some(x=> x.key === last)) ? last : pickSeasonForDate(SEASONS, todayKey()).key;
   }
   /* Extra menu settings, re-read on every open like the season list, and
      never replaced by the built-in starting point once real ones exist. */

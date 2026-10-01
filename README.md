@@ -2035,3 +2035,35 @@ The Holiday club prints in its own, lighter style.
 - **No weaning page:** the weaning-stages page is left out.
 
 The nursery menu pack is unchanged. Checked: both weeks and the key fit on the page, no description is cut off, Download PDF works, and the nursery pack still has its weaning page and four week pages.
+
+## 1 October 2026: Wedmore removed, Cheltenham Central added
+
+- **Wedmore is removed.** Its site folder is gone and it is no longer listed:
+  - on the nursery picker (`index.html`);
+  - in Staff admin's site list (`SITE_SLUGS`).
+
+  Its old link (`?site=little-adventures-wedmore`) now shows "Nursery not found". The footer's built-in placeholder address, which was Wedmore's, is now blank until the site's own details load. The example links in this README now use Cheddar.
+- **Cheltenham Central is added**, as `little-adventures-cheltenham-central`:
+  - Little Adventures Nursery, at 107 St Georges Road, Cheltenham, GL50 3ED;
+  - it uses the general menu;
+  - its logo is the Little Adventures Cheltenham one from `site_logos_raw`;
+  - its phone and email are the group ones every site uses.
+
+  Its kitchen link is `app.html?site=little-adventures-cheltenham-central`.
+
+## 1 October 2026: removing an extra menu
+
+**Menu settings** now has a **Remove menu…** button at the bottom of the right-hand column. It appears only for extra menus, such as the Holiday club; the two nursery menus cannot be removed, because sites are tied to them.
+
+Removing always asks first. The confirm box says:
+
+- that the menu comes off the Editing list for everyone, and off the kitchen iPads at its sites;
+- that its settings and its rotation go with it, and this can't be undone from there;
+- that its recipes stay in the recipe bank, and the nursery menus are not changed;
+- whether the menu is **running now**, or still has dates to come.
+
+**Cancel** changes nothing. **Yes, remove this menu** takes only that menu out of `_config/extra-menus.json`, using the same re-read-and-replace as a save, so other menus are never disturbed. It then returns to the nursery menu and a real season.
+
+A device that was left editing the removed menu goes back to a real nursery season the next time Staff admin opens, rather than showing a blank rotation. Kitchens stop showing the menu the next time their page loads.
+
+Checked: 6 new checks (`remove.js`), plus all the earlier suites and her 11.
