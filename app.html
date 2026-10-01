@@ -443,7 +443,7 @@ table.shopListTable tr.shopCatRow td{
 .allergen-modal-backdrop{
   position:fixed;inset:0;background:rgba(20,30,40,.55);
   display:flex;align-items:center;justify-content:center;
-  /* above the kitchen recipe screen (#prepDetailOverlay, 8000) AND Staff
+  /* above the station's Who's eating sheet (8500) AND Staff
      admin (9000) -- admin's week grid opens this popup too, and at 1000 it
      sat invisibly underneath and blocked the next click */
   z-index:9500;padding:20px;
@@ -730,51 +730,211 @@ body.draggingIngredient{-webkit-user-select:none;user-select:none;}
 .rbAdminTriggerBtn:hover{color:var(--ink, #1F3C55);}
 #rbAdminRoot .btn.hasUnsaved{background:#B8860B;border-color:#B8860B;color:#fff;}
 
-/* ---------- prep grid + detail overlay (day-at-a-glance mode) ---------- */
-#prepGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin:18px 0;}
-.pgCard{position:relative;display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;cursor:pointer;font:inherit;color:inherit;box-sizing:border-box;transition:transform .12s ease, box-shadow .12s ease;}
-.pgCard:hover,.pgCard:focus-visible{transform:translateY(-2px);box-shadow:0 4px 14px rgba(31,60,85,0.16);outline:none;}
-.pgCard .course-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;}
-#prepDetailOverlay{position:fixed;inset:0;z-index:8000;}
-.pgBackdrop{position:fixed;inset:0;background:rgba(31,60,85,0.45);}
-.pgPanelOuter{position:fixed;inset:0;background:var(--paper);display:flex;flex-direction:column;min-height:0;box-sizing:border-box;padding:16px;overflow:hidden;}
-.pgBackBtn{align-self:flex-start;background:none;border:none;color:var(--ink-soft);font-size:14px;padding:8px 4px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:6px;flex:0 0 auto;font-family:inherit;}
-.pgBackBtn:hover{color:var(--ink);}
-.pgDetailHead{flex:0 0 auto;display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding-bottom:12px;border-bottom:1px solid var(--line);margin-bottom:12px;}
-.pgSplitRow{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-.pgSplitRow.no-method{grid-template-columns:1fr;}
-.pgSplitRow.pgExpanded-ing{grid-template-columns:1fr;}
-.pgSplitRow.pgExpanded-ing .pgMethodCol{display:none;}
-.pgSplitRow.pgExpanded-method{grid-template-columns:1fr;}
-.pgSplitRow.pgExpanded-method .pgIngCol{display:none;}
-.pgCol{display:flex;flex-direction:column;min-height:0;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
-.pgColBar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line);font-family:'Roca','Space Grotesk',sans-serif;font-weight:600;color:var(--ink);}
-.pgExpandBtn{background:var(--paper-dim);border:1px solid var(--line-strong);color:var(--ink-soft);border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;}
-.pgExpandBtn:hover{color:var(--ink);}
-.pgScroll{flex:1 1 auto;min-height:0;overflow:auto;padding:10px;}
-body.pgDetailOpen{overflow:hidden;}
-.pgNoAllergens{font-size:12.5px;color:var(--ink-soft);margin-top:6px;}
-.pgCard .allergen-badge{pointer-events:none;}
-/* A <button> centres its content vertically, so in a row of equal-height
-   cards a two-line dish name started higher than its neighbours. */
-.pgCard{display:flex;flex-direction:column;justify-content:flex-start;align-items:stretch;}
+/* ---------- prep station (the iPad layout) ----------
+   One screen that does not scroll as a page: a navy bar with the day, the
+   day's courses down the left, and the chosen dish's ingredients and method
+   side by side, each scrolling in its own panel. */
+#prepModeToggle{margin-left:auto;margin-right:8px;}
+#prepModeToggle ~ #prepPrintBtn{margin-right:8px;}
 @media (max-width:680px){
   .ticket-head-top{flex-wrap:wrap;gap:8px;}
   #prepModeToggle{margin-left:0;}
-  /* both columns stack here and the expand buttons are hidden, so an
-     expanded state carried over from a wider screen must not hide one */
-  .pgSplitRow.pgExpanded-ing .pgMethodCol,.pgSplitRow.pgExpanded-method .pgIngCol{display:flex;}
-  .pgPanelOuter{overflow:auto;}
-  .pgSplitRow{display:block;overflow:visible;min-height:0;}
-  .pgCol{margin-bottom:16px;min-height:0;}
-  .pgCol:last-child{margin-bottom:0;}
-  .pgScroll{overflow:visible;}
-  .pgExpandBtn{display:none;}
 }
-#prepModeToggle{margin-left:auto;margin-right:8px;}
-#prepModeToggle ~ #prepPrintBtn{margin-right:8px;}
-.pgCard .course-head{padding:0;border:0;cursor:inherit;background:none;}
-.pgCard .course-head:hover{background:none;}
+#prepStation{display:none;}
+#hcSheetBackdrop{display:none;}
+.hcSheetFoot{display:none;}
+body.stationMode{padding-bottom:0;}
+body.stationMode .ticket-head,
+body.stationMode .tear,
+body.stationMode #headcountPanel{display:none;}
+body.stationMode #prepStation{
+  display:flex;flex-direction:column;height:100vh;min-height:520px;
+  background:var(--paper);color:var(--ink);
+}
+#prepStation button{font-family:inherit;}
+#prepStation button:focus-visible,#prepStation select:focus-visible{outline:3px solid var(--butter);outline-offset:2px;}
+
+.stTop{
+  flex:0 0 auto;background:var(--ink);color:#fff;
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:14px 20px;
+}
+.stBrand{display:flex;align-items:center;gap:12px;min-width:0;flex:0 1 auto;}
+.stLogo{width:46px;height:46px;border-radius:9px;background:var(--paper);flex:none;overflow:hidden;display:flex;}
+.stLogo img{width:100%;height:100%;object-fit:contain;padding:3px;box-sizing:border-box;display:block;}
+.stBrandText{min-width:0;display:flex;flex-direction:column;gap:3px;}
+.stSite{
+  font-family:'Roca','Space Grotesk',sans-serif;font-weight:700;font-size:18px;line-height:1.15;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px;
+}
+.stSeason{font-size:12.5px;color:#C9D2DA;display:flex;align-items:center;gap:6px;white-space:nowrap;}
+.stWeekSel{
+  -webkit-appearance:none;appearance:none;font:inherit;font-weight:700;color:#fff;
+  background:rgba(255,255,255,0.10) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M1.5 3.5l3.5 3.5 3.5-3.5' fill='none' stroke='%23fff' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 8px center;
+  border:1px solid rgba(255,255,255,0.28);border-radius:8px;padding:4px 26px 4px 9px;min-height:34px;cursor:pointer;
+}
+.stWeekSel option{color:var(--ink);background:#fff;}
+
+.stNav{display:flex;align-items:center;gap:6px;margin-left:8px;}
+.stBtn{
+  height:44px;min-width:44px;border-radius:22px;border:1.5px solid rgba(255,255,255,0.28);
+  background:transparent;color:#fff;display:inline-flex;align-items:center;justify-content:center;
+  gap:8px;padding:0 14px;font-size:14px;font-weight:600;white-space:nowrap;
+}
+.stBtn.icon{padding:0;width:44px;}
+.stBtn i{font-size:20px;line-height:1;}
+.stIco{display:block;flex:none;}
+.stNoWrap{white-space:nowrap;}
+.stBtn img{width:22px;height:22px;object-fit:contain;flex:none;}
+.stBtn:hover{background:rgba(255,255,255,0.10);}
+.stDay{
+  height:44px;min-width:56px;border-radius:22px;border:1.5px solid rgba(255,255,255,0.22);
+  background:transparent;color:#D5DCE2;font-size:14px;font-weight:700;padding:0 10px;
+}
+.stDay.on{background:var(--butter);border-color:var(--butter);color:#fff;}
+.stSpacer{flex:1 1 auto;}
+.stActions{display:flex;gap:8px;align-items:center;}
+
+.stBody{flex:1 1 auto;min-height:0;display:flex;gap:14px;padding:14px 16px 16px;}
+.stRail{width:280px;flex:0 0 auto;display:flex;flex-direction:column;gap:10px;min-height:0;}
+.stRailList{flex:1 1 auto;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:8px;padding:2px;-webkit-overflow-scrolling:touch;}
+.stRailItem{
+  flex:none;width:100%;border:1px solid var(--line);background:var(--card);border-radius:11px;
+  padding:11px 12px;display:flex;flex-direction:column;gap:6px;text-align:left;color:var(--ink);
+}
+.stRailItem:hover{border-color:var(--line-strong);}
+.stRailItem.on{background:var(--ink);border-color:var(--ink);color:#fff;}
+.stRailTop{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;}
+.stRailCourse{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);}
+.stRailItem.on .stRailCourse{color:#C9D2DA;}
+.stPill{
+  font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;padding:2px 9px;border-radius:11px;
+  background:var(--sage-light);color:var(--sage-text);white-space:nowrap;
+}
+.stPill.done{background:var(--sage);color:#fff;}
+.stRailItem.on .stPill:not(.done){background:rgba(255,255,255,0.16);color:#fff;}
+.stRailDish{font-family:'Roca','Space Grotesk',sans-serif;font-weight:700;font-size:16.5px;line-height:1.2;}
+.stRailAl{display:flex;gap:5px;align-items:center;flex-wrap:wrap;min-height:22px;}
+.stRailAl img{width:22px;height:22px;border-radius:50%;background:#fff;display:block;}
+.stRailAl img.maybe{opacity:.6;}
+.stRailChip{font-size:11px;font-weight:600;color:var(--rust-text);background:var(--rust-light);border-radius:999px;padding:1px 7px;}
+.stRailNone{font-size:12px;color:var(--ink-soft);}
+.stRailItem.on .stRailNone{color:#C9D2DA;}
+
+.stWho{
+  flex:none;width:100%;border:1.5px solid transparent;background:var(--butter-light);border-radius:11px;
+  padding:12px 14px;display:flex;align-items:center;gap:12px;text-align:left;color:var(--butter-dark);
+}
+.stWho.empty{border-color:var(--butter);}
+.stWhoText{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.stWhoLabel{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
+.stWhoLine{font-size:13px;line-height:1.35;}
+.stWhoNum{display:flex;flex-direction:column;align-items:center;line-height:1;flex:none;}
+.stWhoNum b{font-family:'Roca','Space Grotesk',sans-serif;font-size:26px;font-variant-numeric:tabular-nums;}
+.stWhoNum small{font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-top:3px;font-weight:700;}
+.stWhoEdit{
+  width:40px;height:40px;border-radius:10px;border:1.5px solid var(--butter);background:#fff;flex:none;
+  display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--butter-dark);
+}
+
+.stMain{flex:1 1 auto;min-width:0;min-height:0;display:flex;flex-direction:column;gap:12px;}
+.stHead{flex:0 0 auto;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;}
+.stHeadText{min-width:0;display:flex;flex-direction:column;gap:4px;}
+.stEyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);}
+.stDish{font-size:28px;line-height:1.12;color:var(--ink);text-wrap:balance;}
+.stMake{font-size:14px;color:var(--ink-soft);}
+.stMake b{color:var(--ink);font-size:16px;}
+.stMake.warn b{color:var(--rust-text);}
+.stAllergens{display:flex;gap:10px;align-items:flex-start;flex:0 1 auto;flex-wrap:wrap;justify-content:flex-end;max-width:48%;}
+.stAllergen{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;font-weight:700;color:var(--ink);text-align:center;min-width:46px;line-height:1.15;}
+.stAllergen .allergen-badge{width:40px;height:40px;margin:0;}
+.stAllergen small{display:block;font-size:10px;font-weight:600;color:var(--ink-soft);}
+.stNoAllergens{font-size:13px;color:var(--ink-soft);max-width:230px;text-align:right;}
+.stPanels{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+.stPanels.noMethod{grid-template-columns:minmax(0,1fr);}
+.stPanel{
+  background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);
+  display:flex;flex-direction:column;min-height:0;overflow:hidden;
+}
+.stPanelHead{
+  flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:12px 16px;border-bottom:1px solid var(--line);
+  font-family:'Roca','Space Grotesk',sans-serif;font-weight:700;font-size:17px;
+}
+.stCount{
+  font-family:'Museo Sans','Inter',system-ui,sans-serif;font-size:14px;font-weight:700;
+  color:var(--sage-text);background:var(--sage-light);border-radius:12px;padding:3px 11px;
+  font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+.stCount.done{background:var(--sage);color:#fff;}
+.stScroll{flex:1 1 auto;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
+#prepStation .ing-list{padding:0;}
+#prepStation .ing-row{
+  border-radius:0;padding:12px 16px;min-height:54px;align-items:center;gap:14px;
+  border-bottom:1px solid var(--paper-dim);
+}
+#prepStation .ing-row:last-child{border-bottom:0;}
+#prepStation .ing-row .checkbox{margin-top:0;}
+#prepStation .ing-name{font-size:16px;}
+#prepStation .ing-qty{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;}
+#prepStation .ing-row:focus-visible{outline:3px solid var(--butter);outline-offset:-3px;}
+.stMethodBody{padding:14px 18px 18px;}
+#prepStation .utensils-line{font-size:13.5px;margin-bottom:14px;}
+#prepStation .method-steps > li{font-size:16px;line-height:1.45;padding-left:40px;margin-bottom:14px;}
+#prepStation .method-steps > li::before{width:28px;height:28px;font-size:14px;}
+#prepStation .method-substeps li{font-size:15px;}
+.stEmptyDay{
+  flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  color:var(--ink-soft);font-size:16px;
+}
+.stEmptyDay i{font-size:40px;}
+
+/* Who's eating opens as a sheet over the station */
+body.hcSheetOpen{overflow:hidden;}
+body.hcSheetOpen #hcSheetBackdrop{display:block;position:fixed;inset:0;background:rgba(31,60,85,0.45);z-index:8400;}
+body.stationMode.hcSheetOpen #headcountPanel{
+  display:block;position:fixed;z-index:8500;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:min(460px,calc(100vw - 32px));max-height:calc(100vh - 40px);overflow:auto;margin:0;
+  box-shadow:0 12px 40px rgba(31,60,85,0.35);
+}
+body.hcSheetOpen #headcountBody{display:block !important;}
+body.hcSheetOpen #hcChevron{display:none;}
+body.hcSheetOpen #headcountToggle{pointer-events:none;}
+body.hcSheetOpen .hcSheetFoot{display:flex;justify-content:flex-end;padding:0 16px 16px;}
+.hcSheetDone{
+  background:var(--ink);color:#fff;border:0;border-radius:22px;min-height:44px;padding:0 26px;
+  font-size:15px;font-weight:700;
+}
+
+@media (max-width:1120px){
+  .stShopLabel{display:none;}
+  .stBtn.shop{padding:0;width:44px;}
+}
+@media (hover:none){
+  #prepStation .ing-row:hover{background:none;}
+}
+@media (max-width:1000px){
+  .stNav{order:3;flex-basis:100%;justify-content:center;margin-left:0;}
+  .stRail{width:240px;}
+  .stPanels{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,1fr);}
+  .stPanels.noMethod{grid-template-rows:minmax(0,1fr);}
+  .stHead{flex-direction:column;align-items:flex-start;gap:8px;}
+  .stAllergens{justify-content:flex-start;max-width:none;}
+  .stNoAllergens{text-align:left;}
+}
+@media (max-width:700px){
+  body.stationMode #prepStation{height:auto !important;min-height:0;}
+  .stTop{padding:12px;}
+  .stBody{flex-direction:column;padding:12px;}
+  .stRail{width:auto;}
+  .stRailList{flex-direction:row;overflow-x:auto;overflow-y:hidden;}
+  .stRailItem{width:210px;}
+  .stPanels{display:flex;flex-direction:column;}
+  .stScroll{overflow:visible;}
+  .stShopLabel{display:none;}
+  .stSite{max-width:160px;}
+  .stDay{min-width:48px;}
+}
+@media (prefers-reduced-motion: reduce){ #prepStation *{transition:none !important;} }
 
 </style>
 </head>
@@ -799,7 +959,7 @@ body.pgDetailOpen{overflow:hidden;}
     </div>
     <div class="ticket-head-top">
       <span class="kicker" id="dateLabel">Today</span>
-      <button class="clear-btn" id="prepModeToggle"><i class="ti ti-layout-grid"></i>Grid view</button>
+      <button class="clear-btn" id="prepModeToggle"><i class="ti ti-layout-sidebar"></i>Station view</button>
       <button class="clear-btn" id="prepPrintBtn" title="One prep sheet per course for this day, scaled to the headcount above"><i class="ti ti-printer"></i>Print prep sheets</button>
       <button class="clear-btn" id="resetBtn"><i class="ti ti-eraser"></i>Clear ticks</button>
     </div>
@@ -810,6 +970,8 @@ body.pgDetailOpen{overflow:hidden;}
   </div>
 </div>
 <div class="tear"></div>
+<div id="prepStation"></div>
+<div id="hcSheetBackdrop"></div>
 
 <div class="wrap">
   <div class="headcount" id="headcountPanel">
@@ -818,11 +980,10 @@ body.pgDetailOpen{overflow:hidden;}
       <i class="ti ti-chevron-down" id="hcChevron"></i>
     </button>
     <div class="headcount-body" id="headcountBody"></div>
+    <div class="hcSheetFoot"><button type="button" class="hcSheetDone" id="hcSheetDone">Done</button></div>
   </div>
 
   <div id="courses"></div>
-  <div id="prepGrid" style="display:none;"></div>
-  <div id="prepDetailOverlay" style="display:none;"></div>
 
   <div id="shopView" style="display:none;">
     <div class="shop-grid">
@@ -1662,9 +1823,11 @@ let state = {
   // independent things a shopper does to the same row.
   shopOrder: {},
   methodOpen: {},
+  // 'station' (the iPad layout) or 'list'. Picked from the screen size
+  // unless this device has chosen one (see loadState).
   prepMode: 'list',
-  prepDetailKey: null,
-  prepDetailExpanded: null
+  stationSel: null,
+  hcSheetOpen: false
 };
 
 function todayKey(){
@@ -1717,6 +1880,12 @@ async function loadState(){
   await loadShopGrid();
   await loadShopChecked();
   await loadShopOrder();
+  let chosen = null;
+  try{
+    const pm = await window.storage.get(prepModeKey());
+    if(pm && (pm.value === 'list' || pm.value === 'station')) chosen = pm.value;
+  }catch(e){}
+  state.prepMode = chosen || defaultPrepMode();
 }
 
 async function loadChecked(){
@@ -2014,8 +2183,8 @@ function renderCourses(){
       const allDone = ids.length>0 && numChecked===ids.length;
       head.innerHTML = `
         <div>
-          <div class="course-name">${courseName}</div>
-          <div class="course-recipe">${recipeName}</div>
+          <div class="course-name">${escapeHtml(courseName)}</div>
+          <div class="course-recipe">${escapeHtml(recipeName)}</div>
           <div class="course-servings">${base ? roundQty(servingsForCourse)+' servings (recipe serves '+base+')' : ''}</div>
           ${recipeAllergenBadgesHtml(recipe)}
         </div>
@@ -2129,295 +2298,368 @@ function appendMethodSection(container, recipe, courseName, recipeName){
   container.appendChild(body);
 }
 
-/* ---------- prep grid + detail overlay (day-at-a-glance mode) ---------- */
+/* ---------- prep station (the iPad layout) ----------
+   The old list put a tall header and the headcount panel above the food,
+   so on an iPad the first dish started below the fold. The station is one
+   screen: the day in a slim bar, the day's courses down the left, and the
+   chosen dish's ingredients and method side by side. "List view" keeps
+   the old page for phones and for anyone who prefers it. */
 
-let LAST_PREP_DETAIL_KEY = null;
-function prepDetailKeyFor(courseName, recipeName){
-  // Week and day are part of the key: a day or week change then finds
-  // nothing under it and the recipe screen closes, instead of silently
-  // showing a same-named dish from another day with no day on screen.
+function stationKeyFor(courseName, recipeName){
+  // Week and day are part of the key, so a day change never leaves a
+  // same-named dish from another day selected.
   return state.week + '|' + state.day + '||' + courseName + '||' + recipeName;
 }
-/* A dish with no allergens recorded says so in words, like the list
-   view's allergy band -- a blank space is not the same statement. */
-function prepAllergensOrNoneHtml(recipe){
-  return recipeAllergenBadgesHtml(recipe) || '<div class="pgNoAllergens">' + noAllergensText() + '</div>';
+
+function prepModeKey(){ return 'prepMode:' + SITE_SLUG; }
+
+/* Tablets and computers get the station; phones keep the list. Either
+   orientation of an iPad counts as a tablet. */
+function defaultPrepMode(){
+  const w = window.innerWidth || 0, h = window.innerHeight || 0;
+  return (Math.max(w, h) >= 1000 && Math.min(w, h) >= 700) ? 'station' : 'list';
 }
 
-function findRecipeByKey(dayCourses, key){
-  if(!key) return null;
-  for(const courseName of COURSE_ORDER){
-    const recipes = dayCourses[courseName];
-    if(!recipes) continue;
-    for(const recipeName of Object.keys(recipes)){
-      if(prepDetailKeyFor(courseName, recipeName) === key){
-        return {courseName, recipeName, recipe: recipes[recipeName]};
-      }
-    }
+function setPrepMode(mode, remember){
+  state.prepMode = mode === 'station' ? 'station' : 'list';
+  state.hcSheetOpen = false;
+  if(remember){
+    try{ window.storage.set(prepModeKey(), state.prepMode); }catch(e){}
   }
-  return null;
-}
-
-function applyPrepVisibility(){
-  const isShop = state.view === 'shop';
-  const showDetail = !isShop && !!state.prepDetailKey;
-  const showGrid = !isShop && !showDetail && state.prepMode === 'grid';
-  const showList = !isShop && !showDetail && state.prepMode !== 'grid';
-  const coursesEl = document.getElementById('courses');
-  const gridEl = document.getElementById('prepGrid');
-  const detailEl = document.getElementById('prepDetailOverlay');
-  const toggleBtn = document.getElementById('prepModeToggle');
-  if(coursesEl) coursesEl.style.display = showList ? 'block' : 'none';
-  // '' not 'block': an inline block would override #prepGrid{display:grid}
-  // and stack the cards in one column.
-  if(gridEl) gridEl.style.display = showGrid ? '' : 'none';
-  if(detailEl) detailEl.style.display = showDetail ? 'block' : 'none';
-  if(toggleBtn) toggleBtn.style.display = isShop ? 'none' : '';
-
-  /* The recipe screen covers the page, so the page behind it must not
-     scroll, take keyboard focus, or be tappable through it (a day tab
-     reached by Tab used to change the day underneath an open recipe). */
-  const wasOpen = document.body.classList.contains('pgDetailOpen');
-  document.body.classList.toggle('pgDetailOpen', showDetail);
-  ['.ticket-head', '.tear', '#headcountPanel', '#prepGrid', '#courses', '#shopView', '.footer-contact'].forEach(sel=>{
-    const el = document.querySelector(sel);
-    if(!el) return;
-    if(showDetail) el.setAttribute('inert', ''); else el.removeAttribute('inert');
-  });
-  if(showDetail && !wasOpen){
-    const back = document.querySelector('#prepDetailOverlay .pgBackBtn');
-    if(back) back.focus();
-  }
-  if(!showDetail && wasOpen && LAST_PREP_DETAIL_KEY){
-    const card = [...document.querySelectorAll('#prepGrid .pgCard')].find(c=> c.dataset.key === LAST_PREP_DETAIL_KEY);
-    if(card) card.focus();
-  }
+  renderActivePrep();
+  window.scrollTo(0, 0);
 }
 
 function renderActivePrep(){
-  if(state.prepDetailKey){
-    renderPrepDetail();
-  }else if(state.prepMode === 'grid'){
-    renderPrepGrid();
+  if(state.view !== 'shop' && state.prepMode === 'station'){
+    renderPrepStation();
   }else{
     renderCourses();
   }
   applyPrepVisibility();
 }
 
-function setPrepMode(mode){
-  state.prepMode = mode;
+function applyPrepVisibility(){
+  const isShop = state.view === 'shop';
+  const station = !isShop && state.prepMode === 'station';
+  if(!station) state.hcSheetOpen = false;
+  const sheet = station && !!state.hcSheetOpen;
+  document.body.classList.toggle('stationMode', station);
+  document.body.classList.toggle('hcSheetOpen', sheet);
+
+  const coursesEl = document.getElementById('courses');
+  if(coursesEl) coursesEl.style.display = (!isShop && !station) ? 'block' : 'none';
   const toggleBtn = document.getElementById('prepModeToggle');
-  if(toggleBtn){
-    toggleBtn.innerHTML = mode === 'grid'
-      ? '<i class="ti ti-list"></i>List view'
-      : '<i class="ti ti-layout-grid"></i>Grid view';
+  if(toggleBtn) toggleBtn.style.display = isShop ? 'none' : '';
+
+  // The headcount panel doubles as the station's "Who's eating" sheet.
+  const panel = document.getElementById('headcountPanel');
+  if(panel){
+    if(sheet){
+      panel.setAttribute('role', 'dialog');
+      panel.setAttribute('aria-modal', 'true');
+      panel.setAttribute('aria-label', "Who's eating today");
+    }else{
+      panel.removeAttribute('role');
+      panel.removeAttribute('aria-modal');
+      panel.removeAttribute('aria-label');
+    }
   }
-  renderActivePrep();
+  const hcToggle = document.getElementById('headcountToggle');
+  if(hcToggle) hcToggle.tabIndex = sheet ? -1 : 0;
+  ['#prepStation', '.footer-contact'].forEach(sel=>{
+    const el = document.querySelector(sel);
+    if(!el) return;
+    if(sheet) el.setAttribute('inert', ''); else el.removeAttribute('inert');
+  });
+  if(station) sizeStation();
 }
 
-function renderPrepGrid(){
-  const container = document.getElementById('prepGrid');
-  if(!container) return;
-  container.innerHTML = '';
+/* Fill the screen below anything above the station (the backup-menu or
+   preview banner), so the page itself never scrolls on a tablet. */
+function sizeStation(){
+  const el = document.getElementById('prepStation');
+  if(!el || !document.body.classList.contains('stationMode')) return;
+  if(window.innerWidth <= 700){ el.style.height = ''; return; }
+  const top = el.getBoundingClientRect().top + window.scrollY;
+  el.style.height = Math.max(520, Math.floor(window.innerHeight - top)) + 'px';
+}
+
+function openHcSheet(){
+  state.hcSheetOpen = true;
+  applyPrepVisibility();
+  const first = document.querySelector('#headcountBody input');
+  if(first) first.focus();
+}
+
+function closeHcSheet(){
+  if(!state.hcSheetOpen) return;
+  state.hcSheetOpen = false;
+  applyPrepVisibility();
+  const who = document.querySelector('#prepStation .stWho');
+  if(who) who.focus();
+}
+
+function stationStepDay(dir){
+  const weeks = Object.keys(MENU).sort((a,b)=> a - b);
+  if(!weeks.length) return;
+  const days = MENU[state.week] ? Object.keys(MENU[state.week]) : [];
+  let wi = weeks.indexOf(String(state.week));
+  if(wi < 0) wi = 0;
+  const di = days.indexOf(state.day) + dir;
+  if(di >= 0 && di < days.length){
+    state.day = days[di];
+  }else{
+    wi = (wi + (dir > 0 ? 1 : -1) + weeks.length) % weeks.length;
+    const nextDays = Object.keys(MENU[weeks[wi]] || {});
+    state.week = Number(weeks[wi]);
+    state.day = dir > 0 ? nextDays[0] : nextDays[nextDays.length - 1];
+  }
+  onDayOrWeekChange();
+}
+
+function stationDayItems(){
   const dayCourses = (MENU[state.week] && MENU[state.week][state.day]) || {};
   const totalServ = totalServings();
-  const availableCourses = COURSE_ORDER.filter(c=>dayCourses[c]);
-
-  if(availableCourses.length===0){
-    container.innerHTML = '<div class="empty"><i class="ti ti-toque"></i>No menu on file for this day.</div>';
-    document.getElementById('menuSummary').textContent = '';
-    return;
-  }
-
-  availableCourses.forEach(courseName=>{
-    const recipes = dayCourses[courseName];
-    Object.keys(recipes).forEach(recipeName=>{
-      const recipe = recipes[recipeName];
-      const servingsForCourse = servingsForCourseName(courseName, dayCourses, totalServ, state.headcounts.veg);
+  const out = [];
+  COURSE_ORDER.filter(c=> dayCourses[c]).forEach(courseName=>{
+    Object.keys(dayCourses[courseName]).forEach(recipeName=>{
+      const recipe = dayCourses[courseName][recipeName];
+      const servings = servingsForCourseName(courseName, dayCourses, totalServ, state.headcounts.veg);
       const base = recipe.baseServings;
-      const ids = recipe.ingredients.map((_,i)=> `${state.week}|${state.day}|${courseName}|${recipeName}|${i}`);
-      const numChecked = ids.filter(id=>state.checked[id]).length;
-      const allDone = ids.length>0 && numChecked===ids.length;
-
-      const card = document.createElement('button');
-      card.type = 'button';
-      card.className = 'pgCard';
-      card.dataset.key = prepDetailKeyFor(courseName, recipeName);
-
-      const stamp = document.createElement('div');
-      stamp.className = 'stamp' + (allDone ? ' show' : '');
-      stamp.textContent = 'Prepped';
-      card.appendChild(stamp);
-
-      const head = document.createElement('div');
-      head.className = 'course-head';
-      head.innerHTML = `
-        <div>
-          <div class="course-name">${escapeHtml(courseName)}</div>
-          <div class="course-recipe">${escapeHtml(recipeName)}</div>
-          <div class="course-servings">${base ? roundQty(servingsForCourse)+' servings (recipe serves '+base+')' : ''}</div>
-          ${prepAllergensOrNoneHtml(recipe)}
-        </div>
-        <div class="progress-pill ${allDone?'done':''}">${numChecked}/${ids.length}</div>
-      `;
-      // The whole card is one button; badges inside it must not be a
-      // second, nested control (tapping one used to open the allergen
-      // popup AND the recipe).
-      head.querySelectorAll('[tabindex],[role="button"]').forEach(el=>{ el.removeAttribute('tabindex'); el.removeAttribute('role'); });
-      card.appendChild(head);
-
-      card.addEventListener('click', ()=>{
-        openPrepDetail(courseName, recipeName);
+      const scale = (base && base > 0) ? (servings / base) : 1;
+      const ids = (recipe.ingredients || []).map((_, i)=> `${state.week}|${state.day}|${courseName}|${recipeName}|${i}`);
+      const done = ids.filter(id=> state.checked[id]).length;
+      out.push({
+        key: stationKeyFor(courseName, recipeName),
+        courseName, recipeName, recipe, servings, base, scale, ids, done,
+        allDone: ids.length > 0 && done === ids.length,
       });
-
-      container.appendChild(card);
     });
   });
-
-  document.getElementById('menuSummary').textContent = 'Week '+state.week+' · '+state.day+' · '+availableCourses.length+' course'+(availableCourses.length===1?'':'s')+' on the menu';
+  return out;
 }
 
-function openPrepDetail(courseName, recipeName){
-  state.prepDetailKey = prepDetailKeyFor(courseName, recipeName);
-  LAST_PREP_DETAIL_KEY = state.prepDetailKey;
-  state.prepDetailExpanded = null;
-  renderActivePrep();
+/* Big allergen icons with their names under them. They keep the
+   .allergen-badge class, so a tap opens the same information popup as
+   everywhere else. */
+function stationAllergensHtml(recipe){
+  const tags = collectRecipeAllergens(recipe);
+  if(!tags.length) return `<div class="stNoAllergens">${escapeHtml(noAllergensText())}</div>`;
+  return tags.map(tag=>{
+    const may = !!tag.mayContainOnly;
+    const titleText = (may ? 'May contain ' : '') + tag.label;
+    if(tag.key && ALLERGEN_ICONS[tag.key]){
+      return `<span class="stAllergen"><span class="allergen-badge${may ? ' maybe' : ''}" role="button" tabindex="0" title="${escapeHtml(titleText)}" data-allergen-key="${escapeHtml(tag.key)}" data-allergen-label="${escapeHtml(tag.label)}" data-allergen-maybe="${may ? '1' : '0'}"><img src="${ALLERGEN_ICONS[tag.key]}" alt="${escapeHtml(titleText)}"></span>${escapeHtml(tag.label)}${may ? '<small>may contain</small>' : ''}</span>`;
+    }
+    return `<span class="allergen-chip">${escapeHtml(titleText)}</span>`;
+  }).join('');
 }
 
-function closePrepDetail(){
-  const overlay = document.getElementById('prepDetailOverlay');
-  if(overlay) delete overlay.dataset.key;
-  state.prepDetailKey = null;
-  state.prepDetailExpanded = null;
-  renderActivePrep();
+/* Small, non-interactive icons for the course list: the whole card is
+   one button, so nothing inside it may be a second control. */
+function stationRailAllergensHtml(recipe){
+  const tags = collectRecipeAllergens(recipe);
+  if(!tags.length){
+    return `<span class="stRailNone">${MENU_FROM_BACKUP ? 'Allergens: check the recipe card' : 'No allergens recorded'}</span>`;
+  }
+  return tags.map(tag=>{
+    const t = (tag.mayContainOnly ? 'May contain ' : '') + tag.label;
+    if(tag.key && ALLERGEN_ICONS[tag.key]){
+      return `<img src="${ALLERGEN_ICONS[tag.key]}" alt="${escapeHtml(t)}" title="${escapeHtml(t)}"${tag.mayContainOnly ? ' class="maybe"' : ''}>`;
+    }
+    return `<span class="stRailChip">${escapeHtml(t)}</span>`;
+  }).join('');
 }
 
-function toggleExpandSection(section){
-  state.prepDetailExpanded = (state.prepDetailExpanded === section) ? null : section;
-  renderActivePrep();
+/* Drawn inline rather than from the icon font, so the station's buttons
+   are never blank if the font's CDN is slow or unreachable. */
+const ST_ICONS = {
+  prev: '<path d="M14.5 5.5l-7 6.5 7 6.5"/>',
+  next: '<path d="M9.5 5.5l7 6.5-7 6.5"/>',
+  list: '<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="18" r="1" fill="currentColor"/>',
+  print: '<path d="M7 9V3.5h10V9"/><rect x="3.5" y="9" width="17" height="8" rx="2"/><path d="M7 14h10v6.5H7z"/>',
+  clear: '<path d="M19 20H8.5l-4.2-4.2a1.5 1.5 0 010-2.1L13.6 4.4a1.5 1.5 0 012.1 0l4.2 4.2a1.5 1.5 0 010 2.1L11 20"/><path d="M17.5 13.5l-6.5-6.5"/>',
+  pencil: '<path d="M4 20h4L19 9a2.8 2.8 0 00-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/>',
+  cart: '<circle cx="9" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/><path d="M3 4h2.5l2.2 11h10.6l2-8H6.4"/>',
+};
+function stIcon(name){
+  return `<svg class="stIco" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ST_ICONS[name]}</svg>`;
 }
 
-function renderPrepDetail(){
-  const overlay = document.getElementById('prepDetailOverlay');
-  if(!overlay) return;
-  /* Every tick redraws this screen; without this the cook was thrown back
-     to the first ingredient each time. Only kept for the same recipe. */
-  const q = sel=> overlay.querySelector(sel);
-  const keepScroll = overlay.dataset.key === state.prepDetailKey ? {
-    outer: q('.pgPanelOuter') ? q('.pgPanelOuter').scrollTop : 0,
-    ing: q('.pgIngCol .pgScroll') ? q('.pgIngCol .pgScroll').scrollTop : 0,
-    method: q('.pgMethodCol .pgScroll') ? q('.pgMethodCol .pgScroll').scrollTop : 0,
-  } : null;
-  overlay.innerHTML = '';
+function stationWhoLine(){
+  const hc = state.headcounts || {};
+  const n = k=> Number(hc[k]) || 0;
+  const parts = [`1–2s ${n('c1')}`, `2–3s ${n('c2')}`, `3–4s ${n('c3')}`, `staff ${n('staff')}`];
   const dayCourses = (MENU[state.week] && MENU[state.week][state.day]) || {};
-  const found = findRecipeByKey(dayCourses, state.prepDetailKey);
-  if(!found){
-    delete overlay.dataset.key;
-    state.prepDetailKey = null;
-    state.prepDetailExpanded = null;
-    renderActivePrep();
-    return;
+  if(VEG_SWAP_PAIRS.some(p=> dayCourses[p.veg])) parts.push(`veg ${n('veg')}`);
+  return parts;
+}
+
+function renderPrepStation(){
+  const root = document.getElementById('prepStation');
+  if(!root) return;
+  const items = stationDayItems();
+  let sel = items.find(it=> it.key === state.stationSel);
+  if(!sel){
+    sel = items.find(it=> !it.allDone) || items[0] || null;
+    state.stationSel = sel ? sel.key : null;
   }
-  const courseName = found.courseName, recipeName = found.recipeName, recipe = found.recipe;
+
+  // Ticking redraws the station; keep the cook's place in each panel.
+  const q = s=> root.querySelector(s);
+  const dayId = state.week + '|' + state.day;
+  const sameDay = root.dataset.day === dayId;
+  const sameDish = !!sel && root.dataset.key === sel.key;
+  const keep = {
+    rail: sameDay && q('.stRailList') ? q('.stRailList').scrollTop : 0,
+    ing: sameDish && q('.stIng .stScroll') ? q('.stIng .stScroll').scrollTop : 0,
+    method: sameDish && q('.stMethod .stScroll') ? q('.stMethod .stScroll').scrollTop : 0,
+    focus: (document.activeElement && root.contains(document.activeElement)) ? document.activeElement.getAttribute('data-focus') : null,
+  };
+
+  const weeks = Object.keys(MENU).sort((a,b)=> a - b);
+  const days = MENU[state.week] ? Object.keys(MENU[state.week]) : [];
+  const season = (SEASONS.find(s=> s.key === SEASON_KEY) || {}).label || '';
+  const site = SITE_CONFIG.siteName || SITE_CONFIG.subBrand || SITE_CONFIG.brand || 'Kitchen';
   const totalServ = totalServings();
-  const servingsForCourse = servingsForCourseName(courseName, dayCourses, totalServ, state.headcounts.veg);
-  const base = recipe.baseServings;
-  const scale = (base && base > 0) ? (servingsForCourse / base) : 1;
-  const ids = recipe.ingredients.map((_,i)=> `${state.week}|${state.day}|${courseName}|${recipeName}|${i}`);
-  const numChecked = ids.filter(id=>state.checked[id]).length;
-  const allDone = ids.length>0 && numChecked===ids.length;
-  const hasMethod = !!(recipe.method && recipe.method.length);
+  const fa = s=> escapeHtml(String(s));
 
-  const backdrop = document.createElement('div');
-  backdrop.className = 'pgBackdrop';
-  backdrop.addEventListener('click', closePrepDetail);
-  overlay.appendChild(backdrop);
+  const top = `
+    <div class="stTop">
+      <div class="stBrand">
+        <span class="stLogo"><img alt=""></span>
+        <div class="stBrandText">
+          <div class="stSite">${escapeHtml(site)}</div>
+          <label class="stSeason">${season ? escapeHtml(season) + ' ·' : ''}
+            <select class="stWeekSel" id="stWeekSel" aria-label="Menu week" data-focus="week">
+              ${weeks.map(wk=> `<option value="${fa(wk)}"${Number(wk) === Number(state.week) ? ' selected' : ''}>Week ${escapeHtml(wk)}</option>`).join('')}
+            </select>
+          </label>
+        </div>
+      </div>
+      <div class="stNav" role="group" aria-label="Day">
+        <button type="button" class="stBtn icon" data-act="prev" data-focus="prev" aria-label="Previous day" title="Previous day">${stIcon('prev')}</button>
+        ${days.map(d=> `<button type="button" class="stDay${d === state.day ? ' on' : ''}" data-act="day" data-day="${fa(d)}" data-focus="day:${fa(d)}" aria-pressed="${d === state.day}" aria-label="${fa(d)}">${escapeHtml(d.slice(0, 3))}</button>`).join('')}
+        <button type="button" class="stBtn icon" data-act="next" data-focus="next" aria-label="Next day" title="Next day">${stIcon('next')}</button>
+      </div>
+      <div class="stSpacer"></div>
+      <div class="stActions">
+        <button type="button" class="stBtn shop" data-act="shop" data-focus="shop" aria-label="Shopping list" title="Weekly shopping list"><span class="stShopIcon"></span><span class="stShopLabel">Shopping list</span></button>
+        <button type="button" class="stBtn icon" data-act="list" data-focus="list" aria-label="Switch to list view" title="List view">${stIcon('list')}</button>
+        <button type="button" class="stBtn icon" data-act="print" data-focus="print" aria-label="Print prep sheets" title="Print prep sheets">${stIcon('print')}</button>
+        <button type="button" class="stBtn icon" data-act="clear" data-focus="clear" aria-label="Clear today's ticks" title="Clear today's ticks">${stIcon('clear')}</button>
+      </div>
+    </div>`;
 
-  const panel = document.createElement('div');
-  panel.className = 'pgPanelOuter';
-  panel.setAttribute('role', 'dialog');
-  panel.setAttribute('aria-modal', 'true');
-  panel.setAttribute('aria-label', courseName + ': ' + recipeName);
+  const rail = `
+    <nav class="stRail" aria-label="${fa(state.day)} courses">
+      <div class="stRailList">
+        ${items.map(it=>{
+          const on = sel && it.key === sel.key;
+          const pill = it.ids.length ? (it.allDone ? 'Prepped' : it.done + '/' + it.ids.length) : '—';
+          return `<button type="button" class="stRailItem${on ? ' on' : ''}" data-act="dish" data-key="${fa(it.key)}" data-focus="rail:${fa(it.key)}"${on ? ' aria-current="true"' : ''}>
+            <span class="stRailTop"><span class="stRailCourse">${escapeHtml(it.courseName)}</span><span class="stPill${it.allDone ? ' done' : ''}">${pill}</span></span>
+            <span class="stRailDish">${escapeHtml(it.recipeName)}</span>
+            <span class="stRailAl">${stationRailAllergensHtml(it.recipe)}</span>
+          </button>`;
+        }).join('')}
+      </div>
+      <button type="button" class="stWho${totalServ > 0 ? '' : ' empty'}" data-act="hc" data-focus="hc" aria-label="Who's eating: ${fa(stationWhoLine().join(', '))}. Change">
+        <span class="stWhoText">
+          <span class="stWhoLabel">Who's eating</span>
+          <span class="stWhoLine">${totalServ > 0 ? stationWhoLine().map(x=> `<span class="stNoWrap">${escapeHtml(x)}</span>`).join(' · ') : 'Add today’s numbers to scale the recipes'}</span>
+        </span>
+        <span class="stWhoNum"><b>${roundQty(totalServ)}</b><small>servings</small></span>
+        <span class="stWhoEdit" aria-hidden="true">${stIcon('pencil')}</span>
+      </button>
+    </nav>`;
 
-  const backBtn = document.createElement('button');
-  backBtn.type = 'button';
-  backBtn.className = 'pgBackBtn';
-  backBtn.innerHTML = '<i class="ti ti-arrow-left"></i>Back to ' + (state.prepMode === 'grid' ? 'grid' : 'list');
-  backBtn.addEventListener('click', closePrepDetail);
-  panel.appendChild(backBtn);
-
-  const head = document.createElement('div');
-  head.className = 'course-head pgDetailHead';
-  head.innerHTML = `
-    <div>
-      <div class="course-name">${escapeHtml(courseName)}</div>
-      <div class="course-recipe">${escapeHtml(recipeName)}</div>
-      <div class="course-servings">${base ? roundQty(servingsForCourse)+' servings (recipe serves '+base+')' : ''}</div>
-      ${prepAllergensOrNoneHtml(recipe)}
-    </div>
-    <div class="progress-pill ${allDone?'done':''}">${numChecked}/${ids.length}</div>
-  `;
-  panel.appendChild(head);
-
-  const splitRow = document.createElement('div');
-  splitRow.className = 'pgSplitRow' + (hasMethod ? '' : ' no-method') + (state.prepDetailExpanded ? ' pgExpanded-'+state.prepDetailExpanded : '');
-
-  const ingCol = document.createElement('div');
-  ingCol.className = 'pgCol pgIngCol';
-  const ingBar = document.createElement('div');
-  ingBar.className = 'pgColBar';
-  ingBar.innerHTML = '<span>Ingredients</span>';
-  if(hasMethod){
-    const ingExpandBtn = document.createElement('button');
-    ingExpandBtn.type = 'button';
-    ingExpandBtn.className = 'pgExpandBtn';
-    ingExpandBtn.innerHTML = state.prepDetailExpanded === 'ing' ? '<i class="ti ti-arrows-minimize"></i>' : '<i class="ti ti-arrows-maximize"></i>';
-    ingExpandBtn.setAttribute('aria-label', state.prepDetailExpanded === 'ing' ? 'Shrink ingredients' : 'Expand ingredients');
-    ingExpandBtn.addEventListener('click', ()=> toggleExpandSection('ing'));
-    ingBar.appendChild(ingExpandBtn);
+  let main;
+  if(!sel){
+    main = `<main class="stMain"><div class="stEmptyDay"><i class="ti ti-toque"></i>No menu on file for this day.</div></main>`;
+  }else{
+    const r = sel.recipe;
+    const hasMethod = !!(r.method && r.method.length);
+    const make = totalServ <= 0
+      ? `<div class="stMake warn"><b>No headcount yet</b> · tap Who's eating to scale this recipe</div>`
+      : sel.base
+        ? `<div class="stMake">Make <b>${roundQty(sel.servings)} servings</b> · recipe serves ${escapeHtml(sel.base)}</div>`
+        : `<div class="stMake"><b>${roundQty(sel.servings)} servings</b> · this recipe has no serving size, so quantities are not scaled</div>`;
+    const count = !sel.ids.length ? 'Nothing to tick' : sel.allDone ? 'All ready' : `${sel.done} of ${sel.ids.length} ready`;
+    const utensils = (r.utensils && r.utensils.length)
+      ? `<div class="utensils-line"><i class="ti ti-tools"></i>${escapeHtml(r.utensils.join(', '))}</div>` : '';
+    main = `
+      <main class="stMain">
+        <div class="stHead">
+          <div class="stHeadText">
+            <div class="stEyebrow">${escapeHtml(state.day)} · ${escapeHtml(sel.courseName)}</div>
+            <h2 class="stDish">${escapeHtml(sel.recipeName)}</h2>
+            ${make}
+          </div>
+          <div class="stAllergens" aria-label="Allergens">${stationAllergensHtml(r)}</div>
+        </div>
+        <div class="stPanels${hasMethod ? '' : ' noMethod'}">
+          <section class="stPanel stIng" aria-label="Ingredients">
+            <div class="stPanelHead"><span>Ingredients</span><span class="stCount${sel.allDone ? ' done' : ''}">${count}</span></div>
+            <div class="stScroll ing-list"></div>
+          </section>
+          ${hasMethod ? `<section class="stPanel stMethod" aria-label="Method">
+            <div class="stPanelHead"><span>Method</span></div>
+            <div class="stScroll"><div class="stMethodBody">${utensils}<ol class="method-steps">${r.method.map(renderMethodStep).join('')}</ol></div></div>
+          </section>` : ''}
+        </div>
+      </main>`;
   }
-  ingCol.appendChild(ingBar);
-  const ingScroll = document.createElement('div');
-  ingScroll.className = 'pgScroll ing-list';
-  recipe.ingredients.forEach((ing, i)=>{
-    ingScroll.appendChild(buildIngRow(ing, ids[i], scale));
-  });
-  ingCol.appendChild(ingScroll);
-  splitRow.appendChild(ingCol);
 
-  if(hasMethod){
-    const methodCol = document.createElement('div');
-    methodCol.className = 'pgCol pgMethodCol';
-    const methodBar = document.createElement('div');
-    methodBar.className = 'pgColBar';
-    methodBar.innerHTML = '<span>Method</span>';
-    const methodExpandBtn = document.createElement('button');
-    methodExpandBtn.type = 'button';
-    methodExpandBtn.className = 'pgExpandBtn';
-    methodExpandBtn.innerHTML = state.prepDetailExpanded === 'method' ? '<i class="ti ti-arrows-minimize"></i>' : '<i class="ti ti-arrows-maximize"></i>';
-    methodExpandBtn.setAttribute('aria-label', state.prepDetailExpanded === 'method' ? 'Shrink method' : 'Expand method');
-    methodExpandBtn.addEventListener('click', ()=> toggleExpandSection('method'));
-    methodBar.appendChild(methodExpandBtn);
-    methodCol.appendChild(methodBar);
-    const methodScroll = document.createElement('div');
-    methodScroll.className = 'pgScroll';
-    const utensilsHtml = (recipe.utensils && recipe.utensils.length)
-      ? `<div class="utensils-line"><i class="ti ti-tools"></i>${recipe.utensils.join(', ')}</div>`
-      : '';
-    methodScroll.innerHTML = `${utensilsHtml}<ol class="method-steps">${recipe.method.map(renderMethodStep).join('')}</ol>`;
-    methodCol.appendChild(methodScroll);
-    splitRow.appendChild(methodCol);
+  root.innerHTML = top + `<div class="stBody">${rail}${main}</div>`;
+
+  // Copy the site logo and the shopping-list icon from the header, which
+  // already has them, rather than carrying a second copy of each.
+  const logo = document.querySelector('.brandmark .badge img');
+  const logoSlot = q('.stLogo img');
+  if(logo && logoSlot){ logoSlot.src = logo.src; logoSlot.alt = logo.alt || ''; }
+  else if(logoSlot) logoSlot.parentNode.remove();
+  const shopIcon = document.querySelector('.viewtab[data-view="shop"] img');
+  const shopSlot = q('.stShopIcon');
+  if(shopSlot){
+    if(shopIcon){ const im = document.createElement('img'); im.src = shopIcon.src; im.alt = ''; shopSlot.replaceWith(im); }
+    else shopSlot.outerHTML = stIcon('cart');
   }
 
-  panel.appendChild(splitRow);
-  overlay.appendChild(panel);
-  overlay.dataset.key = state.prepDetailKey;
-  if(keepScroll){
-    panel.scrollTop = keepScroll.outer;
-    const ingS = q('.pgIngCol .pgScroll'); if(ingS) ingS.scrollTop = keepScroll.ing;
-    const mS = q('.pgMethodCol .pgScroll'); if(mS) mS.scrollTop = keepScroll.method;
+  if(sel){
+    const list = q('.stIng .stScroll');
+    (sel.recipe.ingredients || []).forEach((ing, i)=>{
+      const id = sel.ids[i];
+      const row = buildIngRow(ing, id, sel.scale);
+      row.setAttribute('role', 'checkbox');
+      row.setAttribute('aria-checked', state.checked[id] ? 'true' : 'false');
+      row.tabIndex = 0;
+      row.setAttribute('data-focus', 'ing:' + id);
+      row.addEventListener('keydown', e=>{
+        if(e.target !== row) return;
+        if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); row.click(); }
+      });
+      list.appendChild(row);
+    });
   }
+
+  root.dataset.day = dayId;
+  root.dataset.key = sel ? sel.key : '';
+  const railEl = q('.stRailList');
+  if(railEl) railEl.scrollTop = keep.rail;
+  const ingEl = q('.stIng .stScroll');
+  if(ingEl) ingEl.scrollTop = keep.ing;
+  const mEl = q('.stMethod .stScroll');
+  if(mEl) mEl.scrollTop = keep.method;
+  if(keep.focus){
+    const again = [...root.querySelectorAll('[data-focus]')].find(el=> el.getAttribute('data-focus') === keep.focus);
+    if(again) again.focus({preventScroll: true});
+  }
+  // Same words as the list view's header, which this replaces on screen.
+  document.getElementById('menuSummary').textContent = items.length
+    ? 'Week ' + state.week + ' · ' + state.day + ' · ' + new Set(items.map(it=> it.courseName)).size + ' course' + (new Set(items.map(it=> it.courseName)).size === 1 ? '' : 's') + ' on the menu'
+    : '';
 }
 
 /* ================= Printable prep sheets =================
@@ -3526,11 +3768,9 @@ function setView(view){
   document.querySelectorAll('.viewtab').forEach(b=> b.classList.toggle('active', b.dataset.view===view));
   const isShop = view === 'shop';
   document.getElementById('dayTabs').style.display = isShop ? 'none' : 'flex';
-  if(isShop){
-    state.prepDetailKey = null;
-    state.prepDetailExpanded = null;
-  }
-  document.getElementById('headcountPanel').style.display = isShop ? 'none' : 'block';
+  if(isShop) state.hcSheetOpen = false;
+  // '' not 'block', so the station's own rules can hide the panel.
+  document.getElementById('headcountPanel').style.display = isShop ? 'none' : '';
   document.getElementById('shopView').style.display = isShop ? 'block' : 'none';
   document.getElementById('prepPrintBtn').style.display = isShop ? 'none' : 'inline-flex';
   document.getElementById('pageTitle').textContent = isShop ? 'Weekly shopping list' : 'Nursery kitchen prep list';
@@ -3566,14 +3806,52 @@ document.getElementById('headcountToggle').addEventListener('click', ()=>{
 document.getElementById('prepPrintBtn').addEventListener('click', ()=> openPrepSheets());
 
 document.getElementById('prepModeToggle').addEventListener('click', ()=>{
-  setPrepMode(state.prepMode === 'grid' ? 'list' : 'grid');
+  setPrepMode('station', true);
 });
+
+document.getElementById('prepStation').addEventListener('click', async (e)=>{
+  const b = e.target.closest('[data-act]');
+  if(!b || !e.currentTarget.contains(b)) return;
+  switch(b.dataset.act){
+    case 'prev': stationStepDay(-1); break;
+    case 'next': stationStepDay(1); break;
+    case 'day':
+      if(b.dataset.day !== state.day){ state.day = b.dataset.day; onDayOrWeekChange(); }
+      break;
+    case 'dish':
+      state.stationSel = b.dataset.key;
+      renderActivePrep();
+      break;
+    case 'hc': openHcSheet(); break;
+    case 'shop': setView('shop'); window.scrollTo(0, 0); break;
+    case 'list': setPrepMode('list', true); break;
+    case 'print': openPrepSheets(); break;
+    case 'clear':
+      // One tap on a counter-top tablet should not wipe a morning's work.
+      if(!confirm("Clear every tick for today?")) return;
+      state.checked = {};
+      await saveChecked();
+      renderActivePrep();
+      break;
+  }
+});
+
+document.getElementById('prepStation').addEventListener('change', (e)=>{
+  if(e.target && e.target.id === 'stWeekSel'){
+    state.week = Number(e.target.value);
+    onDayOrWeekChange();
+  }
+});
+
+document.getElementById('hcSheetDone').addEventListener('click', closeHcSheet);
+document.getElementById('hcSheetBackdrop').addEventListener('click', closeHcSheet);
+window.addEventListener('resize', sizeStation);
 
 document.addEventListener('keydown', (e)=>{
   // The allergen popup handles its own Escape; closing the recipe screen
   // underneath it as well would lose the cook's place.
-  if(e.key === 'Escape' && state.prepDetailKey && !document.querySelector('.allergen-modal-backdrop')){
-    closePrepDetail();
+  if(e.key === 'Escape' && state.hcSheetOpen && !document.querySelector('.allergen-modal-backdrop')){
+    closeHcSheet();
   }
 });
 
@@ -3754,9 +4032,11 @@ function applyBackupMenuBanner(){
   banner.setAttribute('role', 'alert');
   banner.style.cssText = 'background:#9F383C;color:#fff;font-weight:600;font-size:13.5px;text-align:center;padding:9px 12px;';
   banner.innerHTML = '<i class="ti ti-alert-triangle"></i> Couldn’t reach the live menu, so this is the backup copy saved with the website. It may be out of date and allergen details may be missing — check the recipe card before serving, and reload the page to try again.';
-  const wrap = document.querySelector('.ticket-head .wrap');
-  if(wrap) wrap.insertBefore(banner, wrap.firstChild);
+  // Above the header rather than inside it: the station hides the header.
+  const head = document.querySelector('.ticket-head');
+  if(head) head.parentNode.insertBefore(banner, head);
   else document.body.insertBefore(banner, document.body.firstChild);
+  if(typeof sizeStation === 'function') sizeStation();
 }
 
 /* The seasons list itself is stored the same way as any other season's
@@ -3869,9 +4149,11 @@ async function applySiteAllergyAlertBanner(){
   icon.className = 'ti ti-alert-triangle';
   banner.appendChild(icon);
   banner.appendChild(document.createTextNode(' ' + (alert.title ? alert.title + ': ' : '') + alert.message));
-  const wrap = document.querySelector('.ticket-head .wrap');
-  if(wrap) wrap.insertBefore(banner, wrap.firstChild);
+  // Above the header rather than inside it: the station hides the header.
+  const head = document.querySelector('.ticket-head');
+  if(head) head.parentNode.insertBefore(banner, head);
   else document.body.insertBefore(banner, document.body.firstChild);
+  if(typeof sizeStation === 'function') sizeStation();
 }
 
 /* Only shown when a ?season= URL param is forcing a season other than
@@ -3886,9 +4168,11 @@ function applySeasonPreviewBanner(season){
   banner.id = 'seasonPreviewBanner';
   banner.style.cssText = 'background:#F4C542;color:#1A303C;font-weight:600;font-size:13.5px;text-align:center;padding:8px 12px;';
   banner.innerHTML = '<i class="ti ti-eye"></i> Preview only — showing the <strong>'+season.label+'</strong> menu. The kitchen iPad is not affected by this link.';
-  const wrap = document.querySelector('.ticket-head .wrap');
-  if(wrap) wrap.insertBefore(banner, wrap.firstChild);
+  // Above the header rather than inside it: the station hides the header.
+  const head = document.querySelector('.ticket-head');
+  if(head) head.parentNode.insertBefore(banner, head);
   else document.body.insertBefore(banner, document.body.firstChild);
+  if(typeof sizeStation === 'function') sizeStation();
 }
 
 function applySiteBranding(){

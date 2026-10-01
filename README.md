@@ -1934,3 +1934,30 @@ Staff admin:
 - **Escape key:** with the allergen popup open, Escape now closes just the popup.
 - **Allergen popup in Staff admin:** the popup opened behind Staff admin. It now appears in front.
 - **Season list:** the real list is now used when the page had only the built-in fallback.
+
+## 1 October 2026: Prep station replaces the grid view
+
+On an iPad the kitchen page put the header and the "Who's eating" panel above the food, so the first dish started below the bottom of the screen. The grid view and its full-screen recipe screen have been replaced by a **Prep station** layout that fits on one screen.
+
+### What the station shows
+
+- **Top bar:** the site, the season and a week picker, the day buttons (Mon to Fri, with arrows that carry on into the next or previous week), and buttons for the shopping list, list view, printing prep sheets and clearing ticks.
+- **Down the left:** each of the day's courses with its dish, its allergen icons and how many ingredients are ticked. Tapping one shows that dish. At the bottom is a "Who's eating" card with today's numbers and total servings. Tapping the card opens the headcount as a sheet over the station.
+- **The chosen dish:** the dish name, how many servings to make, the allergens as large icons with their names, and then the ingredients and the method side by side. Each panel scrolls on its own, so the page itself never scrolls on a tablet.
+
+### Behaviour
+
+- Ticking works as before and uses the same saved ticks as the list. A tick keeps your place in the ingredient list.
+- Tapping an allergen icon opens the same allergen information as everywhere else. Tapping an allergen inside an ingredient row does not tick the row.
+- "Clear ticks" in the station asks first, because a single tap on a counter-top tablet should not wipe the morning's work.
+- Tablets and computers open in the station; phones open in the list. The **List view** and **Station view** buttons switch between them, and each device remembers its choice.
+- In portrait the ingredients sit above the method. Narrower screens stack everything.
+- The backup-menu warning, the site allergy alert and the season preview banner now sit above the header instead of inside it, so they still show in the station.
+- The station's buttons draw their own icons, so they are never blank if the icon font fails to load.
+- The list view now escapes course and dish names, as the grid view did.
+
+### Checked
+
+- All 15 sites, every week and day, in list view and the station, opening every dish (1,740): no problems.
+- At 1180×820, 1133×744 and 1024×768 landscape and 820×1180 portrait, the dish and its first ingredients are on screen without scrolling.
+- Her 11 suites, the save-glitch checks (T1–T8), the season check and the second- and third-pass checks still pass. 24 new station checks cover the headcount sheet, ticking, keyboard use, allergen popups, days and weeks, escaping, clearing, the shopping list and remembering list or station.
