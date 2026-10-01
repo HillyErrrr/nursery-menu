@@ -1961,3 +1961,15 @@ On an iPad the kitchen page put the header and the "Who's eating" panel above th
 - All 15 sites, every week and day, in list view and the station, opening every dish (1,740): no problems.
 - At 1180×820, 1133×744 and 1024×768 landscape and 820×1180 portrait, the dish and its first ingredients are on screen without scrolling.
 - Her 11 suites, the save-glitch checks (T1–T8), the season check and the second- and third-pass checks still pass. 24 new station checks cover the headcount sheet, ticking, keyboard use, allergen popups, days and weeks, escaping, clearing, the shopping list and remembering list or station.
+
+### Opens on today's menu
+
+The kitchen page now opens on today's menu instead of the last week and day the device showed.
+
+- **How the week is worked out:** the rotation runs in whole weeks from the season's start date. The week that contains the start date is Week 1, the next is Week 2, and after the last week it goes back to Week 1. For Autumn/Winter 2026, which starts on Monday 7 September, Thursday 1 October is Week 4 Thursday and Monday 5 October is Week 1 Monday.
+- **Weekends:** Saturday and Sunday open on the coming Monday.
+- **Looking ahead:** you can still look at other days. The page stays where you put it for the rest of the day, and a **Today** button in the station takes you back. Today's day and week have a small dot under them in both the station and the list.
+- **Tablets left on overnight:** a tablet left on overnight moves itself to the new day's menu, with that day's ticks. If a new season starts that day, it reloads to pick up the new season's menu.
+- **A season with no start date:** a season with no start date can't be placed in the rotation, so the page falls back to the last week and day the device showed. Give every season a start date in Staff admin to avoid this.
+
+Checked: 13 date checks covering the season start, the wrap back to Week 1, a weekend, reloading, looking ahead, the midnight rollover, the list view, a season with no start date and a 1024-wide iPad. Her 11 suites, T1–T8, the season check, the station checks and the all-sites sweep still pass.

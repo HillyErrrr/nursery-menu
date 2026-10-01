@@ -791,6 +791,12 @@ body.stationMode #prepStation{
   background:transparent;color:#D5DCE2;font-size:14px;font-weight:700;padding:0 10px;
 }
 .stDay.on{background:var(--butter);border-color:var(--butter);color:#fff;}
+/* a small dot under today's day */
+.stDay{position:relative;}
+.stDay.today::after{content:'';position:absolute;left:50%;bottom:5px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:currentColor;}
+.stToday{border-color:var(--butter);color:#fff;padding:0 16px;}
+.tab{position:relative;}
+.tab.today::after{content:'';position:absolute;left:50%;bottom:6px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:currentColor;}
 .stSpacer{flex:1 1 auto;}
 .stActions{display:flex;gap:8px;align-items:center;}
 
@@ -907,6 +913,8 @@ body.hcSheetOpen .hcSheetFoot{display:flex;justify-content:flex-end;padding:0 16
 
 @media (max-width:1120px){
   .stShopLabel{display:none;}
+  .stTop{gap:10px 12px;}
+  .stDay{min-width:50px;}
   .stBtn.shop{padding:0;width:44px;}
 }
 @media (hover:none){
@@ -1860,6 +1868,72 @@ function shopGridKey(){ return 'shopgrid:'+SITE_SLUG+':'+SEASON_KEY+':'+shopCycl
 function shopCheckedKey(){ return 'shopchecked:'+SITE_SLUG+':'+SEASON_KEY+':'+shopCycleKey()+':'+state.week; }
 function shopOrderKey(){ return 'shoporder:'+SITE_SLUG+':'+SEASON_KEY+':'+shopCycleKey()+':'+state.week; }
 
+/* ---------- today's menu ----------
+   The rotation runs in whole weeks from the season's start date: the
+   week containing the start date is Week 1, the next is Week 2, and after
+   the last week it goes round to Week 1 again. Saturday and Sunday show
+   the coming Monday, which is the next menu anyone will cook. A season
+   with no start date can't be placed, so the page keeps the last week and
+   day this device showed. */
+const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+function localDateFromKey(key){
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(key || ''));
+  return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : null;
+}
+function mondayOf(d){
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+  return x;
+}
+function todaysMenuSlot(now){
+  now = now || new Date();
+  const season = SEASONS.find(s=> s.key === SEASON_KEY);
+  const start = season && localDateFromKey(season.startDate);
+  const weeks = Object.keys(MENU).sort((a,b)=> a - b);
+  if(!start || !weeks.length) return null;
+  let day = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const weekend = day.getDay() === 0 || day.getDay() === 6;
+  if(weekend) day.setDate(day.getDate() + (day.getDay() === 6 ? 2 : 1));
+  // Whole days between the two Mondays; rounding absorbs a clock change.
+  const weeksIn = Math.round((mondayOf(day) - mondayOf(start)) / 86400000 / 7);
+  const idx = weeksIn < 0 ? 0 : weeksIn % weeks.length;
+  const week = Number(weeks[idx]);
+  const dayName = weeksIn < 0 ? Object.keys(MENU[weeks[0]])[0] : DAY_NAMES[day.getDay()];
+  if(!MENU[week] || !MENU[week][dayName]) return null;
+  return { week, day: dayName, weekend, beforeStart: weeksIn < 0 };
+}
+function isTodaysSlot(week, day){
+  const t = todaysMenuSlot();
+  return !!t && !t.weekend && !t.beforeStart && Number(t.week) === Number(week) && t.day === day;
+}
+/* The calendar day the page last moved itself to. When the date changes
+   (a tablet left on overnight) the page moves to the new day's menu, but
+   never in the middle of a day, so looking ahead at Friday stays put. */
+let TODAY_SHOWN_FOR = null;
+function applyTodaysMenu(){
+  TODAY_SHOWN_FOR = todayKey();
+  const t = todaysMenuSlot();
+  if(!t) return false;
+  state.week = t.week;
+  state.day = t.day;
+  return true;
+}
+async function goToTodaysMenu(){
+  if(applyTodaysMenu()) await onDayOrWeekChange();
+}
+async function checkDateRolledOver(){
+  if(TODAY_SHOWN_FOR === null || TODAY_SHOWN_FOR === todayKey()) return;
+  // A new season may have started overnight; that needs its own menu file.
+  if(!SEASON_OVERRIDDEN && pickSeasonForDate(SEASONS, todayKey()).key !== SEASON_KEY){
+    location.reload();
+    return;
+  }
+  await goToTodaysMenu();
+}
+setInterval(checkDateRolledOver, 60000);
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) checkDateRolledOver(); });
+window.addEventListener('focus', checkDateRolledOver);
+
 async function loadState(){
   try{
     const sel = await window.storage.get('lastSelection:'+SITE_SLUG+':'+SEASON_KEY);
@@ -1869,6 +1943,9 @@ async function loadState(){
       if(v.day) state.day = v.day;
     }
   }catch(e){}
+  // Today's menu wins over the last one shown; the saved one is only the
+  // fallback for a season with no start date.
+  applyTodaysMenu();
   try{
     const hc = await window.storage.get('headcounts:'+SITE_SLUG+':'+SEASON_KEY);
     if(hc){
@@ -2024,7 +2101,10 @@ function renderTabs(){
   weekTabs.innerHTML = '';
   Object.keys(MENU).sort((a,b)=>a-b).forEach(wk=>{
     const b = document.createElement('button');
-    b.className = 'tab' + (Number(wk)===Number(state.week) ? ' active':'');
+    const tSlot = todaysMenuSlot();
+    const isTodayWeek = !!tSlot && !tSlot.weekend && !tSlot.beforeStart && Number(tSlot.week) === Number(wk);
+    b.className = 'tab' + (Number(wk)===Number(state.week) ? ' active':'') + (isTodayWeek ? ' today' : '');
+    if(isTodayWeek) b.title = 'This week';
     b.textContent = 'Week '+wk;
     b.onclick = ()=>{ state.week = Number(wk); onDayOrWeekChange(); };
     weekTabs.appendChild(b);
@@ -2035,7 +2115,8 @@ function renderTabs(){
   const days = MENU[state.week] ? Object.keys(MENU[state.week]) : [];
   days.forEach(day=>{
     const b = document.createElement('button');
-    b.className = 'tab' + (day===state.day ? ' active':'');
+    b.className = 'tab' + (day===state.day ? ' active':'') + (isTodaysSlot(state.week, day) ? ' today' : '');
+    if(isTodaysSlot(state.week, day)) b.title = 'Today';
     b.textContent = day;
     b.onclick = ()=>{ state.day = day; onDayOrWeekChange(); };
     dayTabs.appendChild(b);
@@ -2520,6 +2601,7 @@ function renderPrepStation(){
 
   const weeks = Object.keys(MENU).sort((a,b)=> a - b);
   const days = MENU[state.week] ? Object.keys(MENU[state.week]) : [];
+  const todaySlot = todaysMenuSlot();
   const season = (SEASONS.find(s=> s.key === SEASON_KEY) || {}).label || '';
   const site = SITE_CONFIG.siteName || SITE_CONFIG.subBrand || SITE_CONFIG.brand || 'Kitchen';
   const totalServ = totalServings();
@@ -2540,8 +2622,10 @@ function renderPrepStation(){
       </div>
       <div class="stNav" role="group" aria-label="Day">
         <button type="button" class="stBtn icon" data-act="prev" data-focus="prev" aria-label="Previous day" title="Previous day">${stIcon('prev')}</button>
-        ${days.map(d=> `<button type="button" class="stDay${d === state.day ? ' on' : ''}" data-act="day" data-day="${fa(d)}" data-focus="day:${fa(d)}" aria-pressed="${d === state.day}" aria-label="${fa(d)}">${escapeHtml(d.slice(0, 3))}</button>`).join('')}
+        ${days.map(d=> `<button type="button" class="stDay${d === state.day ? ' on' : ''}${isTodaysSlot(state.week, d) ? ' today' : ''}" data-act="day" data-day="${fa(d)}" data-focus="day:${fa(d)}" aria-pressed="${d === state.day}" aria-label="${fa(d)}${isTodaysSlot(state.week, d) ? ' (today)' : ''}">${escapeHtml(d.slice(0, 3))}</button>`).join('')}
         <button type="button" class="stBtn icon" data-act="next" data-focus="next" aria-label="Next day" title="Next day">${stIcon('next')}</button>
+        ${todaySlot && !(Number(todaySlot.week) === Number(state.week) && todaySlot.day === state.day)
+          ? `<button type="button" class="stBtn stToday" data-act="today" data-focus="today" title="Go to ${todaySlot.weekend ? 'Monday’s' : 'today’s'} menu">${todaySlot.weekend ? 'Monday' : 'Today'}</button>` : ''}
       </div>
       <div class="stSpacer"></div>
       <div class="stActions">
@@ -2593,7 +2677,7 @@ function renderPrepStation(){
       <main class="stMain">
         <div class="stHead">
           <div class="stHeadText">
-            <div class="stEyebrow">${escapeHtml(state.day)} · ${escapeHtml(sel.courseName)}</div>
+            <div class="stEyebrow">${isTodaysSlot(state.week, state.day) ? 'Today · ' : ''}${escapeHtml(state.day)} · ${escapeHtml(sel.courseName)}</div>
             <h2 class="stDish">${escapeHtml(sel.recipeName)}</h2>
             ${make}
           </div>
@@ -3814,6 +3898,7 @@ document.getElementById('prepStation').addEventListener('click', async (e)=>{
   if(!b || !e.currentTarget.contains(b)) return;
   switch(b.dataset.act){
     case 'prev': stationStepDay(-1); break;
+    case 'today': goToTodaysMenu(); break;
     case 'next': stationStepDay(1); break;
     case 'day':
       if(b.dataset.day !== state.day){ state.day = b.dataset.day; onDayOrWeekChange(); }
