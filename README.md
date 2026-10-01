@@ -14,7 +14,7 @@ shared.
 - `index.html` — a picker page listing all 15 nurseries. Mainly useful once, for
   finding each site's own link.
 - `app.html` — the actual prep list / shopping list app. Takes a `?site=` in the
-  address, e.g. `app.html?site=little-adventures-wedmore`. Also includes a
+  address, e.g. `app.html?site=little-adventures-cheddar`. Also includes a
   password-gated **staff admin** panel (recipe bank + weekly matrix editor) —
   see "Staff admin" below.
 - `groups/<group>/seasons/<season-key>.json` — the **master document**: 4-week
@@ -106,7 +106,7 @@ pre-order shopping a look at the next season's ingredient list before the
 switchover, without touching what the kitchen iPad shows. For example:
 
 ```
-https://<your-netlify-address>/app.html?site=little-adventures-wedmore&season=autumn-winter-2025
+https://<your-netlify-address>/app.html?site=little-adventures-cheddar&season=autumn-winter-2025
 ```
 
 A preview link like this shows a yellow banner at the top confirming it's a
@@ -269,10 +269,10 @@ Once deployed, each nursery's link is:
 https://<your-netlify-address>/app.html?site=<their-slug>
 ```
 
-For example, Wedmore's link is:
+For example, Cheddar's link is:
 
 ```
-https://<your-netlify-address>/app.html?site=little-adventures-wedmore
+https://<your-netlify-address>/app.html?site=little-adventures-cheddar
 ```
 
 The full list of slugs is in `index.html` (or just open the site's root address
