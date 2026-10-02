@@ -2077,3 +2077,16 @@ On a day where the vegetarian option is "Same as Above", the veg children eat th
 Staff admin's rotation grid and the printed menu pack still show "Same as Above", where it is the message.
 
 Checked: 6 new checks (`same.js`, including a real veg dish still taking its children from the main), the station, today's-menu, extra-menu and site checks, the all-sites sweep, and her kitchen, menus, prepnotes and props suites.
+
+## 2 October 2026: a one-week Holiday club menu prints as a one-week page
+
+When an extra menu's rotation is one week long (for example a half-term Holiday club), its menu pack page no longer stretches four or five rows down the whole page. A page that holds a single week now gets its own layout:
+
+- a larger header, all-day line, day headings, dish names, descriptions and allergen icons, since there is no second week to share the room with;
+- a set table height of about 26mm a row (never more than the page has room for), shared between the rows, so a light week keeps compact rows and the week sits centred between the all-day line and the allergy key;
+- rows come out equal unless one holds more, in which case it takes what it needs;
+- the subtitle reads "a one-week menu" rather than "a 1-week menu, starting at Week 1 each holiday".
+
+The last page of an odd-length rotation (Week 3 of a 3-week menu, say) uses the same layout. Two weeks still share one page exactly as before. If a very full week ever outgrows the one-week page, that page falls back to the standard layout, which always fits. The allergen matrix pages that follow are unchanged.
+
+Checked: 7 new checks (`oneweek.js`: a near-empty week, a full week with a vegetarian option, two weeks, and a three-week menu), the PDF download, all the earlier suites and her 11.
