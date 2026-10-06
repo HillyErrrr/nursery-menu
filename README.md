@@ -2104,3 +2104,24 @@ Now any Save button on the page also saves what has been typed in the other card
 - The page heading says "Any Save button on this page saves everything you have filled in here."
 
 Checked: 9 new checks (`ingsave.js`), 7 of which fail on the previous build. Also her 11 suites and the earlier ones.
+
+## 6 October 2026: Holiday club pack — bolder "Available all day", a distinct vegetarian row
+
+- **Available all day:** the dashed outline is now a solid sage-green band with white text. It has the Little Adventures apple illustration in a cream disc and an "AVAILABLE ALL DAY" label in a cream pill. It is larger again on a one-week page. To make room, the one-week table's height cap goes from 136mm to 131mm.
+- **Vegetarian option row:**
+  - The whole row is tinted green, with a darker green label cell.
+  - A leaf badge sits beside the course name, and the label and dish names are dark green.
+  - A dashed green line joins it to the lunch above, so it reads as the other lunch, not another course.
+- **"Same as Above"** in that row prints as a quiet italic note, without allergen icons.
+
+The nursery menu pack is unchanged.
+
+Checked: `oneweek.js` 7/7 (its full week now includes a "Same as Above"), `pack.js` 6/6 and `extra.js` 23/23.
+
+## 6 October 2026: Holiday club pack — bold dish names, italic descriptions
+
+- **Dish names now print in real bold.** The embedded font is Museo Sans 500, a single cut, but its `@font-face` declares weights 400–700. Because 700 counts as covered, the browser never drew a bold version, and the names looked regular. A second face for the same file, declared at weight 400 only (`HC Museo Bold`), is used for the dish names, so asking it for 700 draws a true bold. The PDF download shows it too.
+- **Descriptions are italic**, in the same softer ink.
+- "Same as Above" stays a quiet italic note.
+
+Checked: `oneweek.js` 7/7 and `pack.js` 6/6, plus the downloaded PDF.
