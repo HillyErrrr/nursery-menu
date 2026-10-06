@@ -16324,6 +16324,16 @@ table.hcTable{flex:1 1 auto;width:100%;border-collapse:collapse;table-layout:fix
 .hcOne.hcFit3 .hcTable .mpIcons{margin-top:0.4mm;}
 .hcOne.hcFit3 .hcTable .mpIcons img{height:3.4mm;width:3.4mm;}
 .hcOne.hcFit3 .hcKey .mpAllergenKeyItem img{height:5.6mm;width:5.6mm;}
+/* Names on one line across each row: every cell starts at the top
+   (labels too, so "Dessert" sits level with the dish names). Each dish's
+   allergen icons stay directly under its own description, so they read
+   as belonging to that dish. Last in the sheet so it outranks the tiers. */
+.hcPage .hcTable tbody td{vertical-align:top;padding-top:2.4mm;}
+.hcPage.hcOne .hcTable tbody td{padding-top:3.4mm;}
+.hcPage.hcOne.hcFit1 .hcTable tbody td{padding-top:3.2mm;}
+.hcPage.hcOne.hcFit2 .hcTable tbody td{padding-top:2.8mm;}
+.hcPage.hcOne.hcFit3 .hcTable tbody td{padding-top:2.2mm;}
+.hcPage .hcTable tbody tr.hcVegRow td.hcLabCell .hcVegLab{align-items:flex-start;}
 `;
 function titleCaseWords(t){
   return String(t || '').split(/\s+/).filter(Boolean).map(w=> w.charAt(0).toUpperCase() + w.slice(1)).join(' ');

@@ -2146,3 +2146,13 @@ A two-week cycle now runs over two pages, one per week, instead of both weeks on
 Any rotation length works the same way: a page per week.
 
 Checked: `pack.js` 6/6, `oneweek.js` 7/7 (O5 and O6 now expect a page per week), `johnweek.js` 5/5 and `extra.js` 23/23 (X5 updated the same way).
+
+## 6 October 2026: Holiday club pack — dish names line up across each row
+
+Cells used to be centred top to bottom, so a dish with a shorter description sat lower than its neighbours, e.g. Fruit Jelly below Banana & Custard.
+
+- **Every cell starts at the top,** so the bold dish names share one line across each row. The course labels are level with them too.
+- **Each dish's allergen icons stay directly under its own description,** so they read as belonging to that dish. John chose this over pinning the icons to the bottom of the row.
+- **There is a little space above the text** in every cell: 2.4mm on a two-week-style page, and 3.4mm on a one-week page, easing to 2.2mm in the tightest fit tier. The rules sit last in the pack CSS with enough specificity to beat the fit tiers' padding shorthand.
+
+Checked: `johnweek.js` 5/5, `oneweek.js` 7/7, `pack.js` 6/6 and the downloaded PDF.
