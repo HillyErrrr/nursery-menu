@@ -15805,15 +15805,46 @@ const MENU_PACK_AUTOFIT_SCRIPT = `
   // standard extra-menu layout, which always fits.
   function fitOneWeekPages(){
     var pages = document.querySelectorAll('.hcPage.hcOne');
+    // Each tier: a class with tighter type, and how far the row floors shrink.
+    var TIERS = [['', 1], ['hcFit1', 0.85], ['hcFit2', 0.7], ['hcFit3', 0.5]];
     for(var i = 0; i < pages.length; i++){
-      var room = pages[i].querySelector('.hcWeeks'), week = pages[i].querySelector('.hcWeek');
-      if(!room || !week) continue;
-      if(week.getBoundingClientRect().height > room.getBoundingClientRect().height + 1){
-        pages[i].classList.remove('hcOne');
-        pages[i].classList.add('hcOneFallback');
-        week.style.height = '';
-        var rows = week.querySelectorAll('tr[style]');
-        for(var j = 0; j < rows.length; j++) rows[j].style.height = '';
+      var pg = pages[i];
+      var room = pg.querySelector('.hcWeeks'), week = pg.querySelector('.hcWeek');
+      var table = week ? week.querySelector('table') : null;
+      if(!room || !week || !table) continue;
+      var rows = week.querySelectorAll('tr[data-floor]');
+      var fits = false;
+      for(var t = 0; t < TIERS.length && !fits; t++){
+        pg.classList.remove('hcFit1', 'hcFit2', 'hcFit3');
+        if(TIERS[t][0]) pg.classList.add(TIERS[t][0]);
+        for(var j = 0; j < rows.length; j++){
+          rows[j].style.height = (parseFloat(rows[j].getAttribute('data-floor')) * TIERS[t][1]) + 'mm';
+        }
+        // The table itself, not its clipping box: the box can't be taller
+        // than the room, the table inside it can.
+        fits = table.getBoundingClientRect().height <= room.getBoundingClientRect().height + 0.5 &&
+               pg.scrollHeight <= pg.clientHeight + 1;
+      }
+      /* A tighter tier usually leaves some room over (the step between
+         tiers is coarse). Hand it back to the rows -- not the vegetarian
+         one -- so the week fills the page instead of floating in it. */
+      if(fits && t > 1){
+        var spare = room.getBoundingClientRect().height - table.getBoundingClientRect().height - 2;
+        var grow = [];
+        for(var g = 0; g < rows.length; g++) if(!rows[g].classList.contains('hcVegRow')) grow.push(rows[g]);
+        if(spare > 0 && grow.length){
+          var each = spare / grow.length;
+          var hs = grow.map(function(r){ return r.getBoundingClientRect().height; });
+          for(var h = 0; h < grow.length; h++) grow[h].style.height = (hs[h] + each) + 'px';
+          if(table.getBoundingClientRect().height > room.getBoundingClientRect().height + 0.5){
+            for(var u = 0; u < grow.length; u++) grow[u].style.height = hs[u] + 'px';
+          }
+        }
+      }
+      if(!fits){
+        pg.classList.remove('hcOne', 'hcFit1', 'hcFit2', 'hcFit3');
+        pg.classList.add('hcOneFallback');
+        for(var k = 0; k < rows.length; k++) rows[k].style.height = '';
       }
     }
   }
@@ -16250,6 +16281,49 @@ table.hcTable{flex:1 1 auto;width:100%;border-collapse:collapse;table-layout:fix
 .hcOne .hcKey .mpAllergenKeyTitle{font-size:10pt;margin-bottom:1mm;}
 .hcOne .hcKey .mpAllergenKeyItem img{height:7mm;width:7mm;}
 .hcOne .hcKey .mpAllergenKeyItem span{font-size:7pt;}
+/* One week: the vegetarian row stays compact -- smaller label, so "Lunch
+   Vegetarian Option" takes two lines -- and descriptions are shown in
+   full (the fit pass below makes the room rather than cutting words). */
+.hcOne .hcTable .hcVegRow .hcLabName{font-size:9.5pt;line-height:1.05;}
+.hcOne .hcVegRow td{padding-top:1mm;padding-bottom:1mm;}
+.hcOne .hcDesc{-webkit-line-clamp:8;}
+/* Tighter tiers, tried in turn by fitOneWeekPages() until the week fits. */
+.hcOne.hcFit1 .hcName{font-size:9.3pt;}
+.hcOne.hcFit1 .hcDesc{font-size:7.1pt;line-height:1.15;margin-top:0.5mm;}
+.hcOne.hcFit1 .hcTable td{padding:1mm 2.2mm;}
+.hcOne.hcFit1 .hcTable .mpIcons{margin-top:0.7mm;}
+.hcOne.hcFit1 .hcTable .mpIcons img{height:4mm;width:4mm;}
+.hcOne.hcFit2 .hcHeader{height:18mm;}
+.hcOne.hcFit2 .hcTitle{font-size:24pt;}
+.hcOne.hcFit2 .hcRainbow{height:19mm;width:19mm;}
+.hcOne.hcFit2 .hcDeco{height:15mm;width:15mm;}
+.hcOne.hcFit2 .hcLogo{height:15mm;width:15mm;}
+.hcOne.hcFit2 .hcAllDay{font-size:11pt;padding:1mm 4mm 1mm 1.4mm;}
+.hcOne.hcFit2 .hcAllDayIcon{width:8.5mm;height:8.5mm;}
+.hcOne.hcFit2 .hcAllDayIcon img{width:6.5mm;height:6.5mm;}
+.hcOne.hcFit2 .hcLabName{font-size:10.5pt;}
+.hcOne.hcFit2 .hcName{font-size:8.8pt;line-height:1.1;}
+.hcOne.hcFit2 .hcDesc{font-size:6.7pt;line-height:1.12;margin-top:0.4mm;}
+.hcOne.hcFit2 .hcTable td{padding:0.8mm 1.8mm;}
+.hcOne.hcFit2 .hcTable .mpIcons{margin-top:0.5mm;}
+.hcOne.hcFit2 .hcTable .mpIcons img{height:3.7mm;width:3.7mm;}
+.hcOne.hcFit2 .hcKey .mpAllergenKeyItem img{height:6mm;width:6mm;}
+.hcOne.hcFit3 .hcHeader{height:16mm;}
+.hcOne.hcFit3 .hcTitle{font-size:22pt;}
+.hcOne.hcFit3 .hcRainbow{height:17mm;width:17mm;}
+.hcOne.hcFit3 .hcDeco{height:13mm;width:13mm;}
+.hcOne.hcFit3 .hcLogo{height:13.5mm;width:13.5mm;}
+.hcOne.hcFit3 .hcAllDay{font-size:10pt;padding:0.8mm 4mm 0.8mm 1.2mm;}
+.hcOne.hcFit3 .hcAllDayIcon{width:7.5mm;height:7.5mm;}
+.hcOne.hcFit3 .hcAllDayIcon img{width:5.8mm;height:5.8mm;}
+.hcOne.hcFit3 .hcLabName{font-size:10pt;}
+.hcOne.hcFit3 .hcTable .hcVegRow .hcLabName{font-size:8.8pt;}
+.hcOne.hcFit3 .hcName{font-size:8.3pt;line-height:1.08;}
+.hcOne.hcFit3 .hcDesc{font-size:6.3pt;line-height:1.1;margin-top:0.3mm;}
+.hcOne.hcFit3 .hcTable td{padding:0.6mm 1.5mm;}
+.hcOne.hcFit3 .hcTable .mpIcons{margin-top:0.4mm;}
+.hcOne.hcFit3 .hcTable .mpIcons img{height:3.4mm;width:3.4mm;}
+.hcOne.hcFit3 .hcKey .mpAllergenKeyItem img{height:5.6mm;width:5.6mm;}
 `;
 function titleCaseWords(t){
   return String(t || '').split(/\s+/).filter(Boolean).map(w=> w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
@@ -16268,28 +16342,30 @@ function extraPackAllergenKeyHtml(){
     <div class="mpAllergenKeyRow">${ALLERGEN_OPTIONS.map(a=> `<div class="mpAllergenKeyItem"><img src="${menuPackIconSrc(a.key, 'paper')}" alt=""><span>${escapeHtml(a.label)}</span></div>`).join('')}</div>
   </div>`;
 }
-// A week alone on an A4 landscape page: the table is given a set height --
-// 26mm a row plus the day headings, but never more than the room left under
-// the header, the all-day line and the allergy key (about 136mm) -- and the
-// browser shares that height between the rows. Each row also gets a floor
-// a little under its even share, so rows come out equal unless one holds
-// more than that, in which case it takes the extra it needs and the rest
-// give a little. A light week keeps compact rows; a full week still fits.
-const HC_ONE_ROOM_MM = 131, HC_ONE_ROW_MM = 26, HC_ONE_HEAD_MM = 8;
-function extraPackOneWeekHeightMm(rowCount){
-  return Math.min(HC_ONE_ROOM_MM, Math.max(1, rowCount) * HC_ONE_ROW_MM + HC_ONE_HEAD_MM);
-}
-function extraPackOneRowFloorMm(rowCount){
-  const even = (extraPackOneWeekHeightMm(rowCount) - HC_ONE_HEAD_MM) / Math.max(1, rowCount);
-  return Math.round(Math.max(12, even - 4) * 10) / 10;
+// A week alone on an A4 landscape page. The table has no set height; each
+// row has a floor instead, so a light week shows equal, compact rows and a
+// row with more in it simply grows. The floors share out about 123mm (the
+// room under the header, the all-day band and the allergy key, less the day
+// headings), never more than 26mm a row. The vegetarian row's dishes carry
+// no descriptions, so it gets a small floor of its own and leaves the rest
+// for the others. fitOneWeekPages() then checks the real table against the
+// real room and tightens if it has to.
+const HC_ONE_ROWS_MM = 123, HC_ONE_ROW_MAX_MM = 26, HC_ONE_VEG_MM = 14;
+function extraPackOneRowFloorMm(isVeg, rowCount, vegCount){
+  if(isVeg) return HC_ONE_VEG_MM;
+  const others = Math.max(1, rowCount - vegCount);
+  const each = (HC_ONE_ROWS_MM - vegCount * HC_ONE_VEG_MM) / others;
+  return Math.round(Math.max(16, Math.min(HC_ONE_ROW_MAX_MM, each)) * 10) / 10;
 }
 function extraPackWeekHtml(key, season, wk, colour, alone){
   const days = season.weeks[wk] || {};
   const rows = extraMenuPackRowSequence(key, season, wk).filter(it=> it.type === 'meal');
-  const weekStyle = alone ? ` style="height:${extraPackOneWeekHeightMm(rows.length)}mm"` : '';
-  const rowStyle = alone ? ` style="height:${extraPackOneRowFloorMm(rows.length)}mm"` : '';
+  const weekStyle = '';
+  const vegCount = rows.filter(it=> VEG_COURSES.has(it.row.course)).length;
   const body = rows.map(it=>{
     const r = it.row;
+    const floor = alone ? extraPackOneRowFloorMm(VEG_COURSES.has(r.course), rows.length, vegCount) : 0;
+    const rowStyle = alone ? ` style="height:${floor}mm" data-floor="${floor}"` : '';
     const cells = DAYS.map(d=>{
       const id = (days[d] || {})[r.course];
       const recipe = id ? DATA.recipeBank[id] : null;
@@ -16341,7 +16417,9 @@ function extraPackPageHtml(key, season, weekKeys, allWeeks){
 function extraPackPagesHtml(key, season){
   const weeks = seasonWeekKeys(season);
   const pages = [];
-  for(let i = 0; i < weeks.length; i += 2) pages.push(extraPackPageHtml(key, season, weeks.slice(i, i + 2), weeks));
+  // A page per week: each week gets the full one-week layout, so a
+  // two-week cycle runs over two pages rather than squeezing both onto one.
+  weeks.forEach(wk=> pages.push(extraPackPageHtml(key, season, [wk], weeks)));
   return pages;
 }
 
@@ -16349,7 +16427,7 @@ function buildMenuPackHtml(seasonKey, opts){
   const season = ensureSeason(seasonKey);
   const seasonLabel = season.label;
   // The weaning-stages page is about the nursery menu, not an extra one.
-  // An extra menu: its own one-page layout, two weeks to a page, and no
+  // An extra menu: its own layout, one week to a page, and no
   // weaning-stages page.
   const pages = isExtraMenu(seasonKey) ? extraPackPagesHtml(seasonKey, season) : [menuPackIntroPageHtml(seasonLabel)];
   if(!isExtraMenu(seasonKey)) seasonWeekKeys(season).forEach(wk=> pages.push(menuPackWeekPageHtml(season, wk, seasonLabel, seasonKey)));
@@ -16420,7 +16498,7 @@ function renderMenuPackView(){
   card.className = 'card';
   card.innerHTML = `
     <div class="tinyNote">${isExtraMenu(EDITING_GROUP)
-      ? 'One PDF: the menu on one page (up to two weeks to a page; a one-week menu gets a page laid out for one week) with the allergy key, then the allergen matrix. Built live from the rotation and the recipes\' linked ingredients, so it always matches what is currently saved.'
+      ? 'One PDF: the menu, one week to a page, each with the allergy key, then the allergen matrix. Built live from the rotation and the recipes\' linked ingredients, so it always matches what is currently saved.'
       : 'One PDF: the weaning-stages intro page, all four weeks of the menu, then the allergen matrix. Built live from the rotation and the recipes\' linked ingredients, so it always matches what is currently saved.'}</div>
     <div class="tinyNote" style="margin-top:8px;">It follows the menu you are editing. To build the other one, switch <b>Editing</b> in the toolbar first.</div>`;
   const row = document.createElement('div');

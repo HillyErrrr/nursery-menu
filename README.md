@@ -2125,3 +2125,24 @@ Checked: `oneweek.js` 7/7 (its full week now includes a "Same as Above"), `pack.
 - "Same as Above" stays a quiet italic note.
 
 Checked: `oneweek.js` 7/7 and `pack.js` 6/6, plus the downloaded PDF.
+
+## 6 October 2026: a full one-week Holiday club menu always fits the page
+
+John's October menu, with long descriptions on almost every dish, overflowed its one-week page. The bottom row's allergen icons were cut off and one description was shortened with "…". The safety net never fired: it measured the clipping box, which can't be taller than the page, rather than the table inside it.
+
+- **The vegetarian row is compact.** Its dishes have no descriptions, so it gets a small 14mm floor and a smaller label, which leaves more room for the other rows.
+- **No set table height.** Each row has a floor and grows with what it holds. The floors share out about 123mm, never more than 26mm a row, so a light week still shows equal, compact rows.
+- **A real fit pass.** `fitOneWeekPages()` measures the table against the room on the page and steps through three tighter tiers (`hcFit1`–`hcFit3`: smaller type and padding, then a smaller header and band) until the week fits.
+  - Any room left over after a tighter tier goes back to the non-vegetarian rows, so the week fills the page.
+  - The standard layout is used only if even the tightest tier doesn't fit.
+- **Descriptions are shown in full** on a one-week page, no longer cut off at four lines.
+
+Checked: `johnweek.js` 5/5 (John's actual October week, plus a short-description version) and the downloaded PDF. `oneweek.js` 7/7 and `pack.js` 6/6.
+
+## 6 October 2026: Holiday club pack — one week to a page
+
+A two-week cycle now runs over two pages, one per week, instead of both weeks on one page. Each page uses the full one-week layout, with the header, the "Available all day" band, the week's table and the allergy key. The subtitle ends with the page's week, e.g. "a 2-week menu, starting at Week 1 each holiday · Week 2". The fit pass from the previous change sizes each page on its own, and the allergen matrix pages follow as before.
+
+Any rotation length works the same way: a page per week.
+
+Checked: `pack.js` 6/6, `oneweek.js` 7/7 (O5 and O6 now expect a page per week), `johnweek.js` 5/5 and `extra.js` 23/23 (X5 updated the same way).
