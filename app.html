@@ -8652,6 +8652,7 @@ async function saveIngredientCard(ingredientId, opts){
   if(outcome === 'cancelled' || outcome === 'gone'){
     restoreFields(DATA.ingredients[ingredientId] || live, beforeForm, written);
     done();
+    if(outcome === 'cancelled' && opts.onCancelled) opts.onCancelled();
     toast(outcome === 'gone' ? 'That product is no longer in the database' : 'Nothing saved');
     /* A form card keeps what was typed so it can be tried again; a card
        whose control IS the value (a swap, the allergen list, archived or
@@ -13985,6 +13986,7 @@ function renderIngredientEditView(ingredientId){
     <div>
       <div class="crumb">Ingredient database</div>
       <h1>${escapeHtml(rec.productName || 'Untitled ingredient')}${ingredientStatusBadgeHtml(rec)}</h1>
+      <div class="sub">Any Save button on this page saves everything you have filled in here.</div>
     </div>
   `;
   const actions = document.createElement('div');
@@ -14000,10 +14002,10 @@ function renderIngredientEditView(ingredientId){
   archiveBtn.onclick = async ()=>{
     relinkIngredient();
     const next = rec.status === 'archived' ? 'active' : 'archived';
-    await saveIngredientCard(ingredientId, {
+    await saveWholePage(null, {
       button: archiveBtn,
       savedToast: next === 'archived' ? 'Archived' : 'Restored',
-      readForm: (r)=>{ r.status = next; },
+      apply: (r)=>{ r.status = next; },
       stamp: (r)=>{ r.history.push({at: nowIso(), summary: next === 'archived' ? 'Archived' : 'Restored from archive'}); },
     });
     relinkIngredient();
@@ -14166,10 +14168,10 @@ function renderIngredientEditView(ingredientId){
      the merge finds a conflict somebody then cancels. */
   async function saveSwap(apply, message){
     relinkIngredient();
-    await saveIngredientCard(ingredientId, {
+    await saveWholePage(null, {
       card: swapCard,
       savedToast: message,
-      readForm: apply,
+      apply: apply,
       stamp: (r)=>{ r.history.push({at: nowIso(), summary: message}); },
     });
     relinkIngredient();
@@ -14223,6 +14225,106 @@ function renderIngredientEditView(ingredientId){
     rec.linkedToTesco = !!rec.tescoUrl;
   }
 
+  /* Every Save button on this screen saves the whole page.
+
+     Each card used to save only its own fields and then redraw the page
+     from the record -- so whatever was typed into the OTHER cards and not
+     yet saved with their own button vanished. On a new ingredient, where
+     the name, nutrition and allergens are all filled in at once, that took
+     three or four saves before everything stuck, and looked exactly like
+     the app losing data.
+
+     What the other cards add is only what was actually typed into them:
+     each field is compared with what that card showed when the page was
+     drawn, so a field nobody touched is never written (not even as a
+     tidied-up copy of itself), and saveIngredientCard's field-by-field
+     merge keeps a colleague's value in it. The button's own card is read
+     in full, exactly as before. */
+  const ING_PRODUCT_KEYS = ['productName','tescoUrl','tescoProductId','imageUrl','category','packSize','unitOfMeasure','currentPrice','recipeUnit','recipeUnitYield','linkedToTesco'];
+  const ING_NUTRITION_KEYS = ['nutritionBasis','nutrition','nutritionSource'];
+  const pickIngKeys = (r, keys)=> stableJson(keys.map(k=> r[k] === undefined ? null : r[k]));
+  function readNutritionForm(r){
+    r.nutritionBasis = nutCard.querySelector('#f_nutritionBasis').value;
+    r.nutrition = Object.assign({}, r.nutrition || {});
+    NUTRITION_FIELDS.forEach(f=>{
+      const v = nutCard.querySelector('#nut_'+f.key).value;
+      r.nutrition[f.key] = v === '' ? null : Number(v);
+    });
+    // r.trafficLights is no longer hand-picked -- every traffic light is
+    // computed fresh from r.nutrition via trafficLightFor().
+    r.nutritionSource = nutCard.querySelector('#f_nutritionSource').value.trim();
+  }
+  /* Both forms read onto a copy. The name box is the one field not taken
+     when empty: Save product refuses an empty name, and another card's
+     Save must not quietly blank a name somebody cleared by accident. */
+  function readFormsOnto(r){
+    const t = JSON.parse(JSON.stringify(r));
+    readProductForm(t);
+    if(!detailsCard.querySelector('#f_productName').value.trim()) t.productName = r.productName;
+    readNutritionForm(t);
+    return t;
+  }
+  // What the two forms read as when the page was drawn (set at the end of
+  // this function, once both cards exist).
+  let pageAsDrawn = null;
+  function takeTypedFields(r, keys){
+    const t = readFormsOnto(r);
+    keys.forEach(k=>{
+      if(!pageAsDrawn || stableJson(t[k] === undefined ? null : t[k]) !== stableJson(pageAsDrawn[k] === undefined ? null : pageAsDrawn[k])) r[k] = t[k];
+    });
+  }
+  function joinWords(list){
+    return list.length <= 1 ? (list[0] || '') : list.slice(0, -1).join(', ') + ' and ' + list[list.length - 1];
+  }
+  /* One save, from whichever button. `what` is the card the button belongs
+     to ('product', 'nutrition', 'allergens', or null for a swap or the
+     archive toggle). Its own stamp always applies; another card's applies
+     only if something typed in it was saved. */
+  async function saveWholePage(what, opts){
+    const changed = {product: what === 'product', nutrition: what === 'nutrition'};
+    const OWN = {product: 'product details', nutrition: 'nutrition', allergens: 'allergens'};
+    const saveOpts = Object.assign({}, opts, {
+      readForm: (r)=>{
+        const p0 = pickIngKeys(r, ING_PRODUCT_KEYS), n0 = pickIngKeys(r, ING_NUTRITION_KEYS);
+        if(what === 'product'){ readProductForm(r); takeTypedFields(r, ING_NUTRITION_KEYS); }
+        else if(what === 'nutrition'){ readNutritionForm(r); takeTypedFields(r, ING_PRODUCT_KEYS); }
+        else takeTypedFields(r, ING_PRODUCT_KEYS.concat(ING_NUTRITION_KEYS));
+        if(opts.apply) opts.apply(r);
+        if(pickIngKeys(r, ING_PRODUCT_KEYS) !== p0) changed.product = true;
+        if(pickIngKeys(r, ING_NUTRITION_KEYS) !== n0) changed.nutrition = true;
+        // Say what else was saved, so a Save on one card that also saved
+        // another doesn't surprise anybody.
+        const extra = [];
+        if(changed.product && what !== 'product') extra.push('product details');
+        if(changed.nutrition && what !== 'nutrition') extra.push('nutrition');
+        if(extra.length){
+          saveOpts.savedToast = OWN[what]
+            ? 'Saved ' + joinWords([OWN[what]].concat(extra))
+            : opts.savedToast + ' — also saved ' + joinWords(extra);
+        }
+      },
+      stamp: (r)=>{
+        if(changed.product){
+          r.dateLastUpdated = nowIso();
+          r.history.push({at: nowIso(), summary:'Product details updated'});
+        }
+        if(changed.nutrition){
+          r.nutritionLastUpdated = nowIso();
+          r.history.push({at: nowIso(), summary:'Nutrition updated'});
+        }
+        if(opts.stamp) opts.stamp(r);
+      },
+    });
+    /* A conflict somebody answered with Cancel cancels everything that
+       save would have saved. What is still typed in the boxes stays there
+       (so the button can be pressed again), but it no longer rides along
+       with a DIFFERENT button -- otherwise every other Save on the page
+       would ask the same question again. */
+    saveOpts.onCancelled = ()=>{ pageAsDrawn = readFormsOnto(DATA.ingredients[ingredientId] || rec); };
+    delete saveOpts.apply;
+    return saveIngredientCard(ingredientId, saveOpts);
+  }
+
   /* Merges against the shared copy before anything is written, so a price
      a colleague changed while this screen was open is not reverted by
      somebody saving the name. */
@@ -14232,16 +14334,11 @@ function renderIngredientEditView(ingredientId){
       return;
     }
     relinkIngredient();
-    await saveIngredientCard(ingredientId, {
+    await saveWholePage('product', {
       button: detailsCard.querySelector('#saveProductBtn'),
       card: detailsCard,
       keepFormOnCancel: true,
       savedToast: 'Saved',
-      readForm: readProductForm,
-      stamp: (r)=>{
-        r.dateLastUpdated = nowIso();
-        r.history.push({at: nowIso(), summary:'Product details updated'});
-      },
     });
     relinkIngredient();
   };
@@ -14361,28 +14458,11 @@ function renderIngredientEditView(ingredientId){
      had just been careful to keep. */
   nutCard.querySelector('#saveNutritionBtn').onclick = async ()=>{
     relinkIngredient();
-    await saveIngredientCard(ingredientId, {
+    await saveWholePage('nutrition', {
       button: nutCard.querySelector('#saveNutritionBtn'),
       card: nutCard,
       keepFormOnCancel: true,
       savedToast: 'Nutrition saved',
-      readForm: (r)=>{
-        r.nutritionBasis = nutCard.querySelector('#f_nutritionBasis').value;
-        r.nutrition = r.nutrition || {};
-        NUTRITION_FIELDS.forEach(f=>{
-          const v = nutCard.querySelector('#nut_'+f.key).value;
-          r.nutrition[f.key] = v === '' ? null : Number(v);
-        });
-        // r.trafficLights is no longer hand-picked (kept only so any
-        // already-saved value from before this update doesn't cause an
-        // error elsewhere) — every traffic light shown anywhere is now
-        // always computed fresh from r.nutrition via trafficLightFor().
-        r.nutritionSource = nutCard.querySelector('#f_nutritionSource').value.trim();
-      },
-      stamp: (r)=>{
-        r.nutritionLastUpdated = nowIso();
-        r.history.push({at: nowIso(), summary:'Nutrition updated'});
-      },
     });
     relinkIngredient();
   };
@@ -14407,11 +14487,16 @@ function renderIngredientEditView(ingredientId){
        "restore" the record to the state the picker had already changed. */
     const before = JSON.parse(JSON.stringify(rec));
     openAllergenPicker(rec, async ()=>{
-      await saveIngredientCard(ingredientId, {
+      /* Show what was just chosen straight away. The card used to keep
+         saying "None recorded" for the whole round trip to the shared
+         database -- several seconds on a slow connection -- which looked
+         exactly like the allergens having been lost. */
+      const box = allergenCard.querySelector('#allergenSummaryBox');
+      if(box) box.innerHTML = (allergensToBadges(rec.allergens) || '<span class="noneNote">None recorded</span>') + ' <span class="tinyNote" style="margin:0 0 0 6px;">Saving…</span>';
+      await saveWholePage('allergens', {
         before: before,
         card: allergenCard,
         savedToast: 'Allergens saved',
-        readForm: ()=>{},
         stamp: (r)=>{ r.history.push({at: nowIso(), summary:'Allergens updated'}); },
       });
       relinkIngredient();
@@ -14431,6 +14516,9 @@ function renderIngredientEditView(ingredientId){
     : `<div>No changes recorded yet.</div>`;
   histCard.appendChild(log);
   root.appendChild(histCard);
+
+  // Both forms now exist: remember what they read as untouched.
+  pageAsDrawn = readFormsOnto(rec);
 
   return root;
 }

@@ -2090,3 +2090,17 @@ When an extra menu's rotation is one week long (for example a half-term Holiday 
 The last page of an odd-length rotation (Week 3 of a 3-week menu, say) uses the same layout. Two weeks still share one page exactly as before. If a very full week ever outgrows the one-week page, that page falls back to the standard layout, which always fits. The allergen matrix pages that follow are unchanged.
 
 Checked: 7 new checks (`oneweek.js`: a near-empty week, a full week with a vegetarian option, two weeks, and a three-week menu), the PDF download, all the earlier suites and her 11.
+
+## 6 October 2026: any Save on an ingredient saves the whole page
+
+Adding a new ingredient took three or four saves before the name, nutrition and allergens all stuck. Each card on the ingredient screen (Product, Nutritional information, Allergens, the swaps, Archive) saved only its own fields and then redrew the page from the saved record. Anything typed into another card and not yet saved with that card's own button disappeared. Nothing already saved was lost, but on a new ingredient, where everything is filled in at once, it looked exactly like the app losing data.
+
+Now any Save button on the page also saves what has been typed in the other cards:
+
+- The button's own card is saved in full, as before. From the other cards, only fields that were actually changed since the page opened are taken. A field nobody touched is never written, so a colleague's change to it (a price, say) is kept by the usual field-by-field merge.
+- An empty product-name box is never saved from another card's button, so clearing the name by accident can't blank it.
+- The message and the "Recent changes" history say what was saved, e.g. "Saved allergens, product details and nutrition".
+- After the allergen picker's Save, the Allergens card shows the new allergens straight away, marked "Saving…". It used to say "None recorded" until the shared database answered, several seconds on a slow connection.
+- The page heading says "Any Save button on this page saves everything you have filled in here."
+
+Checked: 9 new checks (`ingsave.js`), 7 of which fail on the previous build. Also her 11 suites and the earlier ones.
