@@ -2156,3 +2156,25 @@ Cells used to be centred top to bottom, so a dish with a shorter description sat
 - **There is a little space above the text** in every cell: 2.4mm on a two-week-style page, and 3.4mm on a one-week page, easing to 2.2mm in the tightest fit tier. The rules sit last in the pack CSS with enough specificity to beat the fit tiers' padding shorthand.
 
 Checked: `johnweek.js` 5/5, `oneweek.js` 7/7, `pack.js` 6/6 and the downloaded PDF.
+
+## 6 October 2026: Holiday club pack — "Little Adventures Nursery"
+
+The small line above the menu title now reads **Little Adventures Nursery** instead of "Little Adventures · Cheddar & Taunton". It still comes from the menu's sites, so a menu for a Green Giraffe site would read "Green Giraffe Nursery".
+
+## 6 October 2026: nursery menu packs — dish names line up across each row
+
+The same alignment as the Holiday club pack, now on the standard menu pack used by every other menu (All sites except WSM, WSM only):
+
+- **Meal cells and course labels start at the top,** with a little room above the text, so the dish names share one line across each row. They used to be centred top to bottom, which put a dish with a shorter description lower than its neighbours.
+- **Each dish's allergen icons stay directly under it.**
+- **The full-width rows stay centred**, i.e. the mid-morning snack, "served with a selection of fruit and vegetables" and the late snack.
+- **Top spacing:** 1.6mm normally, 1.1mm and 0.7mm in the two tight-fit tiers, so every page still fits.
+
+Checked: `nurserypack.js` (both menus: every week page fits, and dish names start level on every row, 0px spread; it was 20.7px before) and the 16-page PDF download. `pack.js`, `johnweek.js` and `extra.js` still pass.
+
+## 6 October 2026: nursery menu packs — descriptions and bold names
+
+- **Descriptions** print as a smaller italic line under the dish name, as before. They appear under Lunch, 2nd Course and Light Tea when a recipe has one; the other rows, as on the reference pack, show none. With the new alignment they line up across the row with the names.
+- **Dish names now print in a real bold**, as on the Holiday club pack. `.mpName` asked for weight 800, but the single embedded Museo Sans (500) is declared for 400–700, so the browser never drew a bold. A 400-only face for the same file (`MP Museo Bold`), asked for at 700, does.
+
+Checked: `nurserypack.js` with and without descriptions on every dish (with descriptions the auto-fit uses its first tight tier, and every page fits). `pack.js` and `johnweek.js` still pass.

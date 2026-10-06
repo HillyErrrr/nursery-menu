@@ -15594,6 +15594,19 @@ const MENU_PACK_TIGHT2_CSS = `
 .mpDoc.mpTight2 .mpDesc{font-size:6.11pt;line-height:0.99;margin-top:0.13mm;}
 .mpDoc.mpTight2 .mpIcons{margin-top:0.25mm;}
 .mpDoc.mpTight2 .mpMergedCell,.mpDoc.mpTight2 .mpSubCell{font-size:6.86pt;}
+/* Dish names on one line across each row (John, 6 October 2026): meal
+   cells and their course labels start at the top, with a little room
+   above the text, instead of being centred up and down -- which put a dish
+   with a shorter description lower than its neighbours. The full-width
+   "served with" rows stay centred. Specific enough to outrank the tiers'
+   padding shorthand; each tier has its own, smaller, top spacing. */
+.mpDoc .mpTable tbody td.mpCell,.mpDoc .mpTable tbody td.mpLabelCell{vertical-align:top;padding-top:1.6mm;}
+.mpDoc.mpTight1 .mpTable tbody td.mpCell,.mpDoc.mpTight1 .mpTable tbody td.mpLabelCell{padding-top:1.1mm;}
+.mpDoc.mpTight2 .mpTable tbody td.mpCell,.mpDoc.mpTight2 .mpTable tbody td.mpLabelCell{padding-top:0.7mm;}
+/* Dish names in a real bold (see build note): a 400-only face for the
+   same Museo file, asked for at 700. */
+@font-face{font-family:'MP Museo Bold';src:url(${MENU_PACK_FONT_MUSEO});font-weight:400;font-style:normal;font-display:swap;}
+.mpDoc .mpName{font-family:'MP Museo Bold','Museo Sans','Inter',sans-serif;font-weight:700;}
 `;
 
 /* Phase 32: styling for the downloadable Allergen Matrix pages appended
@@ -16342,9 +16355,8 @@ function extraPackKicker(cfg){
   const sites = (cfg.sites || []);
   const brands = [];
   sites.forEach(sl=>{ const m = /^(Little Adventures|Green Giraffe)/.exec(siteSlugLabel(sl)); if(m && brands.indexOf(m[1]) === -1) brands.push(m[1]); });
-  const names = sites.map(sl=> siteSlugLabel(sl).replace(/^(Little Adventures|Green Giraffe)\s+/, ''));
-  const where = names.length <= 1 ? (names[0] || '') : names.slice(0, -1).join(', ') + ' & ' + names[names.length - 1];
-  return [brands.join(' & '), where].filter(Boolean).join(' · ');
+  // The brand and "Nursery", without the site names (John's wording).
+  return brands.map(b=> b + ' Nursery').join(' & ') || 'Little Adventures Nursery';
 }
 function extraPackAllergenKeyHtml(){
   return `<div class="mpAllergenKey hcKey">
