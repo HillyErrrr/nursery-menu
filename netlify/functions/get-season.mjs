@@ -27,7 +27,13 @@ export default async (req) => {
     return json({ error: 'group and file query params are required' }, 400);
   }
 
-  const store = getStore('season-data');
+  /* consistency: 'strong' -- Blobs' default is "eventual", where a read can
+     return the previous version of a key for up to 60 seconds after it was
+     written. Every save in Staff admin reads before it merges, so an
+     eventual read handed back the copy from before the last save and the
+     merge reverted it (a changed product, or allergens, "taking two
+     saves"). Strong reads always see the latest write. */
+  const store = getStore({ name: 'season-data', consistency: 'strong' });
   const key = group + '/' + file;
 
   // Whether the Blobs read FAILED, as opposed to cleanly returning nothing.

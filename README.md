@@ -2178,3 +2178,67 @@ Checked: `nurserypack.js` (both menus: every week page fits, and dish names star
 - **Dish names now print in a real bold**, as on the Holiday club pack. `.mpName` asked for weight 800, but the single embedded Museo Sans (500) is declared for 400–700, so the browser never drew a bold. A 400-only face for the same file (`MP Museo Bold`), asked for at 700, does.
 
 Checked: `nurserypack.js` with and without descriptions on every dish (with descriptions the auto-fit uses its first tight tier, and every page fits). `pack.js` and `johnweek.js` still pass.
+
+## 7 October 2026: syncing a published menu no longer copies recipes
+
+**What John saw:** recipes "imported and then duplicated from menu to menu". For example, a second *Strawberry Mousse* whose history reads only "Imported from holiday-club-easter".
+
+**Why it happened:**
+- A published menu file listed each dish by name and content only, with no recipe id.
+- When a menu is synced, the import recognised a dish only if its name, ingredients and method were exactly the same as a recipe in the bank. A menu is synced automatically when Staff admin opens or the menu is switched to, and also by "Get the published version", "+ Add season" and Publish.
+- So once a recipe had been edited after its menu was published (a method line, a quantity, servings), the next sync no longer recognised it. It made a new recipe from the old published copy, labelled "Imported from <menu>", and pointed the menu's slot at that copy. Each edit and sync added another copy, and the slot showed the old content.
+- Measured on the test copy: switching menus after one edit made a copy. A fresh device opening Staff admin made 124 copies of dishes whose published wording had drifted from its own.
+
+**What changes:**
+- **The published file carries each dish's recipe id.** An import uses that id when the device has the recipe, and keeps the recipe bank's own, current content. Recipe edits travel through the shared recipe bank, not through the menu file.
+- **A dish the device has never seen is created under the published id,** so the copy that later arrives from the shared recipe bank is the same record, not a second one.
+- **Older files without ids** still match by name, ingredients and method first. If that fails, they match the recipe already in the same slot with the same name, which is the same dish edited since. A new recipe is made only when neither matches.
+- **Only an exact content match brings across the published description and ingredient links,** as before. When the content differs, the bank's copy is left as it is.
+
+**Already-made copies stay** until they are tidied up. Publishing each menu once after deploying puts the ids into its file.
+
+**Checked:**
+- `dupes.js` 5/5. D1 (edit, then sync) and D2 (edit, publish, sync) both failed before this change.
+- Her 11 suites pass. In `menus.js`, M12's setup now picks a recipe the general menu doesn't use. With no more copies, "the first recipe in the bank" is now in use by the general rotation, which broke the check's own premise rather than the behaviour it tests.
+- `extra`, `remove`, `today`, `station`, `same` and `sites_check` all pass.
+
+## 15 October 2026: saves no longer reverted by a stale read
+
+**What was reported:** changing an ingredient's product on a recipe sometimes took two or three saves. The same thing had happened on the ingredient page, where allergens and nutrition took several attempts.
+
+**Why it happened:**
+- Both Netlify Functions opened the Blobs store with its default read consistency, which is **eventual**: for up to 60 seconds after a write, a read of that key can return the previous version.
+- Every save in Staff admin first reads the shared copy so it can merge with a colleague's changes.
+- A save made within a minute of the previous one (pick a new product, then press **Save ingredients**; save allergens, then nutrition) read the copy from *before* the last save. The merge took that old copy as a colleague's change and handed the old value back. The record's history still logged both saves.
+- The ingredient database's whole-document write also kept failing its version check against the stale read, so it could not sync.
+- Reproduced with the new `/__staleReads` knob on the test mock server, which serves the previous version of a key for a while after each write, as eventual reads do.
+
+**What changes:**
+- **Both functions use `consistency: 'strong'`,** so a read always sees the latest write. This is the root fix. The functions only change on a `netlify deploy --prod`.
+- **The app refuses to treat a shared copy that is older than its own last publish as a colleague's edit,** as a safety net. Recipes check `version`; ingredients check whether the copy's edit history is missing entries this device has already published. This applies in three places:
+  - the save-time merge;
+  - the background pull, which no longer puts a pre-save version back on screen;
+  - the ingredient database publish.
+
+**Checked:**
+- `staleread.js`, with strong reads: S1 (changed product, then Save ingredients 2s later) and S2 (allergens, then nutrition 3s later) both pass.
+- With stale reads (the old functions):
+  - S1 now passes on the app alone.
+  - S2 still needs the strong-read functions, because the whole-document write's version check is on the server.
+- Her 11 suites and `ingsave.js` pass.
+
+## 15 October 2026: Holiday club — vegetarian option for Light tea
+
+The printed Holiday club menu now includes the vegetarian option for Light tea.
+
+**Why it was missing:** the course already existed in the app ("Tea Vegetarian Option"), but an extra menu only showed it if it was ticked in Menu settings, and the Holiday club menus were set up without it. So there was nowhere to plan it and nothing to print.
+
+**What changes:**
+- **The course is switched on once** for every extra menu that serves Light tea, named after the tea course (e.g. "Light Tea Vegetarian Option"). The menu is marked `teaVegChecked`, so if someone unticks it in Menu settings and saves, it stays off. New menus and the built-in Holiday club default include it from the start.
+- **It appears in the rotation grid under Light tea.** On the printed pack it prints straight under Light tea in the vegetarian style (green row, leaf badge, dashed line to the row above) on any week where a day has a tea vegetarian dish. A one-week page with both vegetarian rows still fits.
+- **Labels:** a tea vegetarian course with no name of its own is labelled from the tea course's name, never the internal key. The tick-box default name is now "Light tea vegetarian option".
+
+**Checked:**
+- `teaveg.js` 3/3 (an existing menu gains the course, printed under Light Tea; unticking sticks).
+- `johnweek.js` with a tea vegetarian dish every day. Every page fits, nothing is cut off, and the row sits under Light Tea.
+- `extra.js` 23/23. X3 now expects the sixth course row.

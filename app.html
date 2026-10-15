@@ -1285,14 +1285,39 @@ const EXTRA_MENUS_DEFAULT = {
       'Vegetarian Option': {name: 'Vegetarian option', time: ''},
       'Dessert': {name: 'Dessert', time: ''},
       'Snack': {name: 'Afternoon snack', time: '2.00pm'},
-      'Tea': {name: 'Light tea', time: 'from 3.15pm'}
+      'Tea': {name: 'Light tea', time: 'from 3.15pm'},
+      'Tea Vegetarian Option': {name: 'Light tea vegetarian option', time: ''}
     },
+    teaVegChecked: true,
     allDay: 'Fruit bowl and crudités',
     groups: [{key: 'k1', label: 'Children 4–10 years', mult: 1}],
     runs: []
   }
 };
 let EXTRA_MENUS = EXTRA_MENUS_DEFAULT;
+/* Turn the tea vegetarian course on, once, for any extra menu that serves
+   Light tea and has never had it (John, 15 October 2026: the Holiday club
+   pack has to show the vegetarian option for light tea). Marked
+   teaVegChecked, so if someone then unticks it in Menu settings and saves,
+   it stays off. Returns a new object; the input is left alone. */
+function withTeaVegCourse(menus){
+  if(!menus || typeof menus !== 'object') return menus;
+  let changed = false;
+  const out = {};
+  Object.keys(menus).forEach(k=>{
+    const cfg = menus[k];
+    const courses = cfg && cfg.courses;
+    if(cfg && !cfg.teaVegChecked && courses && courses['Tea'] && !courses['Tea Vegetarian Option']){
+      const teaName = String((courses['Tea'] || {}).name || '').trim() || 'Light tea';
+      out[k] = Object.assign({}, cfg, {
+        teaVegChecked: true,
+        courses: Object.assign({}, courses, {'Tea Vegetarian Option': {name: teaName + ' Vegetarian Option', time: ''}}),
+      });
+      changed = true;
+    } else out[k] = cfg;
+  });
+  return changed ? out : menus;
+}
 function isExtraMenu(key){
   return !!key && !!EXTRA_MENUS && Object.prototype.hasOwnProperty.call(EXTRA_MENUS, key);
 }
@@ -1311,7 +1336,7 @@ async function loadExtraMenusConfig(){
     const res = await fetchSeasonJson('_config', 'extra-menus.json');
     if(res.ok){
       const data = await res.json();
-      if(data && data.menus && typeof data.menus === 'object' && !Array.isArray(data.menus)) return data.menus;
+      if(data && data.menus && typeof data.menus === 'object' && !Array.isArray(data.menus)) return withTeaVegCourse(data.menus);
     }
   }catch(e){}
   return EXTRA_MENUS_DEFAULT;
@@ -7563,6 +7588,7 @@ async function saveIngredientsToServer(touchedIds){
   if(fresh.ingredients){
     const changedIds = INGREDIENTS_BASE === null ? noBaseOverlayIds(fresh.ingredients) : locallyChangedIngredientIds();
     const merged = Object.assign({}, fresh.ingredients);
+    staleIngredientIds(fresh.ingredients).forEach(id=>{ merged[id] = DATA.ingredients[id]; });
     changedIds.forEach(id=>{
       if(DATA.ingredients[id]) merged[id] = DATA.ingredients[id];
       else delete merged[id];
@@ -7611,6 +7637,7 @@ async function saveIngredientsToServer(touchedIds){
       if(!again.reachable || !again.ingredients) throw e;
       const changedIds = INGREDIENTS_BASE === null ? noBaseOverlayIds(again.ingredients) : locallyChangedIngredientIds();
       const merged = Object.assign({}, again.ingredients);
+      staleIngredientIds(again.ingredients).forEach(id=>{ merged[id] = DATA.ingredients[id]; });
       changedIds.forEach(id=>{
         if(DATA.ingredients[id]) merged[id] = DATA.ingredients[id];
         else delete merged[id];
@@ -7647,7 +7674,12 @@ async function ensureIngredientsLoaded(){
     // ordinary pending changes. Holding them in the no-baseline list too
     // would let them overwrite a colleague's newer version one day later.
     setNoBaseTouched([]);
+    // A stale read of a record this device already published keeps this
+    // device's copy and its recorded ancestor -- see ingredientCopyIsStale.
+    const staleIng = staleIngredientIds(result.ingredients);
+    const prevBase = INGREDIENTS_BASE || {};
     const incoming = Object.assign({}, result.ingredients);
+    staleIng.forEach(id=>{ if(DATA.ingredients[id]) incoming[id] = DATA.ingredients[id]; });
     pending.forEach(id=>{
       if(DATA.ingredients[id]) incoming[id] = DATA.ingredients[id];
       else delete incoming[id];
@@ -7659,7 +7691,7 @@ async function ensureIngredientsLoaded(){
     // next save republishes them.
     INGREDIENTS_BASE = {};
     Object.keys(result.ingredients).forEach(id=>{
-      INGREDIENTS_BASE[id] = stableJson(result.ingredients[id]);
+      INGREDIENTS_BASE[id] = staleIng.indexOf(id) !== -1 && prevBase[id] ? prevBase[id] : stableJson(result.ingredients[id]);
     });
     persistIngredientsBase();
     INGREDIENTS_STALE = false;
@@ -7960,6 +7992,18 @@ async function ensureRecipesLoaded(){
        recipes are a tidiness problem; missing ones are a data-loss
        problem, and only one of those is worth risking. */
     const dirty = recipeDirty();
+    /* A shared record OLDER than the one this device last published is a
+       stale read (the store not yet caught up with our own write). Taking
+       it would put the pre-save version back on screen and record it as
+       the ancestor -- the next save would then "merge" the old values back
+       in. Those records keep this device's copy and its recorded ancestor. */
+    const staleIds = Object.keys(result.recipes).filter(id=>{
+      if(!DATA.recipeBank[id] || !RECIPES_BASE[id]) return false;
+      let prev = null; try{ prev = JSON.parse(RECIPES_BASE[id]); }catch(e){ return false; }
+      return (Number((result.recipes[id] || {}).version) || 0) < (Number(prev && prev.version) || 0);
+    });
+    staleIds.forEach(id=>{ result.recipes[id] = DATA.recipeBank[id]; });
+    const staleSet = {}; staleIds.forEach(id=>{ staleSet[id] = 1; });
     const next = Object.assign({}, DATA.recipeBank || {}, result.recipes);
     /* A whole-record merge would carry an empty shared `description` over
        a real local one -- see the long note in importSeasonJson for how a
@@ -7971,6 +8015,7 @@ async function ensureRecipesLoaded(){
        afterwards would record a guard's repair as something the colleague
        published. */
     Object.keys(result.recipes).forEach(id=>{
+      if(staleSet[id]) return;
       RECIPES_BASE[id] = JSON.stringify(result.recipes[id]);
     });
     Object.keys(result.recipes).forEach(id=>{
@@ -8416,7 +8461,14 @@ async function commitRecipeEdit(recipeId, formFields, reviewerName, opts){
      replaced it". Only one of those deserves a plain "saved". */
   const res = await withSaveDeadline(fetchSharedRecipes());
   const storeAnswered = !!(res && res.reachable);
-  const shared = (res && res.reachable && res.recipes && res.recipes[recipeId]) || null;
+  let shared = (res && res.reachable && res.recipes && res.recipes[recipeId]) || null;
+  /* A shared copy OLDER than the one this device last published is a stale
+     read (the store had not caught up with our own write yet), not a
+     colleague's edit. Merging against it handed the old values back and
+     reverted the save before -- a changed product needed saving twice.
+     Every save bumps `version`, so older is easy to see: treat it as the
+     ancestor itself, i.e. "nobody else changed anything". */
+  if(shared && base && (Number(shared.version) || 0) < (Number(base.version) || 0)) shared = base;
   const theirs = base ? shared : null;
   /* Re-read AFTER the await: the record object can have been replaced
      while the request was in the air. */
@@ -8542,6 +8594,29 @@ function preserveRecordIdentity(nextBag, prevBag){
    record-level merge it already had takes the whole local copy of any
    record this device touched. A colleague's price change on a product
    whose name someone else was editing was therefore lost every time. */
+/* Ingredient records carry no version number, but their edit history only
+   ever grows: a copy whose history is a strict subset of the ancestor's --
+   it lacks entries this device already published -- is an older read of
+   the record, not somebody else's newer edit. */
+function ingredientCopyIsStale(theirs, base){
+  if(!theirs || !base) return false;
+  const th = Array.isArray(theirs.history) ? theirs.history : [];
+  const bh = Array.isArray(base.history) ? base.history : [];
+  if(th.length >= bh.length) return false;
+  const seen = {};
+  bh.forEach(h=>{ seen[stableJson(h)] = 1; });
+  return th.every(h=> seen[stableJson(h)]);
+}
+/* Ids whose copy in `bag` (a fresh read of the shared database) is older
+   than what this device last published. */
+function staleIngredientIds(bag){
+  if(!bag || !INGREDIENTS_BASE) return [];
+  return Object.keys(bag).filter(id=>{
+    if(!INGREDIENTS_BASE[id] || !DATA.ingredients[id]) return false;
+    let b = null; try{ b = JSON.parse(INGREDIENTS_BASE[id]); }catch(e){ return false; }
+    return ingredientCopyIsStale(bag[id], b);
+  });
+}
 async function mergeIngredientBeforeSave(ingredientId){
   if(!DATA.ingredients[ingredientId]) return 'gone';
   let theirs = null;
@@ -8563,6 +8638,9 @@ async function mergeIngredientBeforeSave(ingredientId){
      form the only change and leaves the behaviour exactly as it was
      before this merge existed. */
   if(!base) base = theirs;
+  /* A shared copy that is missing edits this device already published is a
+     stale read, not a colleague's change -- see ingredientCopyIsStale. */
+  if(ingredientCopyIsStale(theirs, base)) theirs = base;
   const outcome = mergeRecordThreeWay(base, Object.assign({}, live), theirs);
   if(!outcome.conflicts.length){ applyMergedIngredient(live, outcome.merged, theirs); return 'merged'; }
   const choice = await new Promise(resolve=> openEditConflictModal(outcome.conflicts, live, theirs, resolve));
@@ -11227,15 +11305,17 @@ function editingCourses(season, wk){
 
 const EXTRA_COURSE_DEFAULT_NAMES = {
   'Breakfast': 'Breakfast', 'Main': 'Lunch', 'Vegetarian Option': 'Vegetarian option', 'Dessert': 'Dessert',
-  'Snack': 'Afternoon snack', 'Tea': 'Light tea', 'Tea Vegetarian Option': 'Vegetarian option (tea)'
+  'Snack': 'Afternoon snack', 'Tea': 'Light tea', 'Tea Vegetarian Option': 'Light tea vegetarian option'
 };
 function newExtraMenuSettings(name){
   return {
     label: name, weeks: 2, sites: [],
     courses: {
       'Main': {name: 'Lunch', time: ''}, 'Vegetarian Option': {name: 'Vegetarian option', time: ''},
-      'Dessert': {name: 'Dessert', time: ''}, 'Snack': {name: 'Afternoon snack', time: ''}, 'Tea': {name: 'Light tea', time: ''}
+      'Dessert': {name: 'Dessert', time: ''}, 'Snack': {name: 'Afternoon snack', time: ''}, 'Tea': {name: 'Light tea', time: ''},
+      'Tea Vegetarian Option': {name: 'Light tea vegetarian option', time: ''}
     },
+    teaVegChecked: true,
     allDay: '', groups: [{key: 'k1', label: 'Children', mult: 1}], runs: []
   };
 }
@@ -11266,7 +11346,7 @@ async function publishExtraMenu(key, cfg){
     next[key] = cfg;
     try{
       await saveSeasonToServer('_config', 'extra-menus.json', {menus: next}, undefined, live.etag || undefined);
-      EXTRA_MENUS = next;
+      EXTRA_MENUS = withTeaVegCourse(next);
       return;
     }catch(e){
       if(!e || !e.conflict) throw e;
@@ -11288,7 +11368,7 @@ async function removeExtraMenu(key){
     delete next[key];
     try{
       await saveSeasonToServer('_config', 'extra-menus.json', {menus: next}, undefined, live.etag || undefined);
-      EXTRA_MENUS = next;
+      EXTRA_MENUS = withTeaVegCourse(next);
       return;
     }catch(e){
       if(!e || !e.conflict) throw e;
@@ -14602,6 +14682,10 @@ async function importSeasonJson(json, seasonKeyHint, groupHint){
 
   const importNotes = {};
   const importWeeks = Array.from(new Set(seasonWeekKeys(season).concat(Object.keys(json || {}))));
+  // The slots as they were before this import replaces them: an older file
+  // (no recipe ids) whose dish no longer matches by content is still the
+  // same dish if the same slot already holds a recipe of the same name.
+  const slotsBefore = JSON.parse(JSON.stringify(season.weeks || {}));
   importWeeks.forEach(wk=> importNotes[wk] = []);
   // How many ingredient rows this import repointed at the record the
   // published file names. Worth surfacing: on the first import after this
@@ -14643,9 +14727,35 @@ async function importSeasonJson(json, seasonKeyHint, groupHint){
         Object.keys(recipes).forEach(name=>{
           const r = recipes[name];
           const fp = recipeFingerprint(name, r);
-          let id = existingFingerprints[fp];
+          /* Which recipe is this? In order:
+               1. the published recipe id, if this device has that recipe;
+               2. the same name + ingredients + method (older files);
+               3. the recipe already in this slot, if it has the same name
+                  (an older file, and the dish has been edited since);
+               4. otherwise it is new here -- created under the published
+                  id when there is one, so the shared-bank copy that
+                  arrives later is this same record, not a second one.
+             Only a content match (1 with identical content, or 2) brings
+             the published description and ingredient links across: when
+             the content differs, the bank's own copy is the newer one
+             (recipe edits travel through the shared recipe bank), so it is
+             left exactly as it is. Before this, anything but a content
+             match made a new recipe -- one more copy per edit and sync. */
+          const pubId = (r && typeof r.recipeId === 'string' && r.recipeId) ? r.recipeId : null;
+          let id = null, contentMatch = false;
+          if(pubId && DATA.recipeBank[pubId]){
+            id = pubId;
+            contentMatch = recipeFingerprint(DATA.recipeBank[pubId].name, DATA.recipeBank[pubId]) === fp;
+          } else if(existingFingerprints[fp]){
+            id = existingFingerprints[fp];
+            contentMatch = true;
+          } else {
+            const prevId = ((slotsBefore[wk] || {})[day] || {})[course];
+            const prev = prevId ? DATA.recipeBank[prevId] : null;
+            if(prev && (prev.name || '').trim().toLowerCase() === (name || '').trim().toLowerCase()) id = prevId;
+          }
           if(!id){
-            id = uid();
+            id = pubId || uid();
             DATA.recipeBank[id] = {
               id, name,
               servings: (r.baseServings!=null ? r.baseServings : null),
@@ -14688,7 +14798,7 @@ async function importSeasonJson(json, seasonKeyHint, groupHint){
               if(ing.ingredientId) return;
               if(!tryAutoLinkIngredientRow(ing)) addOrGetStock(ing.canonicalName, ing.unit);
             });
-          } else {
+          } else if(contentMatch){
             // A recipe this device already has (matched by name+ingredients
             // +method) previously had ONLY its weekly slot re-linked here,
             // never its own content -- so a "parents' description" typed in
@@ -14868,6 +14978,9 @@ function buildSeasonExportJson(seasonKey){
         if(!recipe || !recipe.name) return;
         dayOut[course] = dayOut[course] || {};
         dayOut[course][recipe.name] = {
+          // The recipe's own id, so an import recognises this dish even
+          // after its content has been edited -- see importSeasonJson.
+          recipeId: recipe.id,
           baseServings: recipe.servings!=null ? recipe.servings : null,
           // Added so a recipe's "description for parents" (Phase 21) is
           // actually part of what "Upload changes" publishes -- previously
@@ -15205,7 +15318,9 @@ function extraMenuPackRowSequence(key, season, wk){
     if(VEG_COURSES.has(course) && !used) return;
     seq.push({type: 'meal', row: {
       course, slug: course.toLowerCase().replace(/[^a-z]+/g, ''),
-      label: (c && String(c.name || '').trim()) || course, time: (c && String(c.time || '').trim()) || '',
+      label: (c && String(c.name || '').trim()) ||
+        (course === 'Tea Vegetarian Option' ? ((String(((cfg.courses || {})['Tea'] || {}).name || '').trim() || 'Light tea') + ' Vegetarian Option') : course),
+      time: (c && String(c.time || '').trim()) || '',
       band: course === 'Snack' ? 'green' : 'tan', showDescription: true, afterText: null, afterIcon: null
     }});
   });
