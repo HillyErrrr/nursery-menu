@@ -2242,3 +2242,21 @@ The printed Holiday club menu now includes the vegetarian option for Light tea.
 - `teaveg.js` 3/3 (an existing menu gains the course, printed under Light Tea; unticking sticks).
 - `johnweek.js` with a tea vegetarian dish every day. Every page fits, nothing is cut off, and the row sits under Light Tea.
 - `extra.js` 23/23. X3 now expects the sixth course row.
+
+## 16 October 2026: print the weekly shopping list
+
+The kitchen page's **Weekly shopping list** now has a **Print list** button next to **Copy list**.
+
+- **What it prints** is a clean A4 portrait sheet with only the shopping list on it, not the rest of the page. It is built from the list exactly as it is on screen:
+  - every section and row, with the amount needed, pack size and packs;
+  - the **To order** numbers the kitchen has typed, and the cost;
+  - the to-order total.
+- **The header** shows the site, the week and the menu, and the date it was printed.
+- **On paper:**
+  - each line has a tick box for use in the shop;
+  - items already ticked on screen print ticked and struck through;
+  - where the screen shows a "No pack weight" badge, the paper shows "—", and a count that may be short prints as "N+".
+- **It uses the browser's own print.** On an iPad that gives AirPrint, or Save to Files as a PDF.
+- **If nothing is being bought yet**, it says so instead of printing an empty sheet.
+
+Checked: `shopprint.js` 7/7. That includes checking that, while printing, only the shopping list is on the page, and that the page prints normally again afterwards. `station`, `today`, `extra`, `same` and her `kitchen` suite still pass.

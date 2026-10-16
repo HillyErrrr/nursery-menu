@@ -176,6 +176,36 @@ button{font-family:inherit;cursor:pointer;}
 .action-btn.secondary{background:var(--card);color:var(--ink);border:1px solid var(--line-strong);}
 .action-btn:active{opacity:.85;}
 
+/* Printed shopping list (see printShopList). Hidden on screen; while the
+   print is running from "Print list" (html.printingShop) it is the only
+   thing on the page. */
+#shopPrintSheet{display:none;}
+@media print{
+  @page{size:A4 portrait;margin:12mm;}
+  html.printingShop, html.printingShop body{background:#fff !important;}
+  html.printingShop body > *:not(#shopPrintSheet){display:none !important;}
+  html.printingShop #shopPrintSheet{display:block !important;}
+}
+#shopPrintSheet{font-family:'Museo Sans','Inter',system-ui,sans-serif;color:#1d2a35;font-size:9.5pt;line-height:1.3;}
+#shopPrintSheet .spHead{display:flex;justify-content:space-between;align-items:flex-end;gap:6mm;border-bottom:0.6mm solid #1d2a35;padding-bottom:2.5mm;margin-bottom:3mm;}
+#shopPrintSheet .spKicker{font-size:8pt;letter-spacing:.08em;text-transform:uppercase;color:#6a5a48;}
+#shopPrintSheet .spTitle{font-size:17pt;font-weight:700;margin:0.5mm 0;}
+#shopPrintSheet .spSub{font-size:9pt;color:#4a5a66;}
+#shopPrintSheet .spPrinted{font-size:8pt;color:#6a7680;text-align:right;white-space:nowrap;}
+#shopPrintSheet .spNote{font-size:8.5pt;border:0.3mm solid #c9b9a3;background:#faf6ef;border-radius:2mm;padding:1.5mm 2.5mm;margin:0 0 2.5mm;}
+#shopPrintSheet table{width:100%;border-collapse:collapse;table-layout:fixed;}
+#shopPrintSheet th{font-size:7.5pt;text-transform:uppercase;letter-spacing:.05em;color:#4a5a66;text-align:left;padding:1.2mm 1.5mm;border-bottom:0.4mm solid #1d2a35;}
+#shopPrintSheet td{padding:1.4mm 1.5mm;border-bottom:0.25mm solid #ddd4c6;vertical-align:top;}
+#shopPrintSheet tr{break-inside:avoid;page-break-inside:avoid;}
+#shopPrintSheet thead{display:table-header-group;}
+#shopPrintSheet .spCat td{background:#efe6d8;font-weight:700;font-size:8.5pt;padding:1.2mm 1.5mm;border-bottom:0.3mm solid #c9b9a3;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+#shopPrintSheet .spBox{display:inline-block;width:3.6mm;height:3.6mm;border:0.35mm solid #1d2a35;border-radius:0.6mm;text-align:center;line-height:3.4mm;font-size:8pt;}
+#shopPrintSheet .spName{font-weight:700;}
+#shopPrintSheet .spNum{text-align:right;white-space:nowrap;}
+#shopPrintSheet .spDone td{color:#8a949c;}
+#shopPrintSheet .spDone .spName{text-decoration:line-through;}
+#shopPrintSheet .spTotals{display:flex;justify-content:flex-end;gap:8mm;margin-top:3mm;font-size:10pt;font-weight:700;}
+
 .shop-list{
   background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
   box-shadow:var(--shadow);margin:16px 0;overflow:hidden;
@@ -1050,6 +1080,7 @@ body.hcSheetOpen .hcSheetFoot{display:flex;justify-content:flex-end;padding:0 16
     </div>
     <div class="shop-actions">
       <button class="action-btn" id="copyListBtn"><i class="ti ti-copy"></i>Copy list</button>
+      <button class="action-btn secondary" id="printShopBtn"><i class="ti ti-printer"></i>Print list</button>
       <button class="action-btn secondary" id="clearShopBtn"><i class="ti ti-eraser"></i>Clear ticks</button>
     </div>
     <p style="font-size:12px;color:var(--ink-faint);margin:0 0 12px;">Quantities are rounded up to whole Tesco pack sizes (e.g. 400g tins, 1kg bags). Core sizes are checked against Tesco's site; less common items use standard UK pack sizes as a close estimate — worth a quick check against your usual brand.</p>
@@ -4380,6 +4411,79 @@ document.getElementById('clearShopBtn').addEventListener('click', async ()=>{
   await saveShopChecked();
   renderShopList();
 });
+
+/* The printed shopping list. Built from the list exactly as it is on screen
+   (rows, sections and the "To order" numbers typed in), so what is
+   printed is what the kitchen sees -- nothing recalculated differently. */
+function buildShopPrintHtml(){
+  const card = document.getElementById('shopListCard');
+  const table = card && card.querySelector('table.shopListTable');
+  if(!table) return null;
+  const text = (el)=> el ? el.textContent.replace(/\s+/g, ' ').trim() : '';
+  const site = [SITE_CONFIG.brand, SITE_CONFIG.siteName].filter(Boolean).join(' — ');
+  const menuName = ACTIVE_EXTRA
+    ? (ACTIVE_EXTRA.cfg.label || ACTIVE_EXTRA.key)
+    : ((SEASONS.find(x=> x.key === SEASON_KEY) || {}).label || '');
+  const printed = new Date().toLocaleDateString('en-GB', {weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'});
+  const notes = [...card.querySelectorAll('.shopOtherNote, .shopZeroWarn')].map(n=> `<div class="spNote">${escapeHtml(text(n))}</div>`).join('');
+  let rows = '';
+  table.querySelectorAll('tbody tr').forEach(tr=>{
+    if(tr.classList.contains('shopCatRow')){
+      rows += `<tr class="spCat"><td colspan="6">${escapeHtml(text(tr))}</td></tr>`;
+      return;
+    }
+    if(!tr.classList.contains('shopRow')) return;
+    const done = tr.classList.contains('checked');
+    const inp = tr.querySelector('.orderInput');
+    const order = inp ? String(inp.value || '').trim() : '';
+    rows += `<tr class="${done ? 'spDone' : ''}">
+      <td><span class="spBox">${done ? '✓' : ''}</span></td>
+      <td class="spName">${escapeHtml(text(tr.querySelector('.ing-name')))}</td>
+      <td>${escapeHtml(text(tr.querySelector('.amountCell')))}</td>
+      <td>${escapeHtml(text(tr.querySelector('.packSizeCell')))}</td>
+      <td class="spNum">${escapeHtml(order === '' ? '—' : order)}</td>
+      <td class="spNum">${escapeHtml(text(tr.querySelector('.lineCostCell')))}</td>
+    </tr>`;
+  });
+  const items = text(document.querySelector('#shopOrderSummary .shopOrderSummaryItems'));
+  const value = text(document.querySelector('#shopOrderSummary .shopOrderSummaryValue'));
+  return `
+    <div class="spHead">
+      <div>
+        <div class="spKicker">${escapeHtml(site)}</div>
+        <div class="spTitle">Weekly shopping list</div>
+        <div class="spSub">Week ${escapeHtml(String(state.week))}${menuName ? ' · ' + escapeHtml(menuName) : ''}</div>
+      </div>
+      <div class="spPrinted">Printed ${escapeHtml(printed)}</div>
+    </div>
+    ${notes}
+    <table>
+      <colgroup><col style="width:7mm"><col><col style="width:30mm"><col style="width:42mm"><col style="width:17mm"><col style="width:17mm"></colgroup>
+      <thead><tr><th></th><th>Ingredient</th><th>Amount needed</th><th>Pack size</th><th class="spNum">To order</th><th class="spNum">Cost</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="spTotals"><span>To order: ${escapeHtml(items || '0')} item${items === '1' ? '' : 's'}</span><span>${escapeHtml(value || '£0.00')}</span></div>`;
+}
+function printShopList(){
+  const html = buildShopPrintHtml();
+  if(!html){
+    alert('There is nothing to print yet. Fill in how many are eating each day, and the shopping list builds itself.');
+    return;
+  }
+  let sheet = document.getElementById('shopPrintSheet');
+  if(!sheet){
+    sheet = document.createElement('div');
+    sheet.id = 'shopPrintSheet';
+    document.body.appendChild(sheet);
+  }
+  sheet.innerHTML = html;
+  const root = document.documentElement;
+  root.classList.add('printingShop');
+  const done = ()=>{ root.classList.remove('printingShop'); window.removeEventListener('afterprint', done); };
+  window.addEventListener('afterprint', done);
+  window.print();
+}
+document.getElementById('printShopBtn').addEventListener('click', printShopList);
 
 document.getElementById('copyListBtn').addEventListener('click', async ()=>{
   const text = buildShopListText();
