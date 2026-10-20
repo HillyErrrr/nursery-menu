@@ -10273,16 +10273,38 @@ function computeRecipeCost(recipe){
    kitchen iPad's own day-by-day ticked headcounts: one total + one
    vegetarian-count for the whole week, meant for rough ordering/budgeting,
    not as a replacement for the operational daily shopping list. */
+/* Two spellings of the same unit ("slice"/"slices", "roll"/"rolls",
+   "Slices"/"slices") count as the same unit. The recipe's unit and the
+   product's Recipe unit / Unit of measure are typed in different places,
+   so an exact match was too strict -- a burger recipe in "slices" against
+   cheese recorded per "slice" never converted, and the line dropped off
+   the shopping list. */
+function shopUnitKey(u){
+  let s = normalizeUnit(u);
+  if(s.length > 3 && /[^s]s$/.test(s)) s = s.slice(0, -1);
+  return s;
+}
+function shopUnitsMatch(a, b){
+  return !!a && !!b && shopUnitKey(a) === shopUnitKey(b);
+}
+
 function computeShoppingList(season, wk, totalHeadcount, vegHeadcount){
   const days = season.weeks[wk] || {};
-  const neededGramsByIngredient = {};
-  // Fallback tally, in the product's own "recipe unit" (see
-  // emptyIngredientRecord — e.g. "clove" of garlic, "slice" of bread) —
-  // only ever added to when gramsForIngredientRow can't weigh the row in
-  // at all (no parseable pack weight recorded), so an ingredient never
-  // gets double-counted across both tallies for the same recipe row.
-  const neededRecipeUnitsByIngredient = {};
-  const missing = [];
+  /* One entry per product (linked) or per ingredient name (not linked yet).
+     Every ingredient of every dish served this week gets a row -- one that
+     can't be turned into packs still shows how much is needed, flagged,
+     rather than being left off the list. A list that silently drops the
+     burger rolls is worse than one that says "work this one out by hand".
+       grams  -- weighable amounts (g/kg/ml/l, spoons, or a unit the product
+                 converts to grams)
+       counts -- whole items by unit ("ind", "slices", "rolls"), each with
+                 how many come in a pack when the product says so */
+  const entries = {};
+  const notes = [];
+  const entryFor = (key, rec, name)=>{
+    if(!entries[key]) entries[key] = {key, rec, name, grams: null, counts: {}, asNeeded: false};
+    return entries[key];
+  };
   DAYS.forEach(day=>{
     const dayCourses = days[day] || {};
     COURSE_ORDER.forEach(courseName=>{
@@ -10294,87 +10316,91 @@ function computeShoppingList(season, wk, totalHeadcount, vegHeadcount){
       if(servingsForCourse <= 0) return;
       const base = recipe.servings;
       const scale = (base && base > 0) ? (servingsForCourse / base) : 1;
+      const where = `${day} ${courseName} ("${recipe.name||'Untitled recipe'}")`;
       (recipe.ingredients||[]).forEach(ing=>{
         const resolved = resolveIngredientRow(ing);
-        if(!resolved.linked || !resolved.rec){
-          missing.push(`${day} ${courseName} ("${recipe.name||'Untitled recipe'}"): ${resolved.name||'an ingredient'} isn't linked to the database yet`);
+        const rec = (resolved.linked && resolved.rec) ? resolved.rec : null;
+        const name = rec ? (rec.productName || 'Untitled ingredient') : (resolved.name || ing.name || '').trim();
+        if(!name) return;
+        if(!rec && isWaterIngredient(name)) return;
+        const entry = rec ? entryFor(rec.id, rec, name) : entryFor('name:' + name.toLowerCase(), null, name);
+        if(!rec) notes.push(`${where}: ${name} isn't linked to the ingredient database yet, so it has no pack size or price`);
+        const qty = Number(ing.qty);
+        if(!ing.qty || isNaN(qty)){
+          entry.asNeeded = true;
           return;
         }
-        const rec = resolved.rec;
-        const grams = gramsForIngredientRow(ing, rec);
-        if(grams != null){
-          neededGramsByIngredient[rec.id] = (neededGramsByIngredient[rec.id] || 0) + grams * scale;
-          return;
-        }
-        const unit = (ing.unit || '').toLowerCase();
-        if(rec.recipeUnit && rec.recipeUnit.toLowerCase() === unit && rec.recipeUnitYield > 0 && ing.qty){
-          const qty = Number(ing.qty);
-          if(!isNaN(qty)){
-            neededRecipeUnitsByIngredient[rec.id] = (neededRecipeUnitsByIngredient[rec.id] || 0) + qty * scale;
+        const isMeasure = !!toBaseAmount(qty, normalizeUnit(ing.unit));
+        /* Counted in the product's own unit ("10 slices" of a pack of 10
+           slices, "20 rolls" of a pack of 6): keep it as a count, which is
+           how the kitchen thinks of it, rather than as grams. */
+        const countPerPack = (rec && !isMeasure)
+          ? ((shopUnitsMatch(ing.unit, rec.recipeUnit) && rec.recipeUnitYield > 0) ? Number(rec.recipeUnitYield)
+            : shopUnitsMatch(ing.unit, rec.unitOfMeasure) ? parsePackCount(rec.packSize) : null)
+          : null;
+        if(rec && !countPerPack){
+          /* Read the row in the product's own spelling of the unit when it
+             is the same unit, so gramsForIngredientRow's conversions
+             (Recipe unit, Unit of measure) apply. */
+          const asProductUnit = shopUnitsMatch(ing.unit, rec.recipeUnit) ? Object.assign({}, ing, {unit: rec.recipeUnit})
+            : shopUnitsMatch(ing.unit, rec.unitOfMeasure) ? Object.assign({}, ing, {unit: rec.unitOfMeasure})
+            : ing;
+          const grams = gramsForIngredientRow(asProductUnit, rec);
+          if(grams != null){
+            entry.grams = (entry.grams || 0) + grams * scale;
+            return;
+          }
+        } else if(!rec){
+          const base = toBaseAmount(qty, normalizeUnit(ing.unit));
+          if(base){
+            entry.grams = (entry.grams || 0) + base.amount * scale;
             return;
           }
         }
-        missing.push(`${day} ${courseName} ("${recipe.name||'Untitled recipe'}"): not clear how much "${ing.unit||'that amount'}" of ${rec.productName} weighs`);
+        // A count of whole items.
+        const unitWord = (ing.unit || '').trim() || 'ind';
+        const k = shopUnitKey(unitWord);
+        const perPack = countPerPack || null;
+        if(!entry.counts[k]) entry.counts[k] = {unit: unitWord, qty: 0, perPack};
+        entry.counts[k].qty += qty * scale;
+        if(rec && !perPack){
+          notes.push(`${where}: ${name} is used in "${unitWord}", but the product doesn't say how many ${unitWord} come in a pack (set its Recipe unit and how many per pack), so work out the packs by hand`);
+        }
       });
     });
   });
-  // One row per ingredient id, built from whichever of the two tallies
-  // above actually has something for it -- normally exactly one of them
-  // does, but the two are independent per *recipe row*, not per
-  // ingredient, so the same product can end up with a contribution in
-  // BOTH (e.g. it's used as a plain "50g" in one recipe -- gramsForIngred-
-  // ientRow always accepts a direct 'g'/'kg'/'ml'/'l' unit regardless of
-  // the product -- and as "3 cloves" via its own Recipe unit in another,
-  // where the pack itself has no parseable weight at all). Building the
-  // union up front, rather than mapping each tally to its own row list
-  // and concatenating, is what keeps that case as one merged row instead
-  // of two separate, confusing partial rows for the same ingredient.
-  const allIds = new Set([...Object.keys(neededGramsByIngredient), ...Object.keys(neededRecipeUnitsByIngredient)]);
-  const rows = [...allIds].map(id=>{
-    const rec = DATA.ingredients[id];
-    const neededGrams = Object.prototype.hasOwnProperty.call(neededGramsByIngredient, id) ? neededGramsByIngredient[id] : null;
-    const neededUnits = Object.prototype.hasOwnProperty.call(neededRecipeUnitsByIngredient, id) ? neededRecipeUnitsByIngredient[id] : null;
+
+  const rows = Object.values(entries).map(e=>{
+    const rec = e.rec;
     const packGrams = rec ? parsePackWeightGrams(rec.packSize, rec.unitOfMeasure) : null;
-    const yieldN = rec ? rec.recipeUnitYield : null;
-
-    // Tiny epsilon guard so a total that should land exactly on a whole
-    // number of packs (e.g. precisely 400g against a 400g pack) doesn't get
-    // pushed up an extra pack by floating-point rounding.
-    const gramsPacks = (neededGrams != null && packGrams) ? Math.ceil(neededGrams / packGrams - 1e-9) : null;
-    const unitsPacks = (neededUnits != null && yieldN > 0) ? Math.ceil(neededUnits / yieldN - 1e-9) : null;
-    const gramsCost = (gramsPacks != null && rec && rec.currentPrice != null) ? gramsPacks * rec.currentPrice : null;
-    const unitsCost = (unitsPacks != null && rec && rec.currentPrice != null) ? unitsPacks * rec.currentPrice : null;
-
-    // In the overwhelmingly common case only one of these two ever has a
-    // value, so this just passes that one straight through. When both do
-    // (the rare mixed-unit case above), both amounts are shown together
-    // and their pack counts/costs are added — rather than one silently
-    // overwriting the other, or the ingredient showing up as two rows.
-    let amountLabel = neededGrams != null
-      ? (neededGrams >= 1000 ? (neededGrams/1000).toFixed(2)+'kg' : Math.round(neededGrams)+'g')
-      : null;
-    if(neededUnits != null){
-      const roundedUnits = Math.ceil(neededUnits - 1e-9);
-      // rec.recipeUnit is used exactly as staff typed it (see the
-      // Ingredient edit form's hint: it must already match the spelling
-      // recipes use, e.g. "cloves"/"slices" — already plural), so it's
-      // shown as-is rather than guessing at pluralisation on top of it.
-      const unitWord = rec && rec.recipeUnit ? rec.recipeUnit : 'unit(s)';
-      const unitsLabel = roundedUnits + ' ' + unitWord;
-      amountLabel = amountLabel ? (amountLabel + ' + ' + unitsLabel) : unitsLabel;
+    const parts = [];
+    let packs = 0, anyPacks = false, unresolved = false;
+    if(e.grams != null){
+      parts.push(e.grams >= 1000 ? (e.grams/1000).toFixed(2)+'kg' : Math.round(e.grams)+'g');
+      // Tiny epsilon guard so a total that should land exactly on a whole
+      // number of packs (e.g. precisely 400g against a 400g pack) doesn't
+      // get pushed up an extra pack by floating-point rounding.
+      if(packGrams){ packs += Math.ceil(e.grams / packGrams - 1e-9); anyPacks = true; }
+      else unresolved = true;
     }
-
-    const packsNeeded = (gramsPacks != null || unitsPacks != null) ? (gramsPacks||0) + (unitsPacks||0) : null;
-    const cost = (gramsCost != null || unitsCost != null) ? (gramsCost||0) + (unitsCost||0) : null;
-
+    Object.values(e.counts).forEach(c=>{
+      parts.push(Math.ceil(c.qty - 1e-9) + ' ' + c.unit);
+      if(c.perPack > 0){ packs += Math.ceil(c.qty / c.perPack - 1e-9); anyPacks = true; }
+      else unresolved = true;
+    });
+    if(e.asNeeded) parts.push('as needed');
+    const packsNeeded = anyPacks ? packs : null;
+    const unitPrice = rec ? rec.currentPrice : null;
     return {
-      id, name: rec ? (rec.productName||'Untitled ingredient') : '(ingredient no longer in database)',
-      neededGrams, amountLabel, packSize: rec ? rec.packSize : '', packsNeeded, unitPrice: rec ? rec.currentPrice : null, cost,
+      id: e.key, name: e.name, linked: !!rec,
+      neededGrams: e.grams, amountLabel: parts.join(' + '), packSize: rec ? rec.packSize : '',
+      packsNeeded, packsIncomplete: anyPacks && unresolved,
+      unitPrice, cost: (packsNeeded != null && unitPrice != null) ? packsNeeded * unitPrice : null,
     };
   }).sort((a,b)=> a.name.localeCompare(b.name));
   const totalCost = rows.reduce((s,r)=> s + (r.cost||0), 0);
   const anyCostMissing = rows.some(r=> r.cost == null);
-  return {rows, missing, totalCost, anyCostMissing};
+  return {rows, missing: [...new Set(notes)], totalCost, anyCostMissing};
 }
 
 /* rows here are computeShoppingList's own rows, each additionally carrying
@@ -10421,7 +10447,7 @@ function renderShoppingListView(){
 
   const note = document.createElement('div');
   note.className = 'card';
-  note.innerHTML = `<div class="tinyNote">Estimates how much of each linked ingredient one week's rotation needs for the headcount below, using each product's own pack size and price — a rough order/budget guide, not a replacement for the kitchen iPad's own day-by-day shopping list. An ingredient that can't be weighed in or has no price/pack size recorded is named below rather than left out silently.</div>`;
+  note.innerHTML = `<div class="tinyNote">Estimates how much of each linked ingredient one week's rotation needs for the headcount below, using each product's own pack size and price — a rough order/budget guide, not a replacement for the kitchen iPad's own day-by-day shopping list. Every ingredient in the week's dishes is listed. Where the packs to buy can't be worked out (no pack size, or not linked to a product yet), the line is flagged and explained below.</div>`;
   root.appendChild(note);
 
   const controls = document.createElement('div');
@@ -10496,16 +10522,18 @@ function renderShoppingListView(){
               <td>${escapeHtml(r.name)}</td>
               <td>${escapeHtml(r.amountLabel||'—')}</td>
               <td>${escapeHtml(r.packSize||'—')}</td>
-              <td>${r.packsNeeded != null ? r.packsNeeded : '<span class="statusBadge needsLink">No pack weight</span>'}</td>
+              <td>${r.packsNeeded != null
+                ? (r.packsIncomplete ? r.packsNeeded + '<span class="statusBadge needsLink" style="margin-left:6px;" title="Part of this is in a unit that could not be turned into packs -- see Amount needed">+ check</span>' : r.packsNeeded)
+                : (r.linked ? '<span class="statusBadge needsLink">No pack size</span>' : '<span class="statusBadge needsLink">Not linked</span>')}</td>
               <td>${r.unitPrice != null ? '£'+r.unitPrice.toFixed(2) : '—'}</td>
               <td class="toOrderCell"><input type="number" class="toOrderInput" data-id="${escapeHtml(r.id)}" min="0" step="1" inputmode="numeric" value="${r.orderQty}"></td>
               <td class="lineCostCell" data-id="${escapeHtml(r.id)}">${orderCostOf(r) != null ? '£'+orderCostOf(r).toFixed(2) : '—'}</td>
-            </tr>`).join('') : `<tr><td colspan="7" class="emptyState">Nothing to show — this week's rotation has no linked, weighable ingredients yet, or the headcount is 0.</td></tr>`}
+            </tr>`).join('') : `<tr><td colspan="7" class="emptyState">Nothing to show — this week has no dishes in the rotation yet, or the headcount is 0.</td></tr>`}
           </tbody>
           ${result.rows.length ? `<tfoot><tr><td colspan="6" style="text-align:right;font-weight:600;">Total to order${result.anyCostMissing ? ' (some items have no price on file)' : ''}</td><td style="font-weight:600;" id="slFooterTotal">£0.00</td></tr></tfoot>` : ''}
         </table>
       </div>
-      ${result.missing.length ? `<div class="card" style="margin-top:10px;"><div class="tinyNote" style="color:#a15c00;">Couldn't include:<ul style="margin:4px 0 0 18px;padding:0;">${result.missing.map(m=>`<li>${escapeHtml(m)}</li>`).join('')}</ul></div></div>` : ''}
+      ${result.missing.length ? `<div class="card" style="margin-top:10px;"><div class="tinyNote" style="color:#a15c00;">On the list, but check these by hand:<ul style="margin:4px 0 0 18px;padding:0;">${result.missing.map(m=>`<li>${escapeHtml(m)}</li>`).join('')}</ul></div></div>` : ''}
     `;
     body.querySelectorAll('.toOrderInput').forEach(inp=>{
       inp.addEventListener('input', ()=>{
@@ -10519,7 +10547,7 @@ function renderShoppingListView(){
         const row = lastRows.find(r=> r.id === inp.dataset.id);
         if(!row) return;
         row.orderQty = digits === '' ? 0 : parseInt(digits, 10);
-        const costCell = body.querySelector(`.lineCostCell[data-id="${row.id}"]`);
+        const costCell = body.querySelector(`.lineCostCell[data-id="${CSS.escape(row.id)}"]`);
         const cost = orderCostOf(row);
         if(costCell) costCell.textContent = cost != null ? '£' + cost.toFixed(2) : '—';
         updateSummary();
