@@ -16,7 +16,10 @@
 // No password is needed to READ — same as the static JSON files this
 // replaces, which were never secret; only WRITING (save-season.mjs) is
 // gated behind the staff password.
-import { getStore } from '@netlify/blobs';
+// Storage: the SQLite database once it has been set up, the Blobs store
+// before that -- see ../lib/store.mjs. Either way this function answers
+// exactly as it always has.
+import { openDocumentStore } from '../lib/store.mjs';
 
 export default async (req) => {
   const url = new URL(req.url);
@@ -33,7 +36,7 @@ export default async (req) => {
      eventual read handed back the copy from before the last save and the
      merge reverted it (a changed product, or allergens, "taking two
      saves"). Strong reads always see the latest write. */
-  const store = getStore({ name: 'season-data', consistency: 'strong' });
+  const { store } = await openDocumentStore();
   const key = group + '/' + file;
 
   // Whether the Blobs read FAILED, as opposed to cleanly returning nothing.

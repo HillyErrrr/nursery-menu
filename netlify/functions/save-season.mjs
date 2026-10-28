@@ -14,7 +14,12 @@
 // it only writes into Netlify Blobs, a separate storage bucket. That means
 // a bug here can fail a save, but it can never corrupt or take down the
 // live static site the way a broken custom redeploy could.
-import { getStore } from '@netlify/blobs';
+// Storage: the SQLite database once it has been set up, the Blobs store
+// before that -- see ../lib/store.mjs. The logic below is unchanged: the
+// database store answers getWithMetadata/set/list/delete exactly as the
+// Blobs store did, including the conditional writes.
+import { openDocumentStore, loadDatabase } from '../lib/store.mjs';
+import { isAdminCredential } from '../lib/users.mjs';
 
 export default async (req) => {
   if (req.method !== 'POST') {
@@ -23,12 +28,22 @@ export default async (req) => {
 
   const expected = process.env.UPLOAD_PASSWORD_HASH || '';
   const provided = req.headers.get('x-rb-auth') || '';
-  if (!expected) {
-    return json({
-      error: 'This site has no UPLOAD_PASSWORD_HASH environment variable set yet — see the README for the one-time setup steps.',
-    }, 500);
+  /* The staff password works exactly as before. Once the database is set
+     up, the admin user's password is accepted too (it is the same
+     password unless it has been changed in the users table). */
+  let authorised = !!expected && provided === expected;
+  if (!authorised && provided) {
+    try {
+      const st = await loadDatabase();
+      if (st && isAdminCredential(st.db, provided)) authorised = true;
+    } catch (e) { /* no database: the staff password is the only check, as before */ }
   }
-  if (provided !== expected) {
+  if (!authorised) {
+    if (!expected) {
+      return json({
+        error: 'This site has no UPLOAD_PASSWORD_HASH environment variable set yet — see the README for the one-time setup steps.',
+      }, 500);
+    }
     return json({ error: 'Unauthorized' }, 401);
   }
 
@@ -50,7 +65,13 @@ export default async (req) => {
      eventual read handed back the copy from before the last save and the
      merge reverted it (a changed product, or allergens, "taking two
      saves"). Strong reads always see the latest write. */
-  const store = getStore({ name: 'season-data', consistency: 'strong' });
+  const opened = await openDocumentStore();
+  if (opened.unavailable) {
+    // The database exists but could not be loaded just now: refuse rather
+    // than write somewhere the next read would not look.
+    return json({ error: 'Could not read the current document: ' + (opened.unavailable.message || opened.unavailable) }, 503);
+  }
+  const store = opened.store;
   const key = group + '/' + file;
 
   /* PATCH MODE, used by the shared recipe bank.

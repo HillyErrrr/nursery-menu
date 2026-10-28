@@ -2293,3 +2293,45 @@ Staff admin's **Shopping list** tab has a **🖨 Print list** button next to Dow
 - **Columns:** a tick box for each line, then Ingredient, Amount needed, Pack size, To order (the numbers as typed on screen) and Cost.
 - **Header:** the menu name, the week, the season, the headcount and the date it was printed.
 - **Underneath:** the total to order, then the "check these by hand" notes.
+
+## SQLite database (October 2026)
+
+The site's saved data — the recipe bank, the ingredient database, published menus, nursery and extra-menu settings, allergy alerts, and their backups — can be held in a SQLite database. `app.html` is unchanged: the two Netlify Functions (`get-season`, `save-season`) answer exactly as before, whichever storage is in use.
+
+**How SQLite runs on Netlify with no separate server.** Netlify Functions have no permanent disk, so the database is one SQLite file kept gzipped in Netlify Blobs (store `kitchen-db`, key `kitchen.sqlite.gz`). Each function instance loads it into memory with sql.js, the SQLite engine compiled to WebAssembly. Every save writes the whole file back conditionally, on the version it started from, so two saves at the same moment can't overwrite each other: the second one re-reads and tries again. sql.js is included in `netlify/lib/vendor/`, so nothing extra needs installing.
+
+**Two layers in one file** (`netlify/lib/schema.mjs`; a copy is in `database/schema.sql`):
+
+- **`documents`:** every document exactly as the app sends it, plus its version tag. The functions serve these, so responses, version checks and "someone else saved first" conflicts are byte-for-byte what they were.
+- **Relational tables, kept in step on every save** (`netlify/lib/projection.mjs`):
+  - `brands`, `sites`, `menu_groups`, `seasons`, `users`;
+  - `recipes` with `recipe_ingredients`, `recipe_method_steps` (+ `recipe_method_substeps`), `recipe_utensils`, `recipe_menu_groups` and `recipe_history`;
+  - `ingredients` with `ingredient_nutrition`, `ingredient_traffic_lights` and `ingredient_history`;
+  - `extra_menus` with its sites, courses, groups and runs;
+  - `published_menus` → `published_dishes` → dish ingredients, method steps, sub-steps and utensils;
+  - `site_allergy_alerts`, and `document_backups`.
+
+  Fields without a column of their own go in each row's `extra_json`, so nothing is lost. Links the app allows to dangle are indexed text rather than enforced foreign keys: recipe row → ingredient, and published dish → recipe. The views `v_recipe_ingredient_links` and `v_published_dish_links` show which of those links resolve. `v_site_menus` shows which nursery is on which menu.
+
+**Users.** The `users` table holds:
+
+- **`admin`:** its password is the existing staff password, and it's accepted wherever the staff password is.
+- **One login per nursery:** the username is the site's slug. Its random password is shown once, at set-up.
+
+Passwords are stored as salted scrypt hashes. Kitchen pages still open without a login, so nothing asks for the site logins yet.
+
+**Setting it up** (one time, after deploying):
+
+1. Open `/db-setup.html` on the live site and enter the staff password.
+2. Click **Set up the database**. It copies everything saved today into the database, keeping each document's text and version tag, and fills the tables. It then checks every document is identical and rebuilds from the tables with the same data. Only then does it switch over.
+3. Download the site logins it shows. They aren't shown again.
+4. Use **Check the database** at any time to repeat the checks. **Download the database file** gives you the `.sqlite` file to open in any SQLite tool.
+
+**Safety nets:**
+
+- Until step 2, everything runs on Blobs exactly as before.
+- After every save, the same document is also written to the old Blobs store as a mirror. If the database ever can't be loaded, kitchens are served from the mirror, and saves are refused rather than lost.
+- **Switch back** (on the same page) writes everything back to Blobs and turns the database off, keeping a copy of the file.
+- "Who else is editing" presence pings stay in Blobs, because they aren't data.
+
+**Admin endpoint:** `/.netlify/functions/db-admin`, POST with the staff password hash in `x-rb-auth`. Actions: `status`, `migrate`, `verify`, `download`, `rollback`, `reset-site-password`.
