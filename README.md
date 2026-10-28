@@ -2270,3 +2270,18 @@ Washwood Heath now has its own nursery menu, like Weston-super-Mare's. In Staff 
 - **Afterwards:** remove the extra menu in its Menu settings (Remove menu…). While it has dates set, Washwood Heath's kitchen shows it as a second menu, and the shopping list adds it in.
 - **Which dishes it can use:** a dish's **Available at** setting is now All menus, or any mix of the three. Dishes set to "All Sites Except WSM" before this change stay available to Washwood Heath.
 - **Another site with its own menu later:** add a line to `SITE_MENU_GROUPS` (with a key no extra menu already uses -- Washwood Heath's is `washwood-heath-nursery` because the extra menu "Washwood heath" already had `washwood-heath`), its name to `MENU_GROUP_FRIENDLY_NAMES`, and, if it splits off the Main Menu, a line to `MENU_GROUP_STARTED_FROM`.
+
+## Menu settings for the nursery menus (October 2026)
+
+Which nursery is on which nursery menu is now set in Staff admin, not in the code. To open it, pick a nursery menu in the Editing list (Main Menu, WSM Only, Washwood Heath Only…) and click **Menu settings**.
+
+- **Sites:** every nursery is on exactly one nursery menu.
+  - Tick a nursery on a menu to move it there.
+  - Untick it to put it back on the Main Menu.
+  - The Main Menu's own ticks are locked. To move a nursery off it, tick that nursery on the menu it should go to.
+  - Saving asks first and lists each move. A kitchen switches the next time its page loads. If the menu it moves to has not been published for the current season, the confirm says so, and that kitchen keeps showing the Main Menu until it is published.
+- **Name:** renames the menu everywhere in Staff admin.
+- **+ Add a nursery menu…** (in the Editing list) makes a new menu, starting from a copy of the Main Menu's rotation or empty. Plan and publish it, then tick its nurseries in its Menu settings. Dishes set to "Main Menu only" are available to it too.
+- **Remove menu…** works once no nursery is on the menu.
+
+The settings are saved in `_config/site-menus.json`. Until someone saves them, the built-in list in app.html (`SITE_MENU_GROUPS`, `NURSERY_MENUS_DEFAULT`) applies. Saving changes only the nurseries you moved, so a colleague's move made at the same time is kept. Opening a brand-new nursery still needs its folder under `sites/` and a deploy.

@@ -1210,7 +1210,10 @@ const SITE_SLUG = new URLSearchParams(location.search).get('site') || '';
    line here mapping its slug to a new group key, and see MENU_GROUP_
    FRIENDLY_NAMES further down for its display name in the admin panel.
    Every site not listed here uses "general" by default. */
-const SITE_MENU_GROUPS = {
+/* The built-in list, used until someone saves Menu settings for a nursery
+   menu in Staff admin. From then on _config/site-menus.json decides (see
+   loadSiteMenusConfig), and this is only the backup. */
+let SITE_MENU_GROUPS = {
   'little-adventures-weston-super-mare': 'weston-super-mare',
   // Its own menu from October 2026. Until a Washwood Heath rotation has
   // been published, its kitchen shows the Main Menu (see loadSiteData).
@@ -1219,14 +1222,55 @@ const SITE_MENU_GROUPS = {
      are made from the name), and a shared key made the two one menu. */
   'little-adventures-washwood-heath': 'washwood-heath-nursery',
 };
-/* A menu split off another one. Recipes whose availability was set before
-   the split -- "Main Menu only", say -- were available to this site then,
-   so they stay available to it now (see recipeMenus). */
-const MENU_GROUP_STARTED_FROM = {
-  'washwood-heath-nursery': 'general',
+/* The nursery menus: their names, and the menu each was split off (a
+   recipe set to "Main Menu only" before the split stays available to the
+   new menu -- see recipeMenus). Built-in until Menu settings are saved. */
+const NURSERY_MENUS_DEFAULT = {
+  'general': {label: 'Main Menu'},
+  'weston-super-mare': {label: 'WSM Only'},
+  'washwood-heath-nursery': {label: 'Washwood Heath Only', startedFrom: 'general'},
 };
+let NURSERY_MENUS = JSON.parse(JSON.stringify(NURSERY_MENUS_DEFAULT));
+function menuGroupStartedFrom(){
+  const out = {};
+  Object.keys(NURSERY_MENUS).forEach(g=>{
+    const from = NURSERY_MENUS[g] && NURSERY_MENUS[g].startedFrom;
+    if(from && from !== g) out[g] = from;
+  });
+  return out;
+}
 function menuGroupForSite(slug){
   return SITE_MENU_GROUPS[slug] || 'general';
+}
+/* Takes the saved Menu settings for the nursery menus. Anything malformed
+   is ignored and the built-in list stays, so a bad file can never leave a
+   kitchen without a menu: a site pointing at a menu that does not exist
+   reads the Main Menu. */
+function applySiteMenusConfig(cfg){
+  if(!cfg || typeof cfg !== 'object') return false;
+  const menus = (cfg.menus && typeof cfg.menus === 'object' && !Array.isArray(cfg.menus)) ? cfg.menus : null;
+  const sites = (cfg.sites && typeof cfg.sites === 'object' && !Array.isArray(cfg.sites)) ? cfg.sites : null;
+  if(!menus || !sites) return false;
+  const nextMenus = {general: Object.assign({label: 'Main Menu'}, menus.general || {})};
+  Object.keys(menus).forEach(k=>{
+    if(k === 'general' || !menus[k] || typeof menus[k] !== 'object') return;
+    nextMenus[k] = {label: String(menus[k].label || k)};
+    if(menus[k].startedFrom) nextMenus[k].startedFrom = String(menus[k].startedFrom);
+  });
+  const nextSites = {};
+  Object.keys(sites).forEach(slug=>{
+    const g = sites[slug];
+    if(g && g !== 'general' && nextMenus[g]) nextSites[slug] = g;
+  });
+  NURSERY_MENUS = nextMenus;
+  SITE_MENU_GROUPS = nextSites;
+  return true;
+}
+async function loadSiteMenusConfig(){
+  try{
+    const res = await fetchSeasonJson('_config', 'site-menus.json');
+    if(res.ok) applySiteMenusConfig(await res.json());
+  }catch(e){}
 }
 /* Many nurseries leave this page open all day on a wall-mounted tablet
    rather than reopening it each morning, so a change saved via "Upload
@@ -4690,7 +4734,11 @@ async function loadSiteData(){
     showNoSiteMessage('No nursery selected');
     throw new Error('__handled__');
   }
+  // Which menu this nursery is on, from Menu settings -- needed before the
+  // menu itself is fetched, so read alongside the seasons.
+  const siteMenusLoaded = loadSiteMenusConfig();
   SEASONS = await loadSeasonsConfig();
+  await siteMenusLoaded;
   const seasonsFromBackup = LAST_SEASONS_CONFIG_FROM_BACKUP;
   const seasonParam = new URLSearchParams(location.search).get('season');
   const requestedSeason = seasonParam ? SEASONS.find(s=>s.key === seasonParam) : null;
@@ -5042,8 +5090,9 @@ function recipeMenus(r){
      recipe's menus again, menusKnown records that Washwood Heath was a
      choice, and the setting is taken exactly as given. */
   const known = Array.isArray(r.menusKnown) ? r.menusKnown : LEGACY_MENU_GROUPS;
-  Object.keys(MENU_GROUP_STARTED_FROM).forEach(g=>{
-    if(known.indexOf(g) === -1 && list.indexOf(g) === -1 && list.indexOf(MENU_GROUP_STARTED_FROM[g]) !== -1) list.push(g);
+  const startedFrom = menuGroupStartedFrom();
+  Object.keys(startedFrom).forEach(g=>{
+    if(known.indexOf(g) === -1 && list.indexOf(g) === -1 && list.indexOf(startedFrom[g]) !== -1) list.push(g);
   });
   // Keep only groups that still exist, so a stale key from an old build
   // (or a group that was renamed) can never make a recipe unreachable.
@@ -5135,20 +5184,20 @@ function slotsWithUnavailableRecipe(group, seasonKey){
   return out;
 }
 
+/* Every nursery menu: the Main Menu first, then the others in the order
+   they were made -- including one with no nurseries on it yet, so it can
+   be planned and published before anyone is moved onto it. */
 function allMenuGroups(){
-  const seen = new Set();
-  const order = [];
+  const order = ['general'];
+  Object.keys(NURSERY_MENUS || {}).forEach(g=>{ if(order.indexOf(g) === -1) order.push(g); });
   SITE_SLUGS.forEach(slug=>{
     const g = menuGroupForSite(slug);
-    if(!seen.has(g)){ seen.add(g); order.push(g); }
+    if(order.indexOf(g) === -1) order.push(g);
   });
-  // Main Menu first, then the menus split off it in the order they were
-  // made (SITE_MENU_GROUPS), not in the order their sites happen to be listed.
-  const made = Object.values(SITE_MENU_GROUPS);
-  const rank = g=> g === 'general' ? -1 : (made.indexOf(g) === -1 ? made.length : made.indexOf(g));
-  return order.sort((a,b)=> rank(a) - rank(b));
+  return order;
 }
 function menuGroupLabel(key){
+  if(NURSERY_MENUS && NURSERY_MENUS[key] && NURSERY_MENUS[key].label) return NURSERY_MENUS[key].label;
   if(isExtraMenu(key)) return EXTRA_MENUS[key].label || key;
   return MENU_GROUP_FRIENDLY_NAMES[key] || key;
 }
@@ -11357,11 +11406,21 @@ function renderTopbar(){
       if(g === EDITING_GROUP) opt.selected = true;
       menuSel.appendChild(opt);
     });
+    const addNursery = document.createElement('option');
+    addNursery.value = '__newNurseryMenu';
+    addNursery.textContent = '+ Add a nursery menu…';
+    menuSel.appendChild(addNursery);
     const addOpt = document.createElement('option');
     addOpt.value = '__newExtraMenu';
     addOpt.textContent = '+ Add an extra menu…';
     menuSel.appendChild(addOpt);
     menuSel.onchange = async ()=>{
+      if(menuSel.value === '__newNurseryMenu'){
+        menuSel.value = EDITING_GROUP;
+        if(!confirmLeaveRecipe()) return;
+        openNewNurseryMenuModal();
+        return;
+      }
       if(menuSel.value === '__newExtraMenu'){
         menuSel.value = EDITING_GROUP;
         if(!confirmLeaveRecipe()) return;
@@ -11396,7 +11455,7 @@ function renderTopbar(){
   const extraNote = document.getElementById('rbExtraNote');
   if(extraNote) extraNote.hidden = !editingExtra;
   const settingsTab = document.getElementById('rbMenuSettingsTab');
-  if(settingsTab) settingsTab.hidden = !editingExtra;
+  if(settingsTab) settingsTab.hidden = false;
   sel.innerHTML = '';
   /* FIX (new season invisible to colleagues): this used to list only the
      seasons THIS device already held locally (DATA.seasons). A season added
@@ -11503,7 +11562,12 @@ function renderTopbar(){
       window.open(location.pathname + '?site=' + encodeURIComponent(xs) + '&xmenu=' + encodeURIComponent(EDITING_GROUP), '_blank');
       return;
     }
-    PREVIEW_SITE_SLUG = (SITE_SLUGS.find(sl=> menuGroupForSite(sl) === EDITING_GROUP) || SITE_SLUG);
+    const onThisMenu = SITE_SLUGS.find(sl=> menuGroupForSite(sl) === EDITING_GROUP);
+    if(!onThisMenu){
+      toast('No nursery is on ' + menuGroupLabel(EDITING_GROUP) + ' yet. Tick one in Menu settings to preview it.');
+      return;
+    }
+    PREVIEW_SITE_SLUG = onThisMenu;
     const seasonKey = DATA.currentSeason;
     // DATA.currentSeason/DATA.seasons is this browser's own locally-saved
     // copy (see loadData/save) — normally kept in step with the live
@@ -11770,11 +11834,7 @@ function extraMenuDraft(){
 
 function renderMenuSettingsView(){
   const root = document.createElement('div');
-  if(!isExtraMenu(EDITING_GROUP)){
-    root.className = 'card emptyState';
-    root.textContent = 'Menu settings are for extra menus, like the Holiday club. Pick one from the "Editing" list at the top, or add one there.';
-    return root;
-  }
+  if(!isExtraMenu(EDITING_GROUP)) return renderNurseryMenuSettingsView();
   const key = EDITING_GROUP;
   const d = extraMenuDraft();
   const season = ensureSeason(key);
@@ -12076,6 +12136,371 @@ function openNewExtraMenuModal(){
       overlay.remove();
       enterEditingMenu(key);
       toast('Created ' + name + '. Set its sites, dates and courses here.');
+      setView('menuSettings');
+    }catch(e){
+      btn.disabled = false; btn.textContent = 'Create';
+      showErr(e.message || String(e));
+    }
+  };
+}
+
+/* ================= Nursery menus: Menu settings =================
+   Which nurseries are on which nursery menu used to be written into the
+   app (SITE_MENU_GROUPS), so moving one meant a new release. It is now
+   _config/site-menus.json, saved from here. Every nursery is on exactly
+   one nursery menu: ticking one here moves it onto this menu, and
+   unticking it puts it back on the Main Menu -- a nursery can never be on
+   two menus, or on none. */
+async function fetchSiteMenusLive(){
+  let res;
+  try{
+    res = await fetch('/.netlify/functions/get-season?group=_config&file=site-menus.json', {cache: 'no-store'});
+  }catch(e){ return {status: 'error'}; }
+  if(res.status === 404) return {status: 'empty'};
+  if(!res.ok) return {status: 'error'};
+  if(res.headers.get('X-RB-Source') === 'static-fallback') return {status: 'error'};
+  const etag = res.headers.get('X-RB-Etag') || null;
+  let body = null;
+  try{ body = await res.json(); }catch(e){ return {status: 'error'}; }
+  return {status: 'ok', cfg: body, etag};
+}
+/* The settings as they stand on this page, written out in full. */
+function currentSiteMenusConfig(){
+  const sites = {};
+  SITE_SLUGS.forEach(sl=>{ sites[sl] = menuGroupForSite(sl); });
+  return {menus: JSON.parse(JSON.stringify(NURSERY_MENUS)), sites};
+}
+/* Changes the saved settings with `change(cfg)`, applied to what is saved
+   NOW rather than to this page's copy, so a colleague moving a different
+   nursery at the same time is kept. */
+async function saveSiteMenus(change){
+  for(let attempt = 1; attempt <= 3; attempt++){
+    const live = await fetchSiteMenusLive();
+    if(live.status === 'error'){
+      throw new Error("Couldn't read the saved menu settings just now, so nothing was saved. Try again in a moment.");
+    }
+    let base = currentSiteMenusConfig();
+    if(live.status === 'ok' && live.cfg && live.cfg.menus && live.cfg.sites){
+      base = JSON.parse(JSON.stringify(live.cfg));
+      SITE_SLUGS.forEach(sl=>{ if(!base.sites[sl]) base.sites[sl] = 'general'; });
+    }
+    const next = change(base) || base;
+    try{
+      await saveSeasonToServer('_config', 'site-menus.json', next, undefined, live.etag || undefined);
+      applySiteMenusConfig(next);
+      return;
+    }catch(e){
+      if(!e || !e.conflict) throw e;
+    }
+  }
+  throw new Error('Someone else saved menu settings at the same moment. Try again.');
+}
+
+/* The page's working copy: which menu each nursery is on, and the name. */
+let NM_DRAFT = null;
+function nurseryMenuDraft(){
+  if(!NM_DRAFT || NM_DRAFT.group !== EDITING_GROUP){
+    const sites = {};
+    SITE_SLUGS.forEach(sl=>{ sites[sl] = menuGroupForSite(sl); });
+    NM_DRAFT = {group: EDITING_GROUP, label: menuGroupLabel(EDITING_GROUP), sites, dirty: false, refreshed: false};
+  }
+  return NM_DRAFT;
+}
+function liveSeasonMeta(){
+  try{ return pickSeasonForDate(SEASONS, todayKey()); }catch(e){ return null; }
+}
+
+function renderNurseryMenuSettingsView(){
+  const g = EDITING_GROUP;
+  const d = nurseryMenuDraft();
+  const root = document.createElement('div');
+  /* Catch up with settings a colleague saved since this page opened --
+     once per visit, and never over changes made here and not saved. */
+  if(!d.refreshed){
+    d.refreshed = true;
+    fetchSiteMenusLive().then(live=>{
+      if(live.status !== 'ok' || !applySiteMenusConfig(live.cfg)) return;
+      if(NM_DRAFT === d && !d.dirty && VIEW === 'menuSettings'){
+        NM_DRAFT = null;
+        nurseryMenuDraft().refreshed = true;
+        render();
+      }
+    });
+  }
+  const onHere = SITE_SLUGS.filter(sl=> d.sites[sl] === g);
+  const savedOnHere = SITE_SLUGS.filter(sl=> menuGroupForSite(sl) === g);
+  const head = document.createElement('div');
+  head.className = 'pageHead';
+  head.innerHTML = `
+    <div>
+      <div class="crumb">Nursery menu</div>
+      <h1>${escapeHtml(menuGroupLabel(g))}</h1>
+      <div class="sub">A nursery menu, planned by season. Every nursery follows exactly one nursery menu &mdash; tick a nursery here to move it onto this one.</div>
+    </div>
+    <div class="actions xmSaveRow">
+      <span class="xmDirty" id="nmDirty"${d.dirty ? '' : ' hidden'}>Unsaved changes</span>
+      ${g !== 'general' ? '<button class="btn" id="nmRemove">Remove menu…</button>' : ''}
+      <button class="btn primary" id="nmSave">Save menu settings</button>
+    </div>`;
+  root.appendChild(head);
+
+  const grid = document.createElement('div');
+  grid.className = 'xmGrid';
+  const left = document.createElement('div'); left.className = 'xmCol';
+  const right = document.createElement('div'); right.className = 'xmCol';
+  grid.appendChild(left); grid.appendChild(right);
+  root.appendChild(grid);
+
+  const markDirty = ()=>{
+    d.dirty = true;
+    const flag = root.querySelector('#nmDirty');
+    if(flag) flag.hidden = false;
+  };
+
+  /* --- the menu --- */
+  const basics = document.createElement('section');
+  basics.className = 'card xmCard';
+  basics.innerHTML = `
+    <h3>The menu</h3>
+    <div class="field" style="margin-top:8px;max-width:340px;"><label for="nmName">Name</label><input type="text" id="nmName" value="${escapeHtml(d.label || '')}"></div>
+    <div class="tinyNote">Shown in the Editing list, on the publish button and wherever this menu is named in Staff admin.</div>`;
+  left.appendChild(basics);
+  basics.querySelector('#nmName').addEventListener('input', (e)=>{ d.label = e.target.value; markDirty(); });
+
+  /* --- the whole picture --- */
+  const overview = document.createElement('section');
+  overview.className = 'card xmCard';
+  overview.innerHTML = `
+    <h3>Which nursery is on which menu</h3>
+    <table class="xmTable">
+      <thead><tr><th style="width:34%">Menu</th><th>Nurseries</th></tr></thead>
+      <tbody>${allMenuGroups().map(m=>{
+        const list = SITE_SLUGS.filter(sl=> d.sites[sl] === m).map(sl=> shortSiteLabel(sl)).sort((a, b)=> a.localeCompare(b));
+        return `<tr><td><b>${escapeHtml(m === g ? (d.label || menuGroupLabel(m)) : menuGroupLabel(m))}</b></td><td>${list.length ? escapeHtml(list.join(', ')) : '<span class="tinyNote" style="margin:0;">None yet</span>'}</td></tr>`;
+      }).join('')}</tbody>
+    </table>
+    <div class="tinyNote" style="margin-top:8px;">A nursery moved onto a menu that has not been published for the current season keeps showing the Main Menu in its kitchen until that menu is published.</div>`;
+  left.appendChild(overview);
+
+  /* --- sites --- */
+  const sitesCard = document.createElement('section');
+  sitesCard.className = 'card xmCard';
+  const siteBox = (slug, label)=>{
+    const here = d.sites[slug] === g;
+    const elsewhere = !here ? menuGroupLabel(d.sites[slug]) : '';
+    // The Main Menu is where a nursery goes when it is on no other menu,
+    // so it cannot be unticked here -- tick it on the other menu instead.
+    const locked = here && g === 'general';
+    return `<label class="xmCheck"${locked ? ' title="To move this nursery, open the menu it should be on and tick it there."' : ''}><input type="checkbox" data-site="${escapeHtml(slug)}"${here ? ' checked' : ''}${locked ? ' disabled' : ''}><span>${escapeHtml(label)}${elsewhere ? `<span class="tinyNote" style="display:block;margin:0;font-size:11px;">on ${escapeHtml(elsewhere)}</span>` : ''}</span></label>`;
+  };
+  sitesCard.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:baseline;"><h3>Sites</h3><span class="tinyNote" style="margin:0;">${onHere.length} of ${SITE_SLUGS.length}</span></div>
+    ${g === 'general'
+      ? '<div class="tinyNote">Every nursery not on another nursery menu is on this one. To move one off it, open the menu it should be on and tick it there.</div>'
+      : '<div class="tinyNote">Ticking a nursery moves it here from the menu it is on. Unticking it puts it back on the Main Menu.</div>'}
+    ${['Little Adventures', 'Green Giraffe'].map(brand=>{
+      const slugs = SITE_SLUGS.filter(sl=> siteSlugLabel(sl).indexOf(brand) === 0).sort((a, b)=> shortSiteLabel(a).localeCompare(shortSiteLabel(b)));
+      if(!slugs.length) return '';
+      return `<div class="xmBrand">${escapeHtml(brand)}</div><div class="xmSites">${slugs.map(slug=> siteBox(slug, shortSiteLabel(slug))).join('')}</div>`;
+    }).join('')}
+    ${SITE_SLUGS.filter(sl=> !/^(Little Adventures|Green Giraffe)/.test(siteSlugLabel(sl))).length ? `<div class="xmSites">${SITE_SLUGS.filter(sl=> !/^(Little Adventures|Green Giraffe)/.test(siteSlugLabel(sl))).map(slug=> siteBox(slug, siteSlugLabel(slug))).join('')}</div>` : ''}`;
+  right.appendChild(sitesCard);
+  sitesCard.querySelectorAll('input[data-site]').forEach(box=>{
+    box.addEventListener('change', ()=>{
+      const slug = box.getAttribute('data-site');
+      d.sites[slug] = box.checked ? g : 'general';
+      d.dirty = true;
+      render();
+    });
+  });
+
+  /* --- save --- */
+  head.querySelector('#nmSave').onclick = ()=>{
+    const label = String(d.label || '').trim();
+    if(!label){ toast('Give the menu a name first'); return; }
+    const taken = allMenuGroups().some(m=> m !== g && menuGroupLabel(m).toLowerCase() === label.toLowerCase());
+    if(taken){ toast('Another menu already has that name'); return; }
+    const moves = SITE_SLUGS.filter(sl=> d.sites[sl] !== menuGroupForSite(sl))
+      .map(sl=> ({slug: sl, from: menuGroupForSite(sl), to: d.sites[sl]}));
+    const renamed = label !== menuGroupLabel(g);
+    if(!moves.length && !renamed){ toast('Nothing has changed'); return; }
+    openNurseryMenuSaveModal(g, label, renamed, moves);
+  };
+  const removeBtn = head.querySelector('#nmRemove');
+  if(removeBtn) removeBtn.onclick = ()=>{
+    if(savedOnHere.length){
+      toast('Move its nurseries to another menu first (untick them here, then Save).');
+      return;
+    }
+    openRemoveNurseryMenuModal(g);
+  };
+  return root;
+}
+
+/* The confirm step for moving nurseries: names each move, and warns when a
+   kitchen will show the Main Menu because the menu it is moving to has not
+   been published for the season the kitchens are on today. */
+async function openNurseryMenuSaveModal(g, label, renamed, moves){
+  const season = liveSeasonMeta();
+  const unpublished = {};
+  if(season && moves.length){
+    const targets = moves.map(m=> m.to).filter((t, i, a)=> t !== 'general' && a.indexOf(t) === i);
+    await Promise.all(targets.map(async t=>{
+      try{
+        const res = await fetch('/.netlify/functions/get-season?group=' + encodeURIComponent(t) + '&file=' + encodeURIComponent(season.file), {cache: 'no-store'});
+        if(res.status === 404) unpublished[t] = true;
+      }catch(e){}
+    }));
+  }
+  const overlay = document.createElement('div');
+  overlay.className = 'modalOverlay';
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  const warnTargets = Object.keys(unpublished);
+  modal.innerHTML = `
+    <h3>Save menu settings?</h3>
+    ${renamed ? `<div class="tinyNote" style="margin-top:8px;">Renamed to <b>${escapeHtml(label)}</b>.</div>` : ''}
+    ${moves.length ? `<div style="margin-top:10px;font-weight:700;font-size:13px;">${moves.length} nursery kitchen${moves.length===1?'':'s'} will switch menu the next time ${moves.length===1?'its page loads':'their pages load'}:</div>
+      <ul style="margin:6px 0 0;padding-left:18px;font-size:13.5px;">${moves.map(m=> `<li>${escapeHtml(shortSiteLabel(m.slug))}: ${escapeHtml(menuGroupLabel(m.from))} &rarr; <b>${escapeHtml(m.to === g ? label : menuGroupLabel(m.to))}</b></li>`).join('')}</ul>` : ''}
+    ${warnTargets.length ? `<div class="warnNote" style="margin-top:10px;"><b>${warnTargets.map(t=> escapeHtml(t === g ? label : menuGroupLabel(t))).join(' and ')} ${warnTargets.length===1?'has':'have'} not been published for ${escapeHtml(season.label || season.key)}.</b> Until ${warnTargets.length===1?'it is':'they are'}, ${warnTargets.length===1?'its':'their'} nurseries keep showing the Main Menu.</div>` : ''}
+    <div id="nmErr" class="warnNote" style="display:none;margin-top:8px;"></div>
+    <div class="closeRow">
+      <button class="btn" id="nmCancel">Cancel</button>
+      <button class="btn primary" id="nmConfirm">Save</button>
+    </div>`;
+  overlay.appendChild(modal);
+  document.getElementById('rbAdminRoot').appendChild(overlay);
+  let busy = false;
+  modal.querySelector('#nmCancel').onclick = ()=>{ if(!busy) overlay.remove(); };
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay && !busy) overlay.remove(); });
+  modal.querySelector('#nmConfirm').onclick = async ()=>{
+    if(busy) return;
+    busy = true;
+    const btn = modal.querySelector('#nmConfirm');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try{
+      await saveSiteMenus(cfg=>{
+        cfg.menus = cfg.menus || {};
+        cfg.menus[g] = Object.assign({}, cfg.menus[g] || NURSERY_MENUS[g] || {}, {label});
+        moves.forEach(m=>{ cfg.sites[m.slug] = m.to; });
+        return cfg;
+      });
+      overlay.remove();
+      NM_DRAFT = null;
+      toast(moves.length ? 'Saved — ' + moves.length + ' nurser' + (moves.length===1?'y':'ies') + ' moved' : 'Saved');
+      render();
+    }catch(e){
+      busy = false;
+      btn.disabled = false; btn.textContent = 'Save';
+      const err = modal.querySelector('#nmErr');
+      err.textContent = e.message || String(e);
+      err.style.display = 'block';
+    }
+  };
+}
+
+/* A nursery menu with no nurseries on it can be removed. Its published
+   rotations stay in storage and its recipes stay in the recipe bank. */
+function openRemoveNurseryMenuModal(g){
+  const overlay = document.createElement('div');
+  overlay.className = 'modalOverlay';
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.innerHTML = `
+    <h3>Remove ${escapeHtml(menuGroupLabel(g))}?</h3>
+    <div class="tinyNote" style="margin-top:8px;">No nursery is on it. It comes off the Editing list for everyone. Its recipes stay in the recipe bank, and the Main Menu and the other menus are not changed.</div>
+    <div id="nmRemErr" class="warnNote" style="display:none;margin-top:8px;"></div>
+    <div class="closeRow">
+      <button class="btn" id="nmRemCancel">Cancel</button>
+      <button class="btn primary" id="nmRemGo">Remove menu</button>
+    </div>`;
+  overlay.appendChild(modal);
+  document.getElementById('rbAdminRoot').appendChild(overlay);
+  modal.querySelector('#nmRemCancel').onclick = ()=> overlay.remove();
+  modal.querySelector('#nmRemGo').onclick = async ()=>{
+    const btn = modal.querySelector('#nmRemGo');
+    btn.disabled = true; btn.textContent = 'Removing…';
+    try{
+      await saveSiteMenus(cfg=>{
+        if(Object.keys(cfg.sites).some(sl=> cfg.sites[sl] === g)) throw new Error('A colleague has just put a nursery on this menu, so it was not removed.');
+        delete cfg.menus[g];
+        return cfg;
+      });
+      overlay.remove();
+      NM_DRAFT = null;
+      enterEditingMenu('general');
+      toast('Removed');
+      setView('rotation');
+    }catch(e){
+      btn.disabled = false; btn.textContent = 'Remove menu';
+      const err = modal.querySelector('#nmRemErr');
+      err.textContent = e.message || String(e);
+      err.style.display = 'block';
+    }
+  };
+}
+
+/* A new nursery menu, split off the Main Menu: it starts with no nurseries
+   (pick them in its Menu settings once its rotation is ready), and either a
+   copy of the Main Menu's rotation for the season being edited, or empty. */
+function openNewNurseryMenuModal(){
+  const seasonKey = isExtraMenu(DATA.currentSeason) ? (DATA.lastNurserySeason || (liveSeasonMeta() || {}).key) : DATA.currentSeason;
+  const seasonLabel = ((SEASONS || []).find(x=> x.key === seasonKey) || {}).label || seasonKey;
+  const overlay = document.createElement('div');
+  overlay.className = 'modalOverlay';
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.innerHTML = `
+    <h3>Add a nursery menu</h3>
+    <div class="tinyNote">A menu of its own for one or more nurseries, planned by season like the Main Menu. You pick its nurseries in its Menu settings.</div>
+    <div class="field" style="margin-top:12px;"><label for="nmNewName">Name</label><input type="text" id="nmNewName" placeholder="e.g. Stirchley Only"></div>
+    <div class="field" style="margin-top:6px;"><label>Start from</label>
+      <label style="display:flex;gap:8px;align-items:flex-start;font-weight:400;margin-top:6px;"><input type="radio" name="nmStart" value="copy" checked> <span>A copy of the Main Menu's ${escapeHtml(seasonLabel)} rotation</span></label>
+      <label style="display:flex;gap:8px;align-items:flex-start;font-weight:400;margin-top:6px;"><input type="radio" name="nmStart" value="empty"> <span>An empty rotation</span></label>
+    </div>
+    <div id="nmNewErr" class="warnNote" style="display:none;margin-top:8px;"></div>
+    <div class="closeRow">
+      <button class="btn" id="nmNewCancel">Cancel</button>
+      <button class="btn primary" id="nmNewCreate">Create</button>
+    </div>`;
+  overlay.appendChild(modal);
+  document.getElementById('rbAdminRoot').appendChild(overlay);
+  const input = modal.querySelector('#nmNewName');
+  const err = modal.querySelector('#nmNewErr');
+  setTimeout(()=> input.focus(), 30);
+  modal.querySelector('#nmNewCancel').onclick = ()=> overlay.remove();
+  modal.querySelector('#nmNewCreate').onclick = async ()=>{
+    const name = input.value.trim();
+    const showErr = t=>{ err.textContent = t; err.style.display = 'block'; };
+    if(!name){ showErr('Give it a name.'); return; }
+    const nameTaken = allMenuGroups().concat(extraMenuKeys()).some(k=> menuGroupLabel(k).toLowerCase() === name.toLowerCase());
+    if(nameTaken){ showErr('There is already a menu with that name. Pick another.'); return; }
+    // Its own key, never one an extra menu, season or other menu already has.
+    const base = (name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 32) || 'menu') + '-nursery';
+    const used = k=> k === '_config' || allMenuGroups().indexOf(k) !== -1 || isExtraMenu(k) || (SEASONS || []).some(x=> x.key === k);
+    let key = base, n = 2;
+    while(used(key)) key = base + '-' + (n++);
+    const copy = modal.querySelector('input[name="nmStart"]:checked').value === 'copy';
+    const btn = modal.querySelector('#nmNewCreate');
+    btn.disabled = true; btn.textContent = 'Creating…';
+    try{
+      await saveSiteMenus(cfg=>{
+        cfg.menus = cfg.menus || {};
+        cfg.menus[key] = {label: name, startedFrom: 'general'};
+        return cfg;
+      });
+      overlay.remove();
+      if(copy && seasonKey){
+        const from = menuFor('general')[seasonKey];
+        if(from) menuFor(key)[seasonKey] = JSON.parse(JSON.stringify(from));
+      }
+      DATA.lastNurserySeason = seasonKey;
+      enterEditingMenu(key);
+      if(seasonKey) DATA.currentSeason = seasonKey;
+      saveLocalOnly();
+      toast('Created ' + name + '. Plan and publish its rotation, then tick its nurseries here.');
       setView('menuSettings');
     }catch(e){
       btn.disabled = false; btn.textContent = 'Create';
