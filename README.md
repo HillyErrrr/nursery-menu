@@ -2296,7 +2296,7 @@ Staff admin's **Shopping list** tab has a **🖨 Print list** button next to Dow
 
 ## SQLite database (October 2026)
 
-The site's saved data — the recipe bank, the ingredient database, published menus, nursery and extra-menu settings, allergy alerts, and their backups — can be held in a SQLite database. `app.html` is unchanged: the two Netlify Functions (`get-season`, `save-season`) answer exactly as before, whichever storage is in use.
+The site's saved data — the recipe bank, the ingredient database, published menus, nursery and extra-menu settings and allergy alerts — can be held in a SQLite database. `app.html` is unchanged: the two Netlify Functions (`get-season`, `save-season`) answer exactly as before, whichever storage is in use.
 
 **How SQLite runs on Netlify with no separate server.** Netlify Functions have no permanent disk, so the database is one SQLite file kept gzipped in Netlify Blobs (store `kitchen-db`, key `kitchen.sqlite.gz`). Each function instance loads it into memory with sql.js, the SQLite engine compiled to WebAssembly. Every save writes the whole file back conditionally, on the version it started from, so two saves at the same moment can't overwrite each other: the second one re-reads and tries again. sql.js is included in `netlify/lib/vendor/`, so nothing extra needs installing.
 
@@ -2309,7 +2309,7 @@ The site's saved data — the recipe bank, the ingredient database, published me
   - `ingredients` with `ingredient_nutrition`, `ingredient_traffic_lights` and `ingredient_history`;
   - `extra_menus` with its sites, courses, groups and runs;
   - `published_menus` → `published_dishes` → dish ingredients, method steps, sub-steps and utensils;
-  - `site_allergy_alerts`, and `document_backups`.
+  - `site_allergy_alerts`. (`document_backups` exists but stays empty: see below.)
 
   Fields without a column of their own go in each row's `extra_json`, so nothing is lost. Links the app allows to dangle are indexed text rather than enforced foreign keys: recipe row → ingredient, and published dish → recipe. The views `v_recipe_ingredient_links` and `v_published_dish_links` show which of those links resolve. `v_site_menus` shows which nursery is on which menu.
 
@@ -2332,6 +2332,15 @@ Passwords are stored as salted scrypt hashes. Kitchen pages still open without a
 - Until step 2, everything runs on Blobs exactly as before.
 - After every save, the same document is also written to the old Blobs store as a mirror. If the database ever can't be loaded, kitchens are served from the mirror, and saves are refused rather than lost.
 - **Switch back** (on the same page) writes everything back to Blobs and turns the database off, keeping a copy of the file.
-- "Who else is editing" presence pings stay in Blobs, because they aren't data.
+- "Who else is editing" presence pings, the copies kept of what each publish replaced (backups), and the storage check save-season makes all stay in Blobs. Backups can number a hundred whole menus, and inside the database file they would make it ten times the size and every save slower.
+- **The menu functions can't be taken down by the database code.** `get-season` and `save-season` load it only when needed (`netlify/lib/safe-store.mjs`). If it ever fails to load, they carry on with the old storage, or refuse to save if the database is already set up.
+- **Writes take turns.** Writes from one function instance are queued, and writes from different instances are protected by a conditional save that retries after a short random pause. When many saves arrive at once, each one either lands or is refused with "Nothing was overwritten", exactly as with the old storage.
 
-**Admin endpoint:** `/.netlify/functions/db-admin`, POST with the staff password hash in `x-rb-auth`. Actions: `status`, `migrate`, `verify`, `download`, `rollback`, `reset-site-password`.
+**Admin endpoint:** `/.netlify/functions/db-admin`, POST with the staff password hash in `x-rb-auth`. Actions: `status`, `migrate`, `migrate-result`, `verify`, `download`, `rollback`, `reset-site-password`.
+
+**Set-up runs in the background.** The set-up page starts `db-migrate-background`, which Netlify lets run for up to 15 minutes, and checks `migrate-result` every two seconds until it finishes. The site logins' passwords are made in the browser, and only their SHA-256 is sent, so no password passes through or is stored on the server.
+
+**Fixed in this version:**
+
+- **First deploy, `Identifier '__dirname' has already been declared`:** Netlify adds its own top-level `__dirname`, `__filename` and `require` when it bundles a function, and the SQLite engine declared `__dirname` too, so the functions failed to load. Everything the engine declares now sits inside one function scope. Every function is tested bundled exactly as Netlify bundles it, including that shim.
+- **Corrupted copies:** sql.js copies its input with `.slice()`, which on a Node `Buffer` is a view, not a copy, so databases opened from the same bytes could corrupt each other. The engine is now always given a real `Uint8Array` copy.

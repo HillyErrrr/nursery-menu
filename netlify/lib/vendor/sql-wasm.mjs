@@ -3,7 +3,13 @@
 // Netlify Functions bundle it with no require() calls, no files to locate and
 // no npm install: the WebAssembly binary itself is passed in as `wasmBinary`
 // (see sql-wasm-binary.mjs and ../sqlite.mjs). Only the three require() calls
-// below were changed.
+// in the original were changed.
+//
+// Everything sql.js declares is kept INSIDE one function. Netlify adds its
+// own top-level __dirname, __filename and require when it bundles a
+// function, and any second top-level declaration of those names stops the
+// whole function from loading ("Identifier '__dirname' has already been
+// declared") -- which took the menu functions down on first deploy.
 import __nodeCrypto from 'node:crypto';
 const __sqljsRequire = (name) => {
   if (name === 'crypto') return __nodeCrypto;
@@ -11,10 +17,12 @@ const __sqljsRequire = (name) => {
   if (name === 'path') return {};
   throw new Error('sql.js: unexpected require(' + name + ')');
 };
-let module = { exports: {} };
-const __sqljsModule = module;
-let exports = module.exports;
-let __dirname = "";
+const __sqljsInit = (function () {
+  let module = { exports: {} };
+  let exports = module.exports;
+  const __sqljsModule = module; // sql.js later sets module = undefined
+  const __dirname = '';
+  const __filename = '';
 
 // We are modularizing this manually because the current modularize setting in Emscripten has some issues:
 // https://github.com/kripken/emscripten/issues/5820
@@ -203,5 +211,6 @@ else if (typeof define === 'function' && define['amd']) {
 else if (typeof exports === 'object'){
     exports["Module"] = initSqlJs;
 }
-
-export default __sqljsModule.exports;
+  return __sqljsModule.exports;
+})();
+export default __sqljsInit;

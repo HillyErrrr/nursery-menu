@@ -18,8 +18,7 @@
 // before that -- see ../lib/store.mjs. The logic below is unchanged: the
 // database store answers getWithMetadata/set/list/delete exactly as the
 // Blobs store did, including the conditional writes.
-import { openDocumentStore, loadDatabase } from '../lib/store.mjs';
-import { isAdminCredential } from '../lib/users.mjs';
+import { storeForWriting, isDatabaseAdmin } from '../lib/safe-store.mjs';
 
 export default async (req) => {
   if (req.method !== 'POST') {
@@ -33,10 +32,7 @@ export default async (req) => {
      password unless it has been changed in the users table). */
   let authorised = !!expected && provided === expected;
   if (!authorised && provided) {
-    try {
-      const st = await loadDatabase();
-      if (st && isAdminCredential(st.db, provided)) authorised = true;
-    } catch (e) { /* no database: the staff password is the only check, as before */ }
+    if (await isDatabaseAdmin(provided)) authorised = true;
   }
   if (!authorised) {
     if (!expected) {
@@ -65,11 +61,11 @@ export default async (req) => {
      eventual read handed back the copy from before the last save and the
      merge reverted it (a changed product, or allergens, "taking two
      saves"). Strong reads always see the latest write. */
-  const opened = await openDocumentStore();
-  if (opened.unavailable) {
+  const opened = await storeForWriting();
+  if (opened.error) {
     // The database exists but could not be loaded just now: refuse rather
     // than write somewhere the next read would not look.
-    return json({ error: 'Could not read the current document: ' + (opened.unavailable.message || opened.unavailable) }, 503);
+    return json({ error: opened.error }, 503);
   }
   const store = opened.store;
   const key = group + '/' + file;

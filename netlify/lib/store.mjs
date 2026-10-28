@@ -24,7 +24,12 @@
      (db-admin "rollback") loses nothing.
    - "Who else is editing" presence pings stay in the old Blobs store:
      they are not data, they change every 45 seconds per open screen, and
-     writing the whole database for each would only slow real saves. */
+     writing the whole database for each would only slow real saves.
+   - So do the publish backups (the copies kept of what each publish
+     replaced): there can be a hundred of them, each a whole menu, and
+     inside the database file they would make it ten times the size and
+     every save that much slower. They are only ever listed and read back
+     one at a time, which Blobs does well. */
 import { getStore } from '@netlify/blobs';
 import { gzipSync, gunzipSync } from 'node:zlib';
 import { randomUUID } from 'node:crypto';
@@ -39,7 +44,12 @@ const BACKUPS_KEPT = 12;
 
 /* Documents that stay in the old Blobs store whatever the mode. */
 export function staysInBlobs(key) {
-  return key === '_config/presence.json';
+  return key === '_config/presence.json' || String(key).includes('/__backups/')
+    // save-season's check that the storage honours conditional writes: the
+    // database relies on Blobs' conditional writes, so that is what to test.
+    // (Through the database, a busy moment could fail the probe and mark the
+    // instance unable to save until it restarted.)
+    || String(key).startsWith('__probe/');
 }
 
 export function legacyStore() {
@@ -66,9 +76,13 @@ export async function loadDatabase() {
   if (CACHE && meta.etag && CACHE.etag === meta.etag) return CACHE;
   const got = await blobs.getWithMetadata(DB_KEY, { type: 'arrayBuffer' });
   if (!got) { CACHE = null; return null; }
-  const bytes = gunzipSync(Buffer.from(got.data));
+  // A plain Uint8Array, never a Node Buffer: sql.js copies its input with
+  // .slice(), which on a Buffer is a VIEW, not a copy -- so every database
+  // opened from these bytes would write straight into them, and the next
+  // save in this instance would start from a corrupted file.
+  const bytes = new Uint8Array(gunzipSync(Buffer.from(got.data)));
   const SQL = await sqliteEngine();
-  const db = new SQL.Database(bytes);
+  const db = new SQL.Database(new Uint8Array(bytes));
   db.run('PRAGMA foreign_keys = ON');
   CACHE = { etag: got.etag, bytes, db };
   return CACHE;
@@ -77,13 +91,22 @@ export async function loadDatabase() {
 /* Runs `change(db)` on a private copy of the latest database and stores
    the result if `change` says to commit. Retries when another instance
    saved the file in between. Returns whatever `change` returned. */
-export async function writeDatabase(change, { attempts = 5 } = {}) {
+/* Writes from the same function instance take turns, so they never race
+   each other for the file; only writes from other instances can, and those
+   are caught by the conditional save below. */
+let WRITE_QUEUE = Promise.resolve();
+export function writeDatabase(change, options) {
+  const run = WRITE_QUEUE.then(() => writeDatabaseNow(change, options));
+  WRITE_QUEUE = run.catch(() => {});
+  return run;
+}
+async function writeDatabaseNow(change, { attempts = 5 } = {}) {
   const blobs = dbBlobStore();
   const SQL = await sqliteEngine();
   for (let attempt = 1; attempt <= attempts; attempt++) {
     const base = await loadDatabase();
     if (!base) throw new Error('The database has not been set up.');
-    const db = new SQL.Database(base.bytes);
+    const db = new SQL.Database(new Uint8Array(base.bytes)); // a private copy (see loadDatabase)
     db.run('PRAGMA foreign_keys = ON');
     let result;
     db.run('BEGIN');
@@ -96,12 +119,14 @@ export async function writeDatabase(change, { attempts = 5 } = {}) {
       throw e;
     }
     if (!result.commit) { db.close(); return result; }
-    const bytes = db.export();
+    const bytes = new Uint8Array(db.export());
     const res = await blobs.set(DB_KEY, toArrayBuffer(gzipSync(bytes)), { onlyIfMatch: base.etag });
     if (res && res.modified === false) {
-      // Someone else saved the database first: start again on their version.
+      // Someone else saved the database first: start again on their version,
+      // after a short random pause so two instances do not collide again.
       db.close();
       CACHE = null;
+      await new Promise((r) => setTimeout(r, 20 + Math.floor(Math.random() * 80) * attempt));
       continue;
     }
     let etag = res && res.etag;

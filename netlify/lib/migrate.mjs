@@ -23,20 +23,27 @@ import { SITE_SLUGS, BUILT_IN_MENUS, BUILT_IN_SITE_MENUS, BUILT_IN_SEASONS, bran
 
 const ORDER = ['seasons', 'siteMenus', 'ingredients', 'recipes', 'extraMenus', 'alerts', 'rotation'];
 
+/* Runs `fn` over `items`, `limit` at a time. */
+async function inParallel(items, limit, fn) {
+  const out = new Array(items.length);
+  let next = 0;
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (next < items.length) { const i = next++; out[i] = await fn(items[i], i); }
+  }));
+  return out;
+}
+
+/* Every document in the old store, read in parallel. Backups and presence
+   stay where they are (see staysInBlobs), so they are not read at all. */
 async function readBlobs() {
   const legacy = legacyStore();
   const listed = await legacy.list();
-  const keys = (listed && listed.blobs ? listed.blobs : []).map((b) => b.key);
+  const keys = (listed && listed.blobs ? listed.blobs : []).map((b) => b.key)
+    .filter((key) => !key.startsWith('__probe/') && !staysInBlobs(key));
+  const got = await inParallel(keys, 10, (key) => legacy.getWithMetadata(key, { type: 'text' }));
   const docs = [];
-  const backups = [];
-  for (const key of keys) {
-    if (key.startsWith('__probe/') || staysInBlobs(key)) continue;
-    const got = await legacy.getWithMetadata(key, { type: 'text' });
-    if (!got) continue;
-    if (key.includes('/__backups/')) backups.push({ key, data: got.data });
-    else docs.push({ key, data: got.data, etag: got.etag || newEtag() });
-  }
-  return { docs, backups };
+  keys.forEach((key, i) => { if (got[i]) docs.push({ key, data: got[i].data, etag: got[i].etag || newEtag() }); });
+  return { docs, backups: [] };
 }
 
 async function siteConfigs(origin) {
@@ -115,7 +122,12 @@ export function tableCounts(db) {
 }
 
 /* The first load. */
-export async function migrateFromBlobs({ origin, adminCredential }) {
+/* siteCredentials: optional {slug: SHA-256 of that site's password}. The
+   set-up page makes the passwords in the browser and sends only these, so
+   no password ever passes through or is stored by the server. Without it,
+   passwords are made here and returned (used by the tests). */
+export async function migrateFromBlobs({ origin, adminCredential, siteCredentials }) {
+  const started = Date.now();
   const existing = await loadDatabase();
   if (existing) return { ok: false, error: 'The database is already set up. Use "Check" to compare it, or "Switch back" first.' };
   for (let attempt = 1; attempt <= 3; attempt++) {
@@ -130,8 +142,10 @@ export async function migrateFromBlobs({ origin, adminCredential }) {
       backups.forEach((b) => putBackup(db, b.key, b.data));
       setUser(db, { username: 'admin', role: 'admin', credential: adminCredential });
       SITE_SLUGS.forEach((slug) => {
-        const pw = newPassword();
-        setUser(db, { username: slug, role: 'site', siteSlug: slug, credential: sha256Hex(pw) });
+        const given = siteCredentials && /^[0-9a-f]{64}$/.test(String(siteCredentials[slug] || '')) ? siteCredentials[slug] : null;
+        const pw = given ? null : newPassword();
+        setUser(db, { username: slug, role: 'site', siteSlug: slug, credential: given || sha256Hex(pw) });
+        if (given) return;
         const site = one(db, 'SELECT name FROM sites WHERE slug = ?', [slug]);
         passwords.push({ username: slug, site: (site && site.name) || slug, password: pw });
       });
@@ -148,16 +162,13 @@ export async function migrateFromBlobs({ origin, adminCredential }) {
     }
     // Nothing saved to Blobs meanwhile? Otherwise take the copy again.
     const legacy = legacyStore();
-    let moved = false;
-    for (const d of docs) {
-      const m = await legacy.getMetadata(d.key);
-      if (!m || (m.etag && m.etag !== d.etag)) { moved = true; break; }
-    }
+    const metas = await inParallel(docs, 10, (d) => legacy.getMetadata(d.key));
+    const moved = docs.some((d, i) => !metas[i] || (metas[i].etag && metas[i].etag !== d.etag));
     if (moved) continue;
     const stored = await storeNewDatabase(db);
     if (!stored) return { ok: false, error: 'Someone else set up the database at the same moment. Use "Check".' };
     return {
-      ok: true, attempts: attempt,
+      ok: true, attempts: attempt, seconds: Math.round((Date.now() - started) / 100) / 10,
       documents: docs.length, backups: backups.length, rebuiltFromTables: check.rebuilt,
       counts: tableCounts(db), siteLogins: passwords,
     };
@@ -178,10 +189,10 @@ export async function verifyDatabase() {
 
 export async function databaseStatus() {
   const st = await loadDatabase();
-  if (!st) return { mode: 'blobs', setUp: false };
+  if (!st) return { mode: 'blobs', setUp: false, siteSlugs: SITE_SLUGS };
   const meta = Object.fromEntries(all(st.db, 'SELECT key, value FROM meta').filter((r) => !r.key.startsWith('probe:')).map((r) => [r.key, r.value]));
   return {
-    mode: 'sqlite', setUp: true, sizeBytes: st.bytes.length, meta,
+    mode: 'sqlite', setUp: true, sizeBytes: st.bytes.length, meta, siteSlugs: SITE_SLUGS,
     counts: tableCounts(st.db),
     users: all(st.db, 'SELECT username, role, site_slug AS site, active FROM users ORDER BY role, username'),
   };

@@ -1,24 +1,21 @@
 // The SQLite database's admin actions, for the db-setup.html page:
 //   status   -- is the database set up, how big, how many rows in each table
-//   migrate  -- the one-time first load from the Blobs store (see ../lib/migrate.mjs)
+//   migrate  -- the one-time first load, run here and now (the set-up page uses
+//               db-migrate-background instead, which has no time limit to hit)
+//   migrate-result -- how the background set-up is getting on
 //   verify   -- compare the database with the Blobs copy and rebuild every
 //               document from its tables; changes nothing
 //   rollback -- switch back to the Blobs store only
 //   download -- the SQLite file itself
 //   reset-site-password -- a new password for one site login
 // Staff password only (the same x-rb-auth header Staff admin sends).
-import { loadDatabase, writeDatabase } from '../lib/store.mjs';
-import { isAdminCredential } from '../lib/users.mjs';
+import { loadDatabase, writeDatabase, dbBlobStore } from '../lib/store.mjs';
+import { staffAuth } from '../lib/auth.mjs';
 import { migrateFromBlobs, verifyDatabase, databaseStatus, rollbackToBlobs, resetSitePassword } from '../lib/migrate.mjs';
 
 export default async (req) => {
   if (req.method !== 'POST') return json({ error: 'Use POST' }, 405);
-  const expected = process.env.UPLOAD_PASSWORD_HASH || '';
-  const provided = req.headers.get('x-rb-auth') || '';
-  let authorised = !!expected && provided === expected;
-  if (!authorised && provided) {
-    try { const st = await loadDatabase(); if (st && isAdminCredential(st.db, provided)) authorised = true; } catch (e) { /* not set up */ }
-  }
+  const { ok: authorised, expected } = await staffAuth(req);
   if (!authorised) return json({ error: expected ? 'Unauthorized' : 'This site has no UPLOAD_PASSWORD_HASH environment variable set yet.' }, expected ? 401 : 500);
 
   let body = {};
@@ -27,8 +24,13 @@ export default async (req) => {
   try {
     if (action === 'status') return json(await databaseStatus(), 200);
     if (action === 'migrate') {
-      const out = await migrateFromBlobs({ origin: new URL(req.url).origin, adminCredential: expected || provided });
+      const out = await migrateFromBlobs({ origin: new URL(req.url).origin, adminCredential: expected || req.headers.get('x-rb-auth') });
       return json(out, out.ok ? 200 : 409);
+    }
+    if (action === 'migrate-result') {
+      // The background set-up's progress (see db-migrate-background.mjs).
+      const raw = await dbBlobStore().get('migrate-result.json');
+      return json(raw ? JSON.parse(raw) : { state: 'none' }, 200);
     }
     if (action === 'verify') { const out = await verifyDatabase(); return json(out, 200); }
     if (action === 'rollback') { const out = await rollbackToBlobs(); return json(out, out.ok ? 200 : 409); }

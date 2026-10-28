@@ -53,7 +53,7 @@
 
   <section aria-labelledby="setup">
     <h2 id="setup">1. Set up the database</h2>
-    <p>Copies everything saved today (recipes, ingredients, published menus, menu settings, extra menus, allergy alerts and their backups) into the database, checks every item matches, and only then switches over. Creates the users: <b>admin</b> (the staff password) and one login per nursery.</p>
+    <p>Copies everything saved today (recipes, ingredients, published menus, menu settings, extra menus and allergy alerts) into the database, checks every item matches, and only then switches over. Creates the users: <b>admin</b> (the staff password) and one login per nursery. Publish backups stay where they are.</p>
     <p class="note">Best done when nobody is editing in Staff admin. It takes a few seconds and can be undone with step 3.</p>
     <div class="row"><button type="button" class="primary" id="migrate">Set up the database</button></div>
     <div id="migrateOut"></div>
@@ -92,11 +92,34 @@
       body: JSON.stringify(Object.assign({ action }, extra || {})),
     });
     if (action === 'download' && res.ok) return res;
-    let body = {};
-    try { body = await res.json(); } catch (e) { body = { error: 'Unexpected answer (' + res.status + ')' }; }
+    return readAnswer(res);
+  }
+  /* Whatever comes back, say what it was -- never "undefined". */
+  async function readAnswer(res) {
+    const raw = await res.text();
+    let body = null;
+    try { body = JSON.parse(raw); } catch (e) { body = null; }
     if (res.status === 401) throw new Error('That password was not accepted.');
+    if (!body || typeof body !== 'object') body = {};
+    if (!res.ok && !body.error) {
+      const detail = body.errorMessage || body.message || raw.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 300);
+      body.error = 'The site answered ' + res.status + (res.statusText ? ' ' + res.statusText : '') + (detail ? ': ' + detail : '') + '.';
+    }
     return body;
   }
+  function randomPassword() {
+    const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
+    const b = crypto.getRandomValues(new Uint8Array(12));
+    return Array.from(b, (x) => chars[x % chars.length]).join('');
+  }
+  async function siteName(slug) {
+    try {
+      const r = await fetch('/sites/' + encodeURIComponent(slug) + '/config.json', { cache: 'no-store' });
+      if (r.ok) { const c = await r.json(); if (c && c.siteName) return c.siteName; }
+    } catch (e) { /* the slug will do */ }
+    return slug;
+  }
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   function show(el, kind, text, extraNode) {
     el.innerHTML = '';
     const d = document.createElement('div');
@@ -160,14 +183,49 @@
       show(out, 'ok', 'Running on the database (' + (s.sizeBytes / 1048576).toFixed(1) + ' MB). Set up ' + new Date(s.meta.migrated_at).toLocaleString('en-GB') + ', ' + s.users.length + ' users.', countsTable(s.counts));
     } catch (e) { show(out, 'bad', e.message); }
   };
+  /* The set-up runs as a background job on Netlify (no time limit to hit);
+     this starts it and checks on it every two seconds. The site logins'
+     passwords are made here, in the browser: only their fingerprints are
+     sent, so they never pass through or stay on the server. */
   $('migrate').onclick = async () => {
     const btn = $('migrate'), out = $('migrateOut');
     if (!confirm('Set up the database now? Everything stays as it is; this copies it into the database and switches over once every item has been checked.')) return;
     busy(btn, true, 'Setting up…');
     try {
-      const r = await call('migrate');
-      if (!r.ok) return show(out, 'bad', r.error + (r.problems ? '\n\n' + r.problems.join('\n') : ''));
-      show(out, 'ok', 'Done. ' + r.documents + ' documents and ' + r.backups + ' backups copied; all ' + r.rebuiltFromTables + ' checked against the tables. The site is now running on the database.', loginsBlock(r.siteLogins || []));
+      const pw = $('password').value;
+      if (!pw) throw new Error('Enter the staff password first.');
+      const status = await call('status');
+      if (status.error) return show(out, 'bad', status.error);
+      if (status.setUp) return show(out, 'info', 'The database is already set up. Use "Check the database" below.');
+      const logins = [];
+      const siteCredentials = {};
+      for (const slug of (status.siteSlugs || [])) {
+        const password = randomPassword();
+        siteCredentials[slug] = await sha256(password);
+        logins.push({ username: slug, site: await siteName(slug), password });
+      }
+      const runId = String(Date.now()) + '-' + Math.random().toString(36).slice(2);
+      show(out, 'info', 'Setting up: copying and checking everything. This normally takes under a minute; keep this page open.');
+      const start = await fetch('/.netlify/functions/db-migrate-background', {
+        method: 'POST',
+        headers: { 'x-rb-auth': await sha256(pw), 'x-rb-run': runId, 'content-type': 'application/json' },
+        body: JSON.stringify({ siteCredentials }),
+      });
+      if (start.status !== 202 && !start.ok) {
+        const b = await readAnswer(start);
+        return show(out, 'bad', b.error || ('The set-up could not be started (' + start.status + ').'));
+      }
+      const deadline = Date.now() + 10 * 60 * 1000;
+      let r = null;
+      while (Date.now() < deadline) {
+        await sleep(2000);
+        r = await call('migrate-result');
+        if (r && r.runId === runId && r.state === 'done') break;
+        r = null;
+      }
+      if (!r) return show(out, 'bad', 'No answer from the set-up after 10 minutes. Click "Check status" to see whether it finished; if it says "Not set up yet", nothing was switched and you can try again.');
+      if (!r.ok) return show(out, 'bad', (r.error || 'The set-up did not finish.') + (r.problems ? '\n\n' + r.problems.join('\n') : '') + '\n\nNothing was switched: the site is still running exactly as before.');
+      show(out, 'ok', 'Done in ' + r.seconds + ' seconds. ' + r.documents + ' documents copied, and all ' + r.rebuiltFromTables + ' checked against the tables. The site is now running on the database.', loginsBlock(logins));
     } catch (e) { show(out, 'bad', e.message); }
     finally { busy(btn, false, 'Set up the database'); }
   };
@@ -200,7 +258,7 @@
     busy(btn, true, 'Switching back…');
     try {
       const r = await call('rollback');
-      if (!r.ok) return show(out, 'bad', r.error);
+      if (!r.ok) return show(out, 'bad', r.error || 'Could not switch back.');
       show(out, 'ok', 'Switched back. ' + r.documents + ' documents are in the old storage; a copy of the database was kept (' + r.keptCopy + ').');
     } catch (e) { show(out, 'bad', e.message); }
     finally { busy(btn, false, 'Switch back to the old storage'); }
