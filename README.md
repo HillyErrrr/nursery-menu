@@ -2285,3 +2285,11 @@ Which nursery is on which nursery menu is now set in Staff admin, not in the cod
 - **Remove menu…** works once no nursery is on the menu.
 
 The settings are saved in `_config/site-menus.json`. Until someone saves them, the built-in list in app.html (`SITE_MENU_GROUPS`, `NURSERY_MENUS_DEFAULT`) applies. Saving changes only the nurseries you moved, so a colleague's move made at the same time is kept. Opening a brand-new nursery still needs its folder under `sites/` and a deploy.
+
+## Printing the Staff admin Shopping list
+
+Staff admin's **Shopping list** tab has a **🖨 Print list** button next to Download as CSV. It prints an A4 sheet with just the list, the same style as the kitchen's printout.
+
+- **Columns:** a tick box for each line, then Ingredient, Amount needed, Pack size, To order (the numbers as typed on screen) and Cost.
+- **Header:** the menu name, the week, the season, the headcount and the date it was printed.
+- **Underneath:** the total to order, then the "check these by hand" notes.

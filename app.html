@@ -4526,6 +4526,12 @@ function printShopList(){
     alert('There is nothing to print yet. Fill in how many are eating each day, and the shopping list builds itself.');
     return;
   }
+  printShopSheet(html);
+}
+/* Prints `html` as the only thing on the page (see the #shopPrintSheet
+   styles). Used by the kitchen's Weekly shopping list and Staff admin's
+   Shopping list. */
+function printShopSheet(html){
   let sheet = document.getElementById('shopPrintSheet');
   if(!sheet){
     sheet = document.createElement('div');
@@ -10665,6 +10671,7 @@ function renderShoppingListView(){
       <div class="field" style="margin:0;"><label>Total headcount</label><input type="number" id="slHeadcount" min="0" value="20"></div>
       <div class="field" style="margin:0;"><label>…of which, vegetarian option</label><input type="number" id="slVegcount" min="0" value="0"></div>
       <button class="btn" id="slDownloadCsv">Download as CSV</button>
+      <button class="btn" id="slPrint">🖨 Print list</button>
     </div>
   `;
   root.appendChild(controls);
@@ -10672,6 +10679,7 @@ function renderShoppingListView(){
   const body = document.createElement('div');
   root.appendChild(body);
   let lastRows = [];
+  let lastMissing = [];
 
   // Floating "To order" summary — position:fixed so it stays on screen
   // while the table below scrolls (#rbAdminRoot itself is the scrolling
@@ -10717,6 +10725,7 @@ function renderShoppingListView(){
     const veg = Number(controls.querySelector('#slVegcount').value) || 0;
     const result = computeShoppingList(season, wk, total, veg);
     lastRows = result.rows;
+    lastMissing = result.missing || [];
     lastRows.forEach(r=> { r.orderQty = orderQtyOf(r); });
     body.innerHTML = `
       <div class="card" style="margin-top:10px;">
@@ -10764,6 +10773,50 @@ function renderShoppingListView(){
   controls.querySelector('#slWeek').addEventListener('change', draw);
   controls.querySelector('#slHeadcount').addEventListener('input', draw);
   controls.querySelector('#slVegcount').addEventListener('input', draw);
+  /* The printed list: exactly the table on screen, To order numbers as
+     typed, without the Packs to buy and Unit price columns (as on the
+     kitchen's printout), headed with what it was worked out for. */
+  controls.querySelector('#slPrint').onclick = ()=>{
+    if(!lastRows.length){
+      toast('Nothing to print yet — this week has no dishes in the rotation, or the headcount is 0.');
+      return;
+    }
+    const wk = controls.querySelector('#slWeek').value;
+    const total = Number(controls.querySelector('#slHeadcount').value) || 0;
+    const veg = Number(controls.querySelector('#slVegcount').value) || 0;
+    const money = v=> '£' + v.toFixed(2);
+    const rowsHtml = lastRows.map(r=>{
+      const cost = r.unitPrice != null ? (r.orderQty || 0) * r.unitPrice : null;
+      const pack = r.packSize || (r.linked === false ? 'not linked' : '—');
+      return `<tr>
+        <td><span class="spBox"></span></td>
+        <td class="spName">${escapeHtml(r.name)}</td>
+        <td>${escapeHtml(r.amountLabel || '—')}</td>
+        <td>${escapeHtml(pack)}</td>
+        <td class="spNum">${escapeHtml(String(r.orderQty || 0))}</td>
+        <td class="spNum">${cost != null ? money(cost) : '—'}</td>
+      </tr>`;
+    }).join('');
+    const items = lastRows.reduce((n, r)=> n + (r.orderQty || 0), 0);
+    const value = lastRows.reduce((n, r)=> n + (r.unitPrice != null ? (r.orderQty || 0) * r.unitPrice : 0), 0);
+    const printed = new Date().toLocaleDateString('en-GB', {weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'});
+    printShopSheet(`
+      <div class="spHead">
+        <div>
+          <div class="spKicker">${escapeHtml(menuGroupLabel(EDITING_GROUP))}</div>
+          <div class="spTitle">Shopping list</div>
+          <div class="spSub">Week ${escapeHtml(wk)} · ${escapeHtml(season.label || DATA.currentSeason)} · for ${total} (${veg} vegetarian)</div>
+        </div>
+        <div class="spPrinted">Printed ${escapeHtml(printed)}</div>
+      </div>
+      <table>
+        <colgroup><col style="width:7mm"><col><col style="width:32mm"><col style="width:40mm"><col style="width:17mm"><col style="width:17mm"></colgroup>
+        <thead><tr><th></th><th>Ingredient</th><th>Amount needed</th><th>Pack size</th><th class="spNum">To order</th><th class="spNum">Cost</th></tr></thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+      <div class="spTotals"><span>To order: ${items} item${items === 1 ? '' : 's'}</span><span>${money(value)}</span></div>
+      ${lastMissing.length ? `<div class="spNote" style="margin-top:4mm;"><b>Check these by hand:</b><ul style="margin:1mm 0 0 5mm;padding:0;">${lastMissing.map(m=> `<li>${escapeHtml(m)}</li>`).join('')}</ul></div>` : ''}`);
+  };
   controls.querySelector('#slDownloadCsv').onclick = ()=>{
     const csv = shoppingListCsv(lastRows);
     const blob = new Blob([csv], {type:'text/csv'});
