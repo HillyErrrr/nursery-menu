@@ -17,13 +17,13 @@
   h2 { margin: 0; font-size: 17px; }
   p { margin: 0; }
   label { font-weight: 600; font-size: 13px; display: flex; flex-direction: column; gap: 4px; max-width: 320px; }
-  input { font: inherit; padding: 8px 10px; border: 1px solid #C2B9A3; border-radius: 6px; }
+  input, select { font: inherit; padding: 8px 10px; border: 1px solid #C2B9A3; border-radius: 6px; }
   .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
   button { font: inherit; padding: 8px 14px; border-radius: 6px; border: 1px solid #C2B9A3; background: #fff; color: var(--ink); cursor: pointer; }
   button.primary { background: var(--navy); border-color: var(--navy); color: #fff; font-weight: 600; }
   button.danger { color: var(--bad); border-color: #E3B4B6; }
   button:disabled { opacity: .55; cursor: default; }
-  button:focus-visible, input:focus-visible { outline: 2px solid #16607A; outline-offset: 2px; }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #16607A; outline-offset: 2px; }
   .note { font-size: 13px; color: var(--soft); }
   .result { border-radius: 8px; padding: 10px 12px; font-size: 14px; white-space: pre-wrap; }
   .result.ok { background: var(--ok-bg); color: var(--ok); }
@@ -53,8 +53,8 @@
 
   <section aria-labelledby="setup">
     <h2 id="setup">1. Set up the database</h2>
-    <p>Copies everything saved today (recipes, ingredients, published menus, menu settings, extra menus and allergy alerts) into the database, checks every item matches, and only then switches over. Creates the users: <b>admin</b> (the staff password) and one login per nursery. Publish backups stay where they are.</p>
-    <p class="note">Best done when nobody is editing in Staff admin. It takes a few seconds and can be undone with step 3.</p>
+    <p>Copies everything saved today (recipes, ingredients, published menus, menu settings, extra menus and allergy alerts) into the database, checks every item matches, and only then switches over. Creates the users: <b>admin</b> (the staff password, used on the admin login page) and one login per nursery. From then on, each kitchen page asks for its nursery's password once per device. Publish backups stay where they are.</p>
+    <p class="note">Best done when nobody is editing in Staff admin. It takes a few seconds and can be undone with step 4.</p>
     <div class="row"><button type="button" class="primary" id="migrate">Set up the database</button></div>
     <div id="migrateOut"></div>
   </section>
@@ -69,9 +69,17 @@
     <div id="verifyOut"></div>
   </section>
 
+  <section aria-labelledby="pwT">
+    <h2 id="pwT">3. Nursery passwords</h2>
+    <p>Each nursery logs in on the kitchen page with its own password. If a password has been lost or shared too widely, make a new one here: the old one stops working at once, and any tablet logged in with it is asked to log in again.</p>
+    <label>Nursery <select id="resetSite"><option value="">Choose a nursery…</option><option value="__all__">All nurseries</option></select></label>
+    <div class="row"><button type="button" id="resetPw">Make a new password</button></div>
+    <div id="resetOut"></div>
+  </section>
+
   <section aria-labelledby="backT">
-    <h2 id="backT">3. Switch back</h2>
-    <p>Puts everything back in the old storage and turns the database off. Keeps a copy of the database file.</p>
+    <h2 id="backT">4. Switch back</h2>
+    <p>Puts everything back in the old storage and turns the database off, which also switches the kitchen and admin logins off. Keeps a copy of the database file.</p>
     <div class="row"><button type="button" class="danger" id="rollback">Switch back to the old storage</button></div>
     <div id="rollbackOut"></div>
   </section>
@@ -148,7 +156,7 @@
     box.style.cssText = 'display:flex;flex-direction:column;gap:8px;margin-top:8px;';
     const warn = document.createElement('div');
     warn.className = 'result info';
-    warn.textContent = 'Site logins: these passwords are shown once only and are not stored anywhere readable. Download them now and keep the file somewhere safe. Nothing asks for them yet.';
+    warn.textContent = 'Site logins: these passwords are shown once only and are not stored anywhere readable. Download them now and keep the file somewhere safe. Each nursery needs its own password to log in on the kitchen page.';
     box.appendChild(warn);
     const wrap = document.createElement('div'); wrap.className = 'scroll';
     const t = document.createElement('table');
@@ -228,6 +236,36 @@
       show(out, 'ok', 'Done in ' + r.seconds + ' seconds. ' + r.documents + ' documents copied, and all ' + r.rebuiltFromTables + ' checked against the tables. The site is now running on the database.', loginsBlock(logins));
     } catch (e) { show(out, 'bad', e.message); }
     finally { busy(btn, false, 'Set up the database'); }
+  };
+  /* The list of nurseries, for making new passwords (names come from the
+     login service, which needs no password to list them). */
+  (async () => {
+    try {
+      const r = await fetch('/.netlify/functions/auth', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'status' }) });
+      const st = await r.json();
+      (st.sites || []).forEach((x) => { const o = document.createElement('option'); o.value = x.slug; o.textContent = (x.name || x.slug) + (x.brand ? ' (' + x.brand + ')' : ''); o.dataset.name = x.name || x.slug; $('resetSite').appendChild(o); });
+    } catch (e) { /* the list stays empty; set-up first */ }
+  })();
+  $('resetPw').onclick = async () => {
+    const btn = $('resetPw'), out = $('resetOut'), sel = $('resetSite');
+    const choice = sel.value;
+    if (!choice) return show(out, 'bad', 'Choose a nursery first.');
+    const targets = choice === '__all__'
+      ? [...sel.options].filter((o) => o.value && o.value !== '__all__').map((o) => ({ slug: o.value, name: o.dataset.name }))
+      : [{ slug: choice, name: sel.selectedOptions[0].dataset.name }];
+    const what = choice === '__all__' ? 'every nursery' : targets[0].name;
+    if (!confirm('Make a new password for ' + what + '? The old password stops working straight away and the kitchen tablet will need the new one.')) return;
+    busy(btn, true, 'Making…');
+    try {
+      const logins = [];
+      for (const t of targets) {
+        const r = await call('reset-site-password', { username: t.slug });
+        if (r.error) return show(out, 'bad', r.error + (logins.length ? ' (' + logins.length + ' already changed: ' + logins.map((l) => l.site).join(', ') + ')' : ''), logins.length ? loginsBlock(logins) : null);
+        logins.push({ site: t.name, username: r.username, password: r.password });
+      }
+      show(out, 'ok', 'New password' + (logins.length > 1 ? 's' : '') + ' made for ' + what + '.', loginsBlock(logins));
+    } catch (e) { show(out, 'bad', e.message); }
+    finally { busy(btn, false, 'Make a new password'); }
   };
   $('verify').onclick = async () => {
     const btn = $('verify'), out = $('verifyOut');

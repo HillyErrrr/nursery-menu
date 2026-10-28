@@ -284,6 +284,8 @@ that page).
 On each nursery's kitchen iPad, in Safari:
 
 1. Open that site's link (not the picker — their own direct `?site=...` link).
+   Once the database is set up, it shows the kitchen login first: the nursery is
+   already chosen, so type its password once and the iPad stays logged in.
 2. Tap the Share icon -> **Add to Home Screen**. This makes it behave like its own
    app icon and always opens in Safari's engine (avoids the Quick Look/JavaScript
    problem that comes from opening files via Mail attachments).
@@ -2318,7 +2320,7 @@ The site's saved data — the recipe bank, the ingredient database, published me
 - **`admin`:** its password is the existing staff password, and it's accepted wherever the staff password is.
 - **One login per nursery:** the username is the site's slug. Its random password is shown once, at set-up.
 
-Passwords are stored as salted scrypt hashes. Kitchen pages still open without a login, so nothing asks for the site logins yet.
+Passwords are stored as salted scrypt hashes. Since the logins update (below), each kitchen page asks for its nursery's login, and Staff admin opens from its own admin login page.
 
 **Setting it up** (one time, after deploying):
 
@@ -2344,3 +2346,25 @@ Passwords are stored as salted scrypt hashes. Kitchen pages still open without a
 
 - **First deploy, `Identifier '__dirname' has already been declared`:** Netlify adds its own top-level `__dirname`, `__filename` and `require` when it bundles a function, and the SQLite engine declared `__dirname` too, so the functions failed to load. Everything the engine declares now sits inside one function scope. Every function is tested bundled exactly as Netlify bundles it, including that shim.
 - **Corrupted copies:** sql.js copies its input with `.slice()`, which on a Node `Buffer` is a view, not a copy, so databases opened from the same bytes could corrupt each other. The engine is now always given a real `Uint8Array` copy.
+
+## Kitchen and admin logins (October 2026)
+
+Once the database is set up, the site has two login pages:
+
+- **Kitchen login, `index.html`** (the site's main address). Choose the nursery, type its password, and the page goes straight to that nursery's kitchen page. The device stays logged in until someone taps **Log out** at the bottom of the kitchen page. A kitchen login opens only its own nursery: any other nursery's link, or the main address, takes it back to its own page.
+- **Admin login, `admin.html`.** Username `admin` and the staff password, plus which nursery's menu to start on. It opens that nursery's page with Staff admin already open, without asking for the password a second time. The admin can open any nursery's page, and the **Staff admin** button works there as before. Log out returns to the admin login.
+
+Kitchen pages no longer show the **Staff admin** button to kitchen logins. The admin login is the only way into Staff admin.
+
+**How it works.** `netlify/functions/auth.mjs` checks a login against the `users` table and returns a signed session token (`netlify/lib/session.mjs`: HMAC-SHA256, with the secret kept in the database's `meta` table). The browser keeps it in `localStorage` (`kitchenLogin.v1` for a kitchen, `kitchenAdminLogin.v1` for the admin). Each kitchen page asks `auth` to check the token before it loads. The token carries a fingerprint of the password, so a new password logs out every device using the old one.
+
+**Making a new nursery password.** On `/db-setup.html`, under **3. Nursery passwords**, choose a nursery, or **All nurseries**, and click **Make a new password**. The new password is shown once, with a CSV download. The old one stops working at once.
+
+**Safety nets:**
+
+- **Before the database is set up, nothing changes.** The main address shows the old open nursery list, kitchen pages open without a login, and Staff admin asks for its password as before. The admin page says logins are not on yet.
+- **If the login service can't be reached, kitchen pages still open.** A kitchen never loses its menu to an outage. Only a definite "this login is not valid" sends a device to the login page.
+- **Switch back** on `/db-setup.html` turns the database off, and the logins with it.
+
+Tests: `logins.js` (33 checks: kitchen, admin, password change, outage, and no database); the regression suites in both storage modes; and the Netlify bundle test, with and without a working SQLite engine.
+

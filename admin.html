@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Kitchen Prep Admin</title>
+<style>
+:root{
+  --paper-dim:#E9E2D2; --ink:#1A303C; --ink-soft:#54626C; --line:#D9D2C2; --line-strong:#C2B9A3;
+  --card:#FFFFFF; --radius:12px; --shadow:0 1px 2px rgba(26,48,60,0.08);
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--paper-dim);color:var(--ink);font-family:'Inter',system-ui,-apple-system,sans-serif;padding-bottom:3rem;}
+.wrap{max-width:480px;margin:0 auto;padding:0 20px;}
+.head{background:var(--ink);color:#fff;padding:32px 0 26px;}
+.head h1{font-size:22px;margin:0 0 4px;}
+.head p{margin:0;color:#B8C4CC;font-size:14px;}
+.login{margin-top:28px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 20px;display:flex;flex-direction:column;gap:16px;}
+.login h2{margin:0;font-size:18px;}
+.field{display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600;}
+.field input,.field select{font:inherit;font-size:16px;font-weight:400;padding:12px;border:1px solid var(--line-strong);border-radius:10px;background:#fff;color:var(--ink);min-height:48px;}
+.btn{font:inherit;font-size:16px;font-weight:700;padding:13px 16px;border-radius:10px;border:none;background:var(--ink);color:#fff;cursor:pointer;min-height:48px;}
+.btn:disabled{opacity:.6;cursor:default;}
+.err{display:none;background:#FDE6E7;color:#9F383C;border-radius:10px;padding:10px 12px;font-size:14px;}
+.info{background:#FDF6E3;color:#6A4E12;border-radius:10px;padding:10px 12px;font-size:14px;}
+.small{font-size:12.5px;color:var(--ink-soft);}
+.small a{color:var(--ink-soft);}
+input:focus-visible,select:focus-visible,.btn:focus-visible,a:focus-visible{outline:2px solid #16607A;outline-offset:2px;}
+[hidden]{display:none !important;}
+</style>
+</head>
+<body>
+<div class="head"><div class="wrap"><h1>Family Adventures Group</h1><p>Kitchen prep lists · Admin</p></div></div>
+<div class="wrap">
+  <form class="login" id="form" novalidate>
+    <h2>Admin login</h2>
+    <div class="info" id="notOn" hidden>Logins are not switched on yet. Open any nursery's kitchen page and use <b>Staff admin</b> at the bottom, as before.</div>
+    <label class="field">Username
+      <input type="text" id="username" value="admin" autocomplete="username" autocapitalize="off" spellcheck="false" required>
+    </label>
+    <label class="field">Password
+      <input type="password" id="password" autocomplete="current-password" required>
+    </label>
+    <label class="field">Open Staff admin with the menu for
+      <select id="site"></select>
+    </label>
+    <div class="err" id="err" role="alert"></div>
+    <button class="btn" type="submit" id="go">Log in</button>
+    <div class="small">The password is the Staff admin password. This browser stays logged in until you log out (at the bottom of any kitchen page).</div>
+    <div class="small"><a href="index.html">Kitchen login</a></div>
+  </form>
+</div>
+<script>
+/* The admin's own login: opens Staff admin straight away on the kitchen
+   page of the chosen nursery (that nursery decides which menu Staff admin
+   starts on). Kitchen pages no longer show a Staff admin button to
+   anyone not logged in as admin. */
+const ADMIN_KEY = 'kitchenAdminLogin.v1';
+const SITE_PREF = 'kitchenAdminSite.v1';
+const readAdmin = () => { try { return JSON.parse(localStorage.getItem(ADMIN_KEY) || 'null'); } catch (e) { return null; } };
+const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+async function sha256(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+async function auth(body) {
+  const res = await fetch('/.netlify/functions/auth', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body), cache: 'no-store' });
+  let data = {};
+  try { data = await res.json(); } catch (e) { data = {}; }
+  data.__status = res.status;
+  return data;
+}
+const sel = document.getElementById('site');
+function openAdmin() {
+  store(SITE_PREF, sel.value);
+  location.replace('app.html?site=' + encodeURIComponent(sel.value) + '&admin=1');
+}
+(async function () {
+  let status = null;
+  try { status = await auth({ action: 'status' }); } catch (e) { status = null; }
+  const sites = (status && status.sites) || [];
+  const params = new URLSearchParams(location.search);
+  let pref = params.get('site');
+  try { pref = pref || JSON.parse(localStorage.getItem(SITE_PREF) || 'null'); } catch (e) {}
+  const byBrand = {};
+  sites.forEach((s) => { (byBrand[s.brand || 'Other'] = byBrand[s.brand || 'Other'] || []).push(s); });
+  Object.keys(byBrand).forEach((brand) => {
+    const og = document.createElement('optgroup'); og.label = brand;
+    byBrand[brand].forEach((s) => { const o = document.createElement('option'); o.value = s.slug; o.textContent = s.name || s.slug; og.appendChild(o); });
+    sel.appendChild(og);
+  });
+  if (pref && [...sel.options].some((o) => o.value === pref)) sel.value = pref;
+  else if ([...sel.options].some((o) => o.value === 'little-adventures-cheddar')) sel.value = 'little-adventures-cheddar';
+  if (!status || !status.enforced) {
+    document.getElementById('notOn').hidden = false;
+    document.getElementById('go').disabled = true;
+    return;
+  }
+  const saved = readAdmin();
+  if (saved && saved.token) {
+    try { const chk = await auth({ action: 'check', adminToken: saved.token }); if (chk.admin) return openAdmin(); } catch (e) { /* show the form */ }
+  }
+  document.getElementById('password').focus();
+})();
+document.getElementById('form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err = document.getElementById('err'), btn = document.getElementById('go');
+  const user = document.getElementById('username'), pw = document.getElementById('password');
+  err.style.display = 'none';
+  if (!pw.value) { err.textContent = 'Enter the password.'; err.style.display = 'block'; pw.focus(); return; }
+  btn.disabled = true; btn.textContent = 'Logging in…';
+  try {
+    const r = await auth({ action: 'login', username: user.value.trim(), credential: await sha256(pw.value) });
+    if (r.ok && r.role === 'admin') { store(ADMIN_KEY, { token: r.token, username: user.value.trim() }); return openAdmin(); }
+    err.textContent = r.ok ? 'That is a nursery login, not an admin one: use the kitchen login page.' : (r.error || 'That username or password is not right.');
+  } catch (e2) {
+    err.textContent = 'Could not reach the site just now. Try again in a moment.';
+  }
+  err.style.display = 'block';
+  btn.disabled = false; btn.textContent = 'Log in';
+  pw.value = ''; pw.focus();
+});
+</script>
+</body>
+</html>

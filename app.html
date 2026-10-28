@@ -228,6 +228,7 @@ button{font-family:inherit;cursor:pointer;}
   font-size:13px;color:var(--ink-soft);
 }
 .footer-contact .fc-item{display:flex;align-items:center;gap:6px;}
+.footer-contact .fc-item[hidden]{display:none;}
 .footer-contact i{color:var(--butter);font-size:15px;}
 
 /* torn edge under header */
@@ -1092,6 +1093,7 @@ body.hcSheetOpen .hcSheetFoot{display:flex;justify-content:flex-end;padding:0 16
     <div class="fc-item"><i class="ti ti-mail"></i>hello@familyadventuresgroup.co.uk</div>
     <div class="fc-item"><i class="ti ti-map-pin"></i></div>
     <div class="fc-item"><button type="button" id="rbAdminTriggerBtn" class="rbAdminTriggerBtn">Staff admin</button></div>
+    <div class="fc-item" id="kitchenLogoutItem" hidden><button type="button" id="kitchenLogoutBtn" class="rbAdminTriggerBtn">Log out</button></div>
   </div>
 </div>
 
@@ -4890,12 +4892,83 @@ function applySiteBranding(){
   document.title = (SITE_CONFIG.siteName ? SITE_CONFIG.siteName + ' — ' : '') + 'Nursery kitchen prep list';
 }
 
+/* ---------- Logins ----------
+   Once the database is set up (see db-setup.html), a nursery's page needs
+   that nursery's login, made on index.html, or the admin's, made on
+   admin.html. Both stay logged in on the device until Log out.
+
+   Deliberately forgiving: before set-up the login service says logins are
+   not on, and the page opens exactly as before; if the service cannot be
+   reached at all, the page opens too -- a kitchen must never lose its menu
+   to an outage. Only a definite "this login is not valid" sends a device
+   to the login page. */
+const KITCHEN_LOGIN_KEY = 'kitchenLogin.v1';
+const KITCHEN_ADMIN_KEY = 'kitchenAdminLogin.v1';
+let KITCHEN_SESSION = { enforced: false, admin: false, site: null };
+let resolveKitchenAuth;
+const KITCHEN_AUTH_READY = new Promise((r)=>{ resolveKitchenAuth = r; });
+function readStoredLogin(key){ try{ return JSON.parse(localStorage.getItem(key) || 'null'); }catch(e){ return null; } }
+function forgetStoredLogin(key){ try{ localStorage.removeItem(key); }catch(e){} }
+async function kitchenAuthGate(){
+  const params = new URLSearchParams(location.search);
+  const wantAdmin = params.get('admin') === '1';
+  const siteLogin = readStoredLogin(KITCHEN_LOGIN_KEY);
+  const adminLogin = readStoredLogin(KITCHEN_ADMIN_KEY);
+  let answer = null;
+  try{
+    const res = await fetch('/.netlify/functions/auth', {
+      method: 'POST', headers: {'content-type': 'application/json'}, cache: 'no-store',
+      body: JSON.stringify({action: 'check', siteToken: siteLogin && siteLogin.token, adminToken: adminLogin && adminLogin.token}),
+    });
+    if(res.ok) answer = await res.json();
+  }catch(e){ answer = null; }
+  if(!answer || !answer.enforced){
+    // Logins not on yet (or the service could not be asked): as before.
+    KITCHEN_SESSION = { enforced: false, admin: false, site: null };
+    return;
+  }
+  if(answer.siteInvalid) forgetStoredLogin(KITCHEN_LOGIN_KEY);
+  if(answer.adminInvalid) forgetStoredLogin(KITCHEN_ADMIN_KEY);
+  const here = SITE_SLUG;
+  if(answer.admin){
+    KITCHEN_SESSION = { enforced: true, admin: true, site: answer.site };
+  } else if(answer.site && (!here || answer.site === here) && !wantAdmin){
+    if(!here){ location.replace('app.html?site=' + encodeURIComponent(answer.site)); throw new Error('__handled__'); }
+    KITCHEN_SESSION = { enforced: true, admin: false, site: answer.site };
+  } else if(answer.site && here && answer.site !== here && !wantAdmin){
+    // Logged in as another nursery: that nursery's own page.
+    location.replace('app.html?site=' + encodeURIComponent(answer.site));
+    throw new Error('__handled__');
+  } else {
+    location.replace((wantAdmin ? 'admin.html' : 'index.html') + (here ? '?site=' + encodeURIComponent(here) : ''));
+    throw new Error('__handled__');
+  }
+}
+/* Staff admin's button is for the admin's login only, once logins are on;
+   Log out appears for whoever is logged in. */
+function applyKitchenLoginControls(){
+  const trigger = document.getElementById('rbAdminTriggerBtn');
+  const outItem = document.getElementById('kitchenLogoutItem');
+  if(trigger && trigger.parentElement) trigger.parentElement.hidden = KITCHEN_SESSION.enforced && !KITCHEN_SESSION.admin;
+  if(outItem) outItem.hidden = !KITCHEN_SESSION.enforced;
+}
+document.getElementById('kitchenLogoutBtn').addEventListener('click', ()=>{
+  const admin = KITCHEN_SESSION.admin;
+  if(!window.confirm(admin ? 'Log out of admin on this device?' : 'Log out of this kitchen? Someone will need the nursery password to log in again.')) return;
+  forgetStoredLogin(admin ? KITCHEN_ADMIN_KEY : KITCHEN_LOGIN_KEY);
+  location.replace(admin ? 'admin.html' : 'index.html' + (SITE_SLUG ? '?site=' + encodeURIComponent(SITE_SLUG) : ''));
+});
+
 (async function init(){
   try{
+    await kitchenAuthGate();
+    applyKitchenLoginControls();
     await loadSiteData();
     await loadState();
     renderAll();
     setView(state.view);
+    // Staff admin (opened from admin.html) waits for the page to finish loading.
+    resolveKitchenAuth(KITCHEN_SESSION);
   }catch(e){
     if(!e || e.message !== '__handled__'){
       showFatalErrorBanner((e && e.message) ? e.message : String(e));
@@ -18698,7 +18771,19 @@ document.getElementById('rbLockNowBtn').addEventListener('click', lockRecipeBank
 document.getElementById('rbAddSeasonBtn').addEventListener('click', openAddSeasonModal);
 document.getElementById('rbRefreshSeasonBtn').addEventListener('click', ()=> openRefreshSeasonModal(DATA.currentSeason));
 const rbTriggerBtn = document.getElementById('rbAdminTriggerBtn');
-if(rbTriggerBtn) rbTriggerBtn.addEventListener('click', openRecipeBankAdmin);
+if(rbTriggerBtn) rbTriggerBtn.addEventListener('click', ()=>{
+  // Logged in on admin.html: straight in, no second password.
+  if(KITCHEN_SESSION.enforced && KITCHEN_SESSION.admin){ openRecipeBankAdmin(); rbShowAppShell(); return; }
+  openRecipeBankAdmin();
+});
+/* Arrived from admin.html (?admin=1) with a valid admin login: open Staff
+   admin at once. */
+KITCHEN_AUTH_READY.then((session)=>{
+  if(session && session.enforced && session.admin && new URLSearchParams(location.search).get('admin') === '1'){
+    openRecipeBankAdmin();
+    rbShowAppShell();
+  }
+});
 
 
 })();
