@@ -1214,13 +1214,16 @@ const SITE_MENU_GROUPS = {
   'little-adventures-weston-super-mare': 'weston-super-mare',
   // Its own menu from October 2026. Until a Washwood Heath rotation has
   // been published, its kitchen shows the Main Menu (see loadSiteData).
-  'little-adventures-washwood-heath': 'washwood-heath',
+  /* Not 'washwood-heath': that key was already taken by the extra menu
+     named "Washwood heath" set up before this one existed (extra-menu keys
+     are made from the name), and a shared key made the two one menu. */
+  'little-adventures-washwood-heath': 'washwood-heath-nursery',
 };
 /* A menu split off another one. Recipes whose availability was set before
    the split -- "Main Menu only", say -- were available to this site then,
    so they stay available to it now (see recipeMenus). */
 const MENU_GROUP_STARTED_FROM = {
-  'washwood-heath': 'general',
+  'washwood-heath-nursery': 'general',
 };
 function menuGroupForSite(slug){
   return SITE_MENU_GROUPS[slug] || 'general';
@@ -4923,7 +4926,7 @@ let PREVIEW_SITE_SLUG = SITE_SLUG || [...SITE_SLUGS].sort((a,b)=> siteSlugLabel(
 const MENU_GROUP_FRIENDLY_NAMES = {
   'general': 'Main Menu',
   'weston-super-mare': 'WSM Only',
-  'washwood-heath': 'Washwood Heath Only',
+  'washwood-heath-nursery': 'Washwood Heath Only',
 };
 
 /* The standardised list of ingredient units for the recipe bank's Unit
