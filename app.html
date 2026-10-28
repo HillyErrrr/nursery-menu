@@ -671,6 +671,19 @@ body.draggingIngredient{-webkit-user-select:none;user-select:none;}
 #rbAdminRoot .modalOverlay{position:fixed;inset:0;background:rgba(31,60,85,0.35);display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto;z-index:50;}
 #rbAdminRoot .modal{background:#fff;border-radius:var(--radius);padding:20px;width:100%;max-width:560px;box-shadow:0 8px 30px rgba(0,0,0,0.25);}
 #rbAdminRoot .modal h3{margin-bottom:10px;}
+#rbAdminRoot .modal.tidyModal{max-width:780px;}
+#rbAdminRoot .tidySummary{font-size:14px;line-height:1.5;margin:4px 0 12px;}
+#rbAdminRoot .tidyList{border:1px solid var(--line);border-radius:8px;max-height:52vh;overflow:auto;}
+#rbAdminRoot .tidyDish{padding:10px 12px;border-bottom:1px solid var(--line);}
+#rbAdminRoot .tidyDish:last-child{border-bottom:none;}
+#rbAdminRoot .tidyDish h4{margin:0 0 6px;font-size:14px;}
+#rbAdminRoot .tidyCopy{display:grid;grid-template-columns:64px 1fr;gap:8px;font-size:12.5px;padding:3px 0;line-height:1.45;}
+#rbAdminRoot .tidyTag{font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;padding:2px 6px;border-radius:999px;text-align:center;align-self:start;}
+#rbAdminRoot .tidyTag.keep{background:var(--sage-light);color:var(--ink);}
+#rbAdminRoot .tidyTag.del{background:var(--rust-light);color:var(--rust-text);}
+#rbAdminRoot .tidyWhy{color:var(--ink-soft);}
+#rbAdminRoot .tidyChecked{font-size:12px;color:var(--ink-soft);margin-top:10px;}
+#rbAdminRoot .tidyChecked ul{margin:6px 0 0 18px;padding:0;}
 #rbAdminRoot .modal .closeRow{display:flex;justify-content:flex-end;margin-top:14px;gap:8px;}
 #rbAdminRoot .pickList{max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:8px;margin-top:8px;}
 #rbAdminRoot .pickRow{padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer;}
@@ -6834,6 +6847,413 @@ function openDeleteRecipeModal(recipeId, onDeleted){
     if(onDeleted) onDeleted();
   };
 }
+/* ================= Tidy duplicate recipes =================
+
+   The recipe bank holds many dishes more than once under the same name --
+   mostly copies the old menu sync made ("Imported from ..."), each time a
+   recipe was edited after its menu was published. This deletes the copies
+   nothing uses, and only those.
+
+   "Used" means any of these, checked at the moment the button is pressed:
+     - a slot in any rotation on THIS device: every nursery menu, every
+       season, and the extra (holiday club) menus;
+     - a slot in any rotation PUBLISHED on the live site, read fresh for
+       every menu and season. A published dish names its recipe id; an
+       older file without one is matched the way an import matches it (by
+       name and content), and one copy that matches is kept for it. If
+       nothing has been published for a menu, the copy shipped with the
+       website is what kitchens and imports use, so that is checked
+       instead.
+   If any of those cannot be read, nothing is deleted.
+
+   Every dish keeps at least one copy. Where no copy is used, the one kept
+   is the original: not made by an import, reviewed, oldest.
+
+   Deleting goes through the shared recipe bank like any delete, and is
+   also recorded in _config/recipe-deletions.json with the whole record,
+   so (1) other admins' devices drop the copy on their next sync -- a pull
+   otherwise never removes anything -- and (2) nothing deleted here is
+   unrecoverable. A device that has since edited one of those copies, or
+   uses it in a rotation of its own, keeps it. */
+const RECIPE_DELETIONS_FILE = 'recipe-deletions.json';
+
+function countDuplicateRecipeNames(){
+  const seen = {};
+  let dupes = 0;
+  Object.values(DATA.recipeBank || {}).forEach(r=>{
+    const k = r && normaliseRecipeNameForRestore(r.name);
+    if(!k) return;
+    seen[k] = (seen[k] || 0) + 1;
+    if(seen[k] === 2) dupes++;
+  });
+  return dupes;
+}
+
+/* Every slot on this device that holds a recipe: all menus, all seasons --
+   including menus no longer listed, whose slots still point somewhere. */
+function localRecipeSlots(){
+  const out = [];
+  const store = menusStore();
+  Object.keys(store).forEach(group=>{
+    const seasons = store[group] || {};
+    Object.keys(seasons).forEach(seasonKey=>{
+      const season = seasons[seasonKey] || {};
+      Object.keys(season.weeks || {}).forEach(wk=>{
+        const week = season.weeks[wk] || {};
+        Object.keys(week).forEach(day=>{
+          const courses = week[day] || {};
+          Object.keys(courses).forEach(course=>{
+            if(courses[course]) out.push({id: courses[course], group, seasonKey, seasonLabel: season.label || seasonKey, week: wk, day, course});
+          });
+        });
+      });
+    });
+  });
+  return out;
+}
+function recipeUsedInAnyLocalMenu(id){
+  return localRecipeSlots().some(u=> u.id === id);
+}
+
+/* One published rotation. 404 means nothing has been published for it, in
+   which case the copy shipped with the website is the one in use. Any
+   other failure throws: a tidy must never decide "unused" from a read
+   that did not happen. */
+async function fetchRotationForTidy(group, file){
+  const enc = encodeURIComponent;
+  for(let attempt = 0; attempt < 2; attempt++){
+    const controller = new AbortController();
+    const timer = setTimeout(()=> controller.abort(), 15000);
+    try{
+      const res = await fetch('/.netlify/functions/get-season?group=' + enc(group) + '&file=' + enc(file), {signal: controller.signal, cache: 'no-store'});
+      clearTimeout(timer);
+      if(res.ok) return {source: 'published', data: await res.json()};
+      if(res.status === 404){
+        const b = await fetch('groups/' + enc(group) + '/seasons/' + enc(file), {cache: 'no-store'});
+        if(b.ok){
+          try{ return {source: 'website', data: await b.json()}; }catch(e){ return {source: 'none', data: null}; }
+        }
+        return {source: 'none', data: null};
+      }
+    }catch(e){ clearTimeout(timer); }
+  }
+  throw new Error('Could not read the published ' + menuGroupLabel(group) + ' menu (' + file + ').');
+}
+
+/* Which copy to keep when nothing decides it: the original (not made by an
+   import), then one somebody reviewed, then the oldest, then the fullest. */
+function recipeImportedOnly(r){
+  const h = Array.isArray(r.history) ? r.history : [];
+  if(!h.length) return false;
+  const first = h[h.length - 1] || {};
+  return /^Imported from/i.test(String(first.summary || ''));
+}
+function recipeEarliestTime(r){
+  let t = Infinity;
+  (Array.isArray(r.history) ? r.history : []).forEach(e=>{
+    const v = Date.parse(e && e.at);
+    if(!isNaN(v) && v < t) t = v;
+  });
+  if(t === Infinity){
+    const m = /^r_[a-z0-9]{8}([a-z0-9]{7,9})$/.exec(String(r.id || ''));
+    if(m){ const v = parseInt(m[1], 36); if(v > 1.5e12 && v < 2.5e12) t = v; }
+  }
+  return t;
+}
+function bestRecipeToKeep(list){
+  return list.slice().sort((a, b)=>
+    (recipeImportedOnly(a) - recipeImportedOnly(b))
+    || ((b.reviewedBy ? 1 : 0) - (a.reviewedBy ? 1 : 0))
+    || (recipeEarliestTime(a) - recipeEarliestTime(b))
+    || (((b.ingredients || []).length) - ((a.ingredients || []).length))
+    || String(a.id).localeCompare(String(b.id))
+  )[0];
+}
+
+/* How a deleted copy differs from the one kept, in the kitchen's words. */
+function recipeDifferenceNote(r, kept){
+  if(!kept) return '';
+  const ing = (x)=> JSON.stringify((x.ingredients || []).map(i=>{ const res = resolveIngredientRow(i); return [res.name, i.qty, i.unit]; }));
+  const diffs = [];
+  if(ing(r) !== ing(kept)) diffs.push('ingredients');
+  if(JSON.stringify(r.method || []) !== JSON.stringify(kept.method || [])) diffs.push('method');
+  if((r.servings || null) !== (kept.servings || null)) diffs.push('portions');
+  if(!recipeMenusAreDefault(r) && recipeAvailabilityLabel(r) !== recipeAvailabilityLabel(kept)) diffs.push('available at ' + recipeAvailabilityLabel(r));
+  return diffs.length ? 'Differs from the copy kept: ' + diffs.join(', ') + '.' : 'Same ingredients and method as the copy kept.';
+}
+function recipeOriginNote(r){
+  const h = Array.isArray(r.history) ? r.history : [];
+  const first = h[h.length - 1];
+  const t = recipeEarliestTime(r);
+  const when = t !== Infinity ? new Date(t).toLocaleDateString('en-GB') : '';
+  if(first && first.summary) return first.summary + (when ? ' (' + when + ')' : '');
+  return when ? 'Made ' + when : 'No history recorded';
+}
+
+async function planDuplicateRecipeTidy(onProgress){
+  const say = (m)=>{ if(onProgress) onProgress(m); };
+  say('Reading the shared recipe bank…');
+  await ensureIngredientsLoaded();
+  await ensureRecipesLoaded();
+  if(RECIPES_STALE) throw new Error('Could not read the shared recipe bank just now.');
+
+  const byName = {};
+  Object.values(DATA.recipeBank || {}).forEach(r=>{
+    const k = r && r.id && normaliseRecipeNameForRestore(r.name);
+    if(k) (byName[k] = byName[k] || []).push(r);
+  });
+  const names = Object.keys(byName).filter(k=> byName[k].length > 1);
+  const plan = {sets: [], checked: [], deleteCount: 0, keepCount: 0};
+  if(!names.length) return plan;
+  const inSet = {};
+  names.forEach(k=> byName[k].forEach(r=>{ inSet[r.id] = k; }));
+
+  const uses = {};    // id -> [where]
+  const needs = [];   // {key, ids, where}: one of these copies must stay
+  const where = (o)=> menuGroupLabel(o.group) + ' · ' + o.seasonLabel + ' · Week ' + o.week + ' · ' + o.day + ' · ' + o.course;
+
+  localRecipeSlots().forEach(u=>{
+    if(inSet[u.id]) (uses[u.id] = uses[u.id] || []).push(where(u) + ' (this device)');
+  });
+
+  // Every published rotation: every menu, every season, the extra menus.
+  const groups = Array.from(new Set(everyMenuGroup().concat(Object.keys(menusStore()))));
+  const jobs = [];
+  groups.forEach(group=>{
+    if(isExtraMenu(group)) jobs.push({group, seasonKey: group, seasonLabel: (EXTRA_MENUS[group] && EXTRA_MENUS[group].label) || group, file: group + '.json'});
+    else (SEASONS || []).forEach(s=> jobs.push({group, seasonKey: s.key, seasonLabel: s.label || s.key, file: s.file || (s.key + '.json')}));
+  });
+  let done = 0;
+  say('Checking ' + jobs.length + ' published rotations…');
+  const results = [];
+  for(let i = 0; i < jobs.length; i += 6){
+    const batch = jobs.slice(i, i + 6);
+    const got = await Promise.all(batch.map(j=> fetchRotationForTidy(j.group, j.file)));
+    got.forEach((g, n)=> results.push(Object.assign({}, batch[n], g)));
+    done += batch.length;
+    say('Checked ' + done + ' of ' + jobs.length + ' published rotations…');
+  }
+  results.forEach(j=>{
+    plan.checked.push({label: menuGroupLabel(j.group) + ' · ' + j.seasonLabel, source: j.source});
+    const data = j.data;
+    if(!data || typeof data !== 'object') return;
+    Object.keys(data).forEach(wk=>{
+      const days = data[wk];
+      if(!days || typeof days !== 'object') return;
+      Object.keys(days).forEach(day=>{
+        const courses = days[day];
+        if(!courses || typeof courses !== 'object') return;
+        Object.keys(courses).forEach(course=>{
+          const dishes = courses[course];
+          if(!dishes || typeof dishes !== 'object') return;
+          Object.keys(dishes).forEach(name=>{
+            const dish = dishes[name];
+            if(!dish || typeof dish !== 'object') return;
+            const label = where({group: j.group, seasonLabel: j.seasonLabel, week: wk, day, course}) + (j.source === 'website' ? ' (website copy)' : ' (published)');
+            const pubId = typeof dish.recipeId === 'string' && dish.recipeId;
+            if(pubId && DATA.recipeBank[pubId]){
+              if(inSet[pubId]) (uses[pubId] = uses[pubId] || []).push(label);
+              return;
+            }
+            // No id this bank knows: matched the way an import matches it.
+            const key = normaliseRecipeNameForRestore(name);
+            if(!byName[key] || byName[key].length < 2) return;
+            const fp = recipeFingerprint(name, dish);
+            const ids = byName[key].filter(r=> recipeFingerprint(r.name, r) === fp).map(r=> r.id);
+            if(ids.length) needs.push({key, ids, where: label});
+          });
+        });
+      });
+    });
+  });
+
+  names.sort((a, b)=> a.localeCompare(b)).forEach(k=>{
+    const copies = byName[k];
+    const keep = {};   // id -> [reasons]
+    copies.forEach(r=>{ if(uses[r.id]) keep[r.id] = uses[r.id].slice(); });
+    needs.filter(n=> n.key === k).forEach(n=>{
+      const already = n.ids.find(id=> keep[id]);
+      if(already){ keep[already].push(n.where + ' — matched by name and content'); return; }
+      const pick = bestRecipeToKeep(copies.filter(r=> n.ids.indexOf(r.id) !== -1));
+      keep[pick.id] = [n.where + ' — matched by name and content'];
+    });
+    if(!Object.keys(keep).length){
+      keep[bestRecipeToKeep(copies).id] = ['Not used in any rotation: kept as the original copy'];
+    }
+    const kept = copies.filter(r=> keep[r.id]);
+    const firstKept = bestRecipeToKeep(kept);
+    const del = copies.filter(r=> !keep[r.id]);
+    plan.sets.push({
+      name: firstKept.name || k,
+      keep: kept.map(r=> ({recipe: r, reasons: keep[r.id]})),
+      del: del.map(r=> ({recipe: r, origin: recipeOriginNote(r), diff: recipeDifferenceNote(r, firstKept), keptId: firstKept.id})),
+    });
+    plan.deleteCount += del.length;
+    plan.keepCount += kept.length;
+  });
+  return plan;
+}
+
+/* Waits for these deletions to reach the shared bank (they publish through
+   the normal debounced recipe publish). True once none is still pending. */
+async function waitForRecipeDeletesPublished(ids, ms){
+  const until = Date.now() + (ms || 45000);
+  while(Date.now() < until){
+    const d = recipeDirty();
+    if(!ids.some(id=> d[id])) return true;
+    if(RECIPES_PUBLISH_FAILURES >= RECIPES_PUBLISH_MAX_FAILURES) return false;
+    await new Promise(r=> setTimeout(r, 500));
+  }
+  return false;
+}
+
+async function applyDuplicateRecipeTidy(plan){
+  const victims = [];
+  plan.sets.forEach(set=> set.del.forEach(d=> victims.push(d)));
+  // Re-checked against this device's rotations at the last moment: a slot
+  // picked while the dialogue was open keeps its recipe.
+  const go = victims.filter(d=> DATA.recipeBank[d.recipe.id] && !recipeUsedInAnyLocalMenu(d.recipe.id));
+  const at = nowIso();
+  const tombstones = {};
+  go.forEach(d=>{
+    tombstones[d.recipe.id] = {at, name: d.recipe.name || '', by: 'Tidy duplicates', keptId: d.keptId, record: JSON.parse(JSON.stringify(d.recipe))};
+    delete DATA.recipeBank[d.recipe.id];
+    markRecipeDeleted(d.recipe.id);
+  });
+  save();
+  const ids = go.map(d=> d.recipe.id);
+  const published = await waitForRecipeDeletesPublished(ids);
+  let recorded = false;
+  if(published && ids.length){
+    try{
+      await saveSeasonToServer('_config', RECIPE_DELETIONS_FILE, undefined, {collection: 'deleted', set: tombstones});
+      recorded = true;
+    }catch(e){ recorded = false; }
+  }
+  return {deleted: ids.length, skipped: victims.length - go.length, published, recorded, tombstones};
+}
+
+/* Pull side: copies deleted elsewhere leave this device, unless the shared
+   bank holds the record again, this device has an unpublished change to
+   it, or one of this device's rotations uses it. Best effort: if the list
+   cannot be read, nothing changes. */
+async function applySharedRecipeDeletions(shared){
+  let doc = null;
+  const controller = new AbortController();
+  const timer = setTimeout(()=> controller.abort(), 8000);
+  try{
+    const res = await fetch('/.netlify/functions/get-season?group=_config&file=' + RECIPE_DELETIONS_FILE, {signal: controller.signal, cache: 'no-store'});
+    clearTimeout(timer);
+    if(!res.ok) return 0;
+    doc = await res.json();
+  }catch(e){ clearTimeout(timer); return 0; }
+  const deleted = (doc && doc.deleted) || {};
+  const dirty = recipeDirty();
+  let n = 0;
+  Object.keys(deleted).forEach(id=>{
+    if(!DATA.recipeBank[id]) return;
+    if(shared && shared[id]) return;
+    if(dirty[id]) return;
+    if(recipeUsedInAnyLocalMenu(id)) return;
+    delete DATA.recipeBank[id];
+    delete RECIPES_BASE[id];
+    n++;
+  });
+  if(n) saveLocalOnly();
+  return n;
+}
+
+function openTidyDuplicatesModal(onDone){
+  const overlay = document.createElement('div');
+  overlay.className = 'modalOverlay';
+  const modal = document.createElement('div');
+  modal.className = 'modal tidyModal';
+  modal.id = 'tidyDupesModal';
+  overlay.appendChild(modal);
+  document.getElementById('rbAdminRoot').appendChild(overlay);
+  let busy = true;
+  const close = ()=>{ if(!busy) overlay.remove(); };
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay) close(); });
+
+  const showMessage = (title, html, done)=>{
+    modal.innerHTML = `<h3>${escapeHtml(title)}</h3><div class="tidySummary" id="tidyMsg">${html}</div><div class="closeRow"><button class="btn" id="tidyClose">Close</button></div>`;
+    busy = false;
+    modal.querySelector('#tidyClose').onclick = ()=>{ overlay.remove(); if(done && onDone) onDone(); };
+  };
+  modal.innerHTML = `<h3>Tidy duplicate recipes</h3><div class="tidySummary" id="tidyProgress">Starting…</div>`;
+  const progress = (m)=>{ const el = modal.querySelector('#tidyProgress'); if(el) el.textContent = m; };
+
+  planDuplicateRecipeTidy(progress).then(plan=>{
+    busy = false;
+    if(!plan.sets.length){
+      showMessage('Tidy duplicate recipes', 'Every recipe in the bank has its own name: there are no duplicates to tidy.', true);
+      return;
+    }
+    const withDeletes = plan.sets.filter(s=> s.del.length);
+    const allUsed = plan.sets.filter(s=> !s.del.length);
+    const copyRow = (tag, cls, r, lines)=> `<div class="tidyCopy"><span class="tidyTag ${cls}">${tag}</span><div>${recipeMenusAreDefault(r) ? '' : `<span class="availChip aOne">${escapeHtml(recipeAvailabilityLabel(r))}</span> `}<span class="tidyWhy">${lines.map(l=> escapeHtml(l)).join('<br>')}</span></div></div>`;
+    const reasonLines = (reasons)=> reasons.length > 3 ? reasons.slice(0, 3).concat(['and ' + (reasons.length - 3) + ' more']) : reasons;
+    const dishHtml = (s)=> `<div class="tidyDish"><h4>${escapeHtml(s.name)} <span class="tidyWhy" style="font-weight:400;">· ${s.keep.length + s.del.length} copies</span></h4>
+      ${s.keep.map(k=> copyRow('Keep', 'keep', k.recipe, ['Used in: ' + reasonLines(k.reasons).join('; ')].map(x=> x.replace('Used in: Not used', 'Not used')))).join('')}
+      ${s.del.map(d=> copyRow('Delete', 'del', d.recipe, [d.origin, d.diff])).join('')}
+    </div>`;
+    const sourceText = {published: 'published', website: 'website copy (nothing published yet)', none: 'nothing published'};
+    modal.innerHTML = `
+      <h3>Tidy duplicate recipes</h3>
+      <div class="tidySummary" id="tidySummary">
+        <b>${plan.sets.length}</b> dish${plan.sets.length === 1 ? ' is' : 'es are'} in the recipe bank more than once.
+        ${plan.deleteCount ? `<b>${plan.deleteCount}</b> cop${plan.deleteCount === 1 ? 'y isn’t' : 'ies aren’t'} used in any rotation and will be deleted. ` : 'Every copy is used in a rotation, so there is nothing to delete. '}
+        ${plan.keepCount} cop${plan.keepCount === 1 ? 'y is' : 'ies are'} kept, at least one of each dish.
+      </div>
+      ${withDeletes.length ? `<div class="tidyList" id="tidyDeleteList">${withDeletes.map(dishHtml).join('')}</div>` : ''}
+      ${allUsed.length ? `<details class="tidyChecked"><summary>${allUsed.length} dish${allUsed.length === 1 ? ' has' : 'es have'} every copy in use, so ${allUsed.length === 1 ? 'it stays' : 'they stay'} as ${allUsed.length === 1 ? 'it is' : 'they are'}</summary><div class="tidyList" style="margin-top:6px;">${allUsed.map(dishHtml).join('')}</div></details>` : ''}
+      <details class="tidyChecked"><summary>Rotations checked: ${plan.checked.length} on the live site, plus every rotation on this device</summary>
+        <ul>${plan.checked.map(c=> `<li>${escapeHtml(c.label)} — ${escapeHtml(sourceText[c.source] || c.source)}</li>`).join('')}</ul>
+      </details>
+      ${plan.deleteCount ? `<div class="tinyNote" style="margin-top:10px;">Deleted copies are saved on the live site with the list of deletions, so any can be recovered. Other admins’ devices drop them the next time they open Staff admin.</div>` : ''}
+      <div class="closeRow">
+        ${plan.deleteCount ? `<button class="btn" id="tidyBackup">Download a copy first</button>` : ''}
+        <button class="btn" id="tidyCancel">${plan.deleteCount ? 'Cancel' : 'Close'}</button>
+        ${plan.deleteCount ? `<button class="btn danger" id="tidyConfirm">Delete ${plan.deleteCount} unused cop${plan.deleteCount === 1 ? 'y' : 'ies'}</button>` : ''}
+      </div>
+    `;
+    modal.querySelector('#tidyCancel').onclick = ()=> overlay.remove();
+    const backupBtn = modal.querySelector('#tidyBackup');
+    if(backupBtn) backupBtn.onclick = ()=>{
+      const out = {exportedAt: nowIso(), note: 'Recipes deleted by Tidy duplicates', recipes: {}};
+      withDeletes.forEach(s=> s.del.forEach(d=>{ out.recipes[d.recipe.id] = d.recipe; }));
+      const blob = new Blob([JSON.stringify(out, null, 2)], {type: 'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'duplicate-recipes-deleted-' + nowIso().slice(0, 10) + '.json';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=> URL.revokeObjectURL(a.href), 4000);
+    };
+    const confirmBtn = modal.querySelector('#tidyConfirm');
+    if(confirmBtn) confirmBtn.onclick = async ()=>{
+      busy = true;
+      confirmBtn.disabled = true;
+      modal.querySelector('#tidyCancel').disabled = true;
+      if(backupBtn) backupBtn.disabled = true;
+      confirmBtn.textContent = 'Deleting…';
+      let r;
+      try{ r = await applyDuplicateRecipeTidy(plan); }
+      catch(e){ busy = false; showMessage('Tidy duplicate recipes', escapeHtml('Something went wrong: ' + ((e && e.message) || e)), true); return; }
+      busy = false;
+      const lines = ['Deleted ' + r.deleted + ' unused cop' + (r.deleted === 1 ? 'y' : 'ies') + '.'];
+      if(r.skipped) lines.push(r.skipped + ' were kept because a rotation on this device started using them while this was open.');
+      if(!r.published) lines.push('They are deleted on this device, but the shared recipe bank could not be updated yet. It will retry automatically; keep Staff admin open for a minute.');
+      else if(!r.recorded) lines.push('The shared recipe bank is updated, but the list of deletions could not be saved, so other admins may still see these copies on their devices until they delete them too.');
+      else lines.push('Other admins’ devices will drop them the next time they open Staff admin.');
+      showMessage('Duplicates tidied', lines.map(l=> escapeHtml(l)).join('<br>'), true);
+      toast('Deleted ' + r.deleted + ' duplicate cop' + (r.deleted === 1 ? 'y' : 'ies'));
+    };
+  }).catch(e=>{
+    busy = false;
+    showMessage('Tidy duplicate recipes', escapeHtml(((e && e.message) || String(e)) + ' Nothing has been deleted. Try again in a moment.'), false);
+  });
+}
+
 /* Reviewer name for "Last reviewed by" on recipe cards. The app has no
    per-user login — Staff Admin is gated by one shared password, not
    individual staff accounts — so there's no way to know who is saving
@@ -8426,6 +8846,8 @@ async function ensureRecipesLoaded(){
     });
     DATA.recipeBank = next;
     saveLocalOnly();
+    // Copies another admin deleted with "Tidy duplicates" leave this device too.
+    await applySharedRecipeDeletions(result.recipes);
     RECIPES_STALE = false;
     RECIPES_LAST_SYNC = Date.now();
     RECIPES_SHARED_EMPTY = false;
@@ -13030,6 +13452,18 @@ function renderBankView(){
     const id = addRecipe({name:'', servings:20, method:[], utensils:[], ingredients:[]});
     setView('recipe', {recipeId:id});
   };
+  /* Only offered when this device's bank actually holds a dish more than
+     once; the dialogue itself re-reads the shared bank before deciding. */
+  const dupeNames = countDuplicateRecipeNames();
+  if(dupeNames){
+    const tidyBtn = document.createElement('button');
+    tidyBtn.className = 'btn';
+    tidyBtn.id = 'rbTidyDupesBtn';
+    tidyBtn.textContent = 'Tidy duplicates (' + dupeNames + ')';
+    tidyBtn.title = 'Delete copies of the same recipe that no rotation uses';
+    tidyBtn.onclick = ()=> openTidyDuplicatesModal(()=> setView('bank'));
+    actions.appendChild(tidyBtn);
+  }
   actions.appendChild(newBtn);
   head.appendChild(actions);
   root.appendChild(head);

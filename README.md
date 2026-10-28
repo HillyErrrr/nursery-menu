@@ -2368,3 +2368,28 @@ Kitchen pages no longer show the **Staff admin** button to kitchen logins. The a
 
 Tests: `logins.js` (33 checks: kitchen, admin, password change, outage, and no database); the regression suites in both storage modes; and the Netlify bundle test, with and without a working SQLite engine.
 
+
+## Tidy duplicate recipes (October 2026)
+
+**Where:** Staff admin → **Recipes** → **Tidy duplicates (N)**, next to **+ New recipe**. N is how many dishes are in the recipe bank more than once. The button only appears when there are some.
+
+**What counts as a duplicate:** recipes with the same name, ignoring capitals and extra spaces. Most are copies the old menu sync made ("Imported from …").
+
+**What it checks before deleting anything,** read fresh when the button is pressed:
+
+- every rotation on this device: every nursery menu, every season, and the extra (holiday club) menus;
+- every rotation published on the live site, for every menu and season. When nothing is published for one, it checks the copy shipped with the website.
+
+A published dish names its recipe id, so that copy is kept. An older published file without ids is matched by name and content, the same way an import matches it, and one matching copy is kept for it. If any rotation can't be read, it stops and deletes nothing.
+
+**What it keeps:** every copy in use, and at least one copy of every dish. When no copy is used, it keeps the original: not made by an import, reviewed, oldest.
+
+**Before deleting,** it lists every dish with each copy marked Keep or Delete. Each copy to delete shows where it came from and how it differs from the copy kept (ingredients, method, portions, or which menus it is available at). **Download a copy first** saves the copies to be deleted as JSON.
+
+**After deleting:**
+
+- The copies leave the shared recipe bank.
+- Each deleted copy is recorded, with its whole record, in `_config/recipe-deletions.json` on the live site, so any can be recovered.
+- Other admins' devices read that list when Staff admin syncs, and drop the deleted copies. A device keeps a copy if it has an unpublished change to it, or if one of its own rotations uses it.
+
+**Tests:** `tidy.js`, 18 checks, in both storage modes.
