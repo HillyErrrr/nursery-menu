@@ -1115,7 +1115,7 @@ body.hcSheetOpen .hcSheetFoot{display:flex;justify-content:flex-end;padding:0 16
   <div id="rbAppShell">
     <div class="topbar">
       <div class="brand">🧑‍🍳 Recipe Bank</div>
-      <select id="rbMenuSelect" title="Which of the two menus you are editing. They are separate rotations — editing one never changes the other."></select>
+      <select id="rbMenuSelect" title="Which menu you are editing. They are separate rotations — editing one never changes the others."></select>
       <select id="rbSeasonSelect"></select>
       <span id="rbExtraNote" class="rbExtraNote" hidden>Runs on its own dates, not by season</span>
       <button type="button" id="rbPreviewBtn" class="rbTopbarBtn" title="Open the kitchen page for the menu you are editing, in a new tab — never affects the live kitchen iPad">👁 Preview kitchen page ↗</button>
@@ -1212,6 +1212,15 @@ const SITE_SLUG = new URLSearchParams(location.search).get('site') || '';
    Every site not listed here uses "general" by default. */
 const SITE_MENU_GROUPS = {
   'little-adventures-weston-super-mare': 'weston-super-mare',
+  // Its own menu from October 2026. Until a Washwood Heath rotation has
+  // been published, its kitchen shows the Main Menu (see loadSiteData).
+  'little-adventures-washwood-heath': 'washwood-heath',
+};
+/* A menu split off another one. Recipes whose availability was set before
+   the split -- "Main Menu only", say -- were available to this site then,
+   so they stay available to it now (see recipeMenus). */
+const MENU_GROUP_STARTED_FROM = {
+  'washwood-heath': 'general',
 };
 function menuGroupForSite(slug){
   return SITE_MENU_GROUPS[slug] || 'general';
@@ -4700,6 +4709,12 @@ async function loadSiteData(){
       fetch('sites/'+encodeURIComponent(SITE_SLUG)+'/config.json'),
       loadIngredientDbForShop(),
     ]);
+    /* A site whose own menu has not been published for this season yet
+       (Washwood Heath, when it was first split off) keeps the Main Menu it
+       was on, rather than an error page in the kitchen. */
+    if(!menuRes.ok && menuGroupForSite(SITE_SLUG) !== 'general'){
+      menuRes = await fetchSeasonJson('general', activeSeason.file);
+    }
   }catch(e){
     showNoSiteMessage('Could not load this nursery\'s data');
     throw new Error('__handled__');
@@ -4906,8 +4921,9 @@ let PREVIEW_SITE_SLUG = SITE_SLUG || [...SITE_SLUGS].sort((a,b)=> siteSlugLabel(
    thing, which reads like two different targets when you are about to
    publish. */
 const MENU_GROUP_FRIENDLY_NAMES = {
-  'general': 'All Sites Except WSM',
+  'general': 'Main Menu',
   'weston-super-mare': 'WSM Only',
+  'washwood-heath': 'Washwood Heath Only',
 };
 
 /* The standardised list of ingredient units for the recipe bank's Unit
@@ -5010,13 +5026,39 @@ function unitSelectHtml(current, compatible){
    logChange() 222 times, mark the entire bank dirty, and republish all
    of it over the shared copy the moment the page opened. The field is
    written only when someone actually sets it. */
+/* The menus that existed before any were split off. A recipe whose menus
+   were set without a record of which menus existed was set against these. */
+const LEGACY_MENU_GROUPS = ['general', 'weston-super-mare'];
 function recipeMenus(r){
   const all = allMenuGroups();
   if(!r || !Array.isArray(r.menus)) return all.slice();
+  const list = r.menus.slice();
+  /* A menu split off after this setting was made inherits the setting of
+     the menu it came from: "Main Menu only", set before Washwood Heath had
+     its own menu, still includes Washwood Heath. Once someone sets the
+     recipe's menus again, menusKnown records that Washwood Heath was a
+     choice, and the setting is taken exactly as given. */
+  const known = Array.isArray(r.menusKnown) ? r.menusKnown : LEGACY_MENU_GROUPS;
+  Object.keys(MENU_GROUP_STARTED_FROM).forEach(g=>{
+    if(known.indexOf(g) === -1 && list.indexOf(g) === -1 && list.indexOf(MENU_GROUP_STARTED_FROM[g]) !== -1) list.push(g);
+  });
   // Keep only groups that still exist, so a stale key from an old build
   // (or a group that was renamed) can never make a recipe unreachable.
-  const kept = r.menus.filter(g=> all.indexOf(g) !== -1);
+  const kept = all.filter(g=> list.indexOf(g) !== -1);
   return kept.length ? kept : all.slice();
+}
+/* The one way to change which menus a recipe is on. Every menu means the
+   field is removed (absent = every menu, including any added later); any
+   narrower choice is stored with the menus that existed when it was made. */
+function setRecipeMenus(r, groups){
+  const all = allMenuGroups();
+  const next = all.filter(g=> (groups || []).indexOf(g) !== -1);
+  if(!next.length || next.length === all.length){
+    delete r.menus; delete r.menusKnown;
+    return;
+  }
+  r.menus = next;
+  r.menusKnown = all.slice();
 }
 function recipeAvailableIn(r, group){
   // An extra menu may use any recipe in the bank.
@@ -5030,7 +5072,7 @@ function recipeMenusAreDefault(r){
    Editing switch, so the two never drift apart. */
 function recipeAvailabilityLabel(r){
   const groups = recipeMenus(r);
-  if(groups.length === allMenuGroups().length) return 'Both menus';
+  if(groups.length === allMenuGroups().length) return 'All menus';
   if(groups.length === 1) return menuGroupLabel(groups[0]);
   return groups.map(menuGroupLabel).join(' + ');
 }
@@ -5097,7 +5139,11 @@ function allMenuGroups(){
     const g = menuGroupForSite(slug);
     if(!seen.has(g)){ seen.add(g); order.push(g); }
   });
-  return order;
+  // Main Menu first, then the menus split off it in the order they were
+  // made (SITE_MENU_GROUPS), not in the order their sites happen to be listed.
+  const made = Object.values(SITE_MENU_GROUPS);
+  const rank = g=> g === 'general' ? -1 : (made.indexOf(g) === -1 ? made.length : made.indexOf(g));
+  return order.sort((a,b)=> rank(a) - rank(b));
 }
 function menuGroupLabel(key){
   if(isExtraMenu(key)) return EXTRA_MENUS[key].label || key;
@@ -5127,7 +5173,7 @@ function seasonWeekKeys(season){
 function newSeasonShape(key){
   const extra = isExtraMenu(key);
   const n = extra ? extraMenuWeeks(EXTRA_MENUS[key]) : 4;
-  const season = {label: extra ? (EXTRA_MENUS[key].label || key) : key, weeks: emptyWeeks(n), notes: emptyNotes(n), importedAt: {}};
+  const season = {label: extra ? (EXTRA_MENUS[key].label || key) : (((SEASONS || []).find(x=> x.key === key) || {}).label || key), weeks: emptyWeeks(n), notes: emptyNotes(n), importedAt: {}};
   for(let i = 1; i <= n; i++) season.importedAt[String(i)] = null;
   if(extra) season.weekCount = n;
   return season;
@@ -5465,6 +5511,108 @@ function migrateSeasonsIntoMenus(startGroup){
   menuFor(EDITING_GROUP);
   installSeasonsAlias();
   saveLocalOnly();
+}
+
+/* Extra menus (set up in Menu settings) that run only at the sites of one
+   nursery menu -- the way Washwood Heath's own menu was first started,
+   before it had a menu of its own. Their dishes can be brought into it. */
+function extraMenusForGroup(group){
+  if(isExtraMenu(group)) return [];
+  const sites = SITE_SLUGS.filter(s=> menuGroupForSite(s) === group);
+  if(group === 'general' || !sites.length) return [];
+  return extraMenuKeys().filter(k=>{
+    const xs = (EXTRA_MENUS[k] && EXTRA_MENUS[k].sites) || [];
+    return xs.length > 0 && xs.every(s=> sites.indexOf(s) !== -1);
+  });
+}
+function rotationSlotCount(season){
+  let n = 0;
+  Object.values((season && season.weeks) || {}).forEach(days=> Object.values(days || {}).forEach(c=> Object.values(c || {}).forEach(id=>{ if(id) n++; })));
+  return n;
+}
+/* Puts the dishes picked on extra menu `fromKey` into `group`'s rotation
+   for `seasonKey`, week by week and slot by slot. With fillFromMain, every
+   slot the extra menu leaves empty takes the Main Menu's dish; otherwise
+   those slots are left empty. Weeks past 4 are not brought in (a nursery
+   rotation is four weeks). Returns how many slots were filled from the
+   extra menu, or -1 if it has no dishes on this device or published. */
+async function bringInExtraMenu(fromKey, group, seasonKey, fillFromMain){
+  let source = menuFor(fromKey)[fromKey];
+  if(!rotationSlotCount(source)){
+    // Not on this device: take the published rotation.
+    try{
+      const res = await fetchSeasonJson(fromKey, fromKey + '.json');
+      if(res.ok){
+        const json = await res.json();
+        if(json && Object.keys(json).length) await importSeasonJson(json, fromKey, fromKey);
+      }
+    }catch(e){}
+    source = menuFor(fromKey)[fromKey];
+  }
+  if(!rotationSlotCount(source)) return -1;
+  const target = seasonForGroup(group, seasonKey);
+  const main = fillFromMain ? (menuFor('general')[seasonKey] || {weeks: {}}) : null;
+  let brought = 0;
+  ['1','2','3','4'].forEach(wk=>{
+    const week = {};
+    DAYS.forEach(day=>{
+      const slots = main ? JSON.parse(JSON.stringify(((main.weeks || {})[wk] || {})[day] || {})) : {};
+      const picked = ((source.weeks || {})[wk] || {})[day] || {};
+      Object.keys(picked).forEach(course=>{
+        if(picked[course]){ slots[course] = picked[course]; brought++; }
+      });
+      week[day] = slots;
+    });
+    target.weeks[wk] = week;
+  });
+  saveLocalOnly();
+  return brought;
+}
+function openBringInExtraMenuModal(fromKey){
+  const group = EDITING_GROUP;
+  const seasonKey = DATA.currentSeason;
+  const season = DATA.seasons[seasonKey] || {};
+  const fromLabel = menuGroupLabel(fromKey);
+  const already = rotationSlotCount(season);
+  const overlay = document.createElement('div');
+  overlay.className = 'modalOverlay';
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.innerHTML = `
+    <h3>Bring in the dishes from "${escapeHtml(fromLabel)}"</h3>
+    <div class="tinyNote">Puts every dish already picked on that menu into the same week, day and course of the <b>${escapeHtml(menuGroupLabel(group))}</b> ${escapeHtml(season.label || seasonKey)} rotation. Nothing is published until you click Publish changes.</div>
+    <div class="field" style="margin-top:12px;"><label>Slots with no dish picked yet</label>
+      <label style="display:flex;gap:8px;align-items:flex-start;font-weight:400;margin-top:6px;"><input type="radio" name="biFill" value="empty" checked> <span>Leave them empty, to fill in here</span></label>
+      <label style="display:flex;gap:8px;align-items:flex-start;font-weight:400;margin-top:6px;"><input type="radio" name="biFill" value="main"> <span>Use the Main Menu's dish for now</span></label>
+    </div>
+    ${already ? `<div class="warnNote" style="margin-top:10px;">This rotation already has ${already} dish${already===1?'':'es'} on this device. Weeks 1&ndash;4 will be <b>replaced</b>.</div>` : ''}
+    <div id="biStatus" class="tinyNote" style="margin-top:8px;"></div>
+    <div class="closeRow">
+      <button class="btn" id="biCancel">Cancel</button>
+      <button class="btn primary" id="biGo">Bring them in</button>
+    </div>`;
+  overlay.appendChild(modal);
+  document.getElementById('rbAdminRoot').appendChild(overlay);
+  let busy = false;
+  modal.querySelector('#biCancel').onclick = ()=>{ if(!busy) overlay.remove(); };
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay && !busy) overlay.remove(); });
+  modal.querySelector('#biGo').onclick = async ()=>{
+    if(busy) return;
+    busy = true;
+    const btn = modal.querySelector('#biGo');
+    btn.disabled = true; btn.textContent = 'Bringing them in…';
+    const fill = modal.querySelector('input[name="biFill"]:checked').value === 'main';
+    const n = await bringInExtraMenu(fromKey, group, seasonKey, fill);
+    busy = false;
+    if(n < 0){
+      btn.disabled = false; btn.textContent = 'Bring them in';
+      modal.querySelector('#biStatus').textContent = 'That menu has no dishes picked yet, on this device or published.';
+      return;
+    }
+    overlay.remove();
+    toast(n + ' dish' + (n===1?'':'es') + ' brought in from ' + fromLabel + ' — publish when ready');
+    render();
+  };
 }
 
 /* Copies the rotation currently being edited into another menu, as its
@@ -6313,7 +6461,7 @@ function duplicateRecipe(recipeId, newName, menus){
   delete copy.reviewedAt;
   copy.version = 0;
   copy.history = [{at: nowIso(), summary: 'Duplicated from "' + (original.name || 'Untitled recipe') + '"'}];
-  if(Array.isArray(menus) && menus.length) copy.menus = menus.slice();
+  if(Array.isArray(menus) && menus.length) setRecipeMenus(copy, menus);
   DATA.recipeBank[id] = copy;
   markRecipeDirty(id);
   save();
@@ -6362,8 +6510,9 @@ function openDuplicateRecipeModal(recipeId, onDone){
     <div id="dupRecipeWarn"></div>
     <div class="field" style="margin-top:10px;"><label>Which menus may use it</label>
       <select id="dupRecipeMenus">
-        <option value="*">Both menus</option>
+        <option value="*">All menus</option>
         ${allMenuGroups().map(g=> `<option value="${escapeHtml(g)}">${escapeHtml(menuGroupLabel(g))}</option>`).join('')}
+        ${(()=>{ const c = recipeMenus(recipe); return (c.length > 1 && c.length < allMenuGroups().length) ? `<option value="${escapeHtml(c.join(','))}">${escapeHtml(c.map(menuGroupLabel).join(' + '))}</option>` : ''; })()}
       </select>
     </div>
     <div id="dupRecipeMenuNote"></div>
@@ -6385,10 +6534,10 @@ function openDuplicateRecipeModal(recipeId, onDone){
   const menuSel = modal.querySelector('#dupRecipeMenus');
   const menuNote = modal.querySelector('#dupRecipeMenuNote');
   const current = recipeMenus(recipe);
-  menuSel.value = (current.length === allMenuGroups().length) ? '*' : (current.length === 1 ? current[0] : '*');
+  menuSel.value = (current.length === allMenuGroups().length) ? '*' : current.join(',');
   const checkMenus = ()=>{
     const v = menuSel.value;
-    menuNote.innerHTML = (v !== '*' && v !== EDITING_GROUP)
+    menuNote.innerHTML = (v !== '*' && v.split(',').indexOf(EDITING_GROUP) === -1)
       ? `<div class="warnNote" style="margin-top:8px;">You are editing <b>${escapeHtml(menuGroupLabel(EDITING_GROUP))}</b>. A copy set to <b>${escapeHtml(menuGroupLabel(v))}</b> will not appear in this menu's dish picker.</div>`
       : '';
   };
@@ -6414,7 +6563,7 @@ function openDuplicateRecipeModal(recipeId, onDone){
        pin every copy to today's two, and silently exclude it from a third
        -- while the original it was copied from, which has no field, would
        be included. */
-    const menus = menuSel.value === '*' ? null : [menuSel.value];
+    const menus = menuSel.value === '*' ? allMenuGroups() : menuSel.value.split(',');
     const id = duplicateRecipe(recipeId, name, menus);
     overlay.remove();
     if(!id) return;
@@ -6599,7 +6748,7 @@ function openUseAnywayModal(recipe, onPlace){
   modal.querySelector('#uaBoth').onclick = ()=>{
     const next = recipeMenus(recipe).slice();
     if(next.indexOf(EDITING_GROUP) === -1) next.push(EDITING_GROUP);
-    recipe.menus = next;
+    setRecipeMenus(recipe, next);
     logChange(recipe.id, 'Available at: ' + recipeAvailabilityLabel(recipe));
     overlay.remove();
     onPlace();
@@ -7236,7 +7385,7 @@ function openAvailabilityConflictModal(recipe, nextMenus, losing, onConfirm){
   overlay.className = 'modalOverlay';
   const modal = document.createElement('div');
   modal.className = 'modal';
-  const label = nextMenus.length === 1 ? menuGroupLabel(nextMenus[0]) : 'Both menus';
+  const label = nextMenus.length === allMenuGroups().length ? 'All menus' : nextMenus.map(menuGroupLabel).join(' + ');
   const byGroup = {};
   losing.forEach(u=>{ (byGroup[u.group] = byGroup[u.group] || []).push(u); });
   modal.innerHTML = `
@@ -8314,6 +8463,10 @@ function mergeRecordThreeWay(base, mine, theirs){
       return;
     }
     if(mergeValuesEqual(m, t)) return;           // same answer, no argument
+    // Bookkeeping for `menus` (see setRecipeMenus): never a question of its
+    // own. If menus itself conflicts, that is asked, and the whole record
+    // is kept from one side.
+    if(k === 'menusKnown') return;
     conflicts.push(k);
   });
   return {merged: out, conflicts: conflicts};
@@ -11313,15 +11466,10 @@ function renderTopbar(){
        alerts. The site chosen for the "all except WSM" entry is the one
        this admin session was opened from whenever that site is in the
        general group -- so previewing from Penarth previews Penarth. */
-    const wsmSlug = Object.keys(SITE_MENU_GROUPS).find(s=> SITE_MENU_GROUPS[s] === 'weston-super-mare')
-      || 'little-adventures-weston-super-mare';
-    const generalSlug = (SITE_SLUG && menuGroupForSite(SITE_SLUG) === 'general')
+    const slugForGroup = (g)=> (SITE_SLUG && menuGroupForSite(SITE_SLUG) === g)
       ? SITE_SLUG
-      : (SITE_SLUGS.find(s=> menuGroupForSite(s) === 'general') || SITE_SLUGS[0]);
-    const groupChoices = [
-      {value: generalSlug, label: 'All Sites Except WSM'},
-      {value: wsmSlug,     label: 'WSM Only'}
-    ];
+      : (SITE_SLUGS.find(s=> menuGroupForSite(s) === g) || SITE_SLUGS[0]);
+    const groupChoices = allMenuGroups().map(g=> ({value: slugForGroup(g), label: menuGroupLabel(g)}));
     groupChoices.forEach(choice=>{
       const opt = document.createElement('option');
       opt.value = choice.value;
@@ -11333,7 +11481,7 @@ function renderTopbar(){
     // list would silently preview somewhere else, so make the default the
     // entry that actually matches this session's menu group.
     if(!groupChoices.some(c=> c.value === PREVIEW_SITE_SLUG)){
-      PREVIEW_SITE_SLUG = menuGroupForSite(SITE_SLUG) === 'weston-super-mare' ? wsmSlug : generalSlug;
+      PREVIEW_SITE_SLUG = slugForGroup(menuGroupForSite(SITE_SLUG));
       previewSel.value = PREVIEW_SITE_SLUG;
     }
     previewSel.onchange = ()=>{ PREVIEW_SITE_SLUG = previewSel.value; };
@@ -11994,7 +12142,7 @@ function renderRotationView(){
       (up ? 'Last published <b>' + escapeHtml(new Date(up.at).toLocaleString()) + '</b>. ' : 'Not published from this device yet. ') +
       (isExtraMenu(EDITING_GROUP)
         ? 'A ' + seasonWeekKeys(season).length + '-week rotation for ' + escapeHtml(extraMenuSitesText(EDITING_GROUP)) + '. ' + escapeHtml(extraMenuNextRunText(EDITING_GROUP)) + ' Dates, sites and course names are in <b>Menu settings</b>.</div></div>'
-        : 'This rotation is separate from the other menu &mdash; editing it here changes nothing anywhere else until you publish.</div></div>');
+        : 'This rotation is separate from the other menus &mdash; editing it here changes nothing anywhere else until you publish.</div></div>');
 
 
   /* Both halves of the sync, together, on the thing they act on.
@@ -12038,6 +12186,14 @@ function renderRotationView(){
         render();
       }
     };
+    menuBar.appendChild(btn);
+  });
+  extraMenusForGroup(EDITING_GROUP).forEach(k=>{
+    const btn = document.createElement('button');
+    btn.className = 'btn small';
+    btn.textContent = '⇣ Bring in dishes from ' + menuGroupLabel(k);
+    btn.title = 'The dishes already picked on that menu, into this rotation';
+    btn.onclick = ()=> openBringInExtraMenuModal(k);
     menuBar.appendChild(btn);
   });
   root.appendChild(menuBar);
@@ -12952,27 +13108,35 @@ function renderRecipeView(recipeId, slotCtx){
     const groups = allMenuGroups();
     const current = recipeMenus(recipe);
     const isBoth = current.length === groups.length;
-    const options = [{key: '*', label: 'Both menus'}].concat(groups.map(g=> ({key: g, label: menuGroupLabel(g)})));
-    const selected = isBoth ? '*' : (current.length === 1 ? current[0] : '*');
+    const options = [{key: '*', label: 'All menus'}].concat(groups.map(g=> ({key: g, label: menuGroupLabel(g)})));
+    // "All menus" is one choice; otherwise each menu is a toggle, so a dish
+    // can be on, say, the Main Menu and Washwood Heath but not WSM.
+    const isOn = (key)=> key === '*' ? isBoth : (!isBoth && current.indexOf(key) !== -1);
     const usage = findRecipeUsageAllMenus(recipeId).filter(u=> !isExtraMenu(u.group));
     const stranded = usage.filter(u=> current.indexOf(u.group) === -1);
     availCard.innerHTML = `
       <h3>Available at</h3>
-      <div class="tinyNote">Which rotations are allowed to put this dish on a menu. Recipes are shared between both menus unless you say otherwise &mdash; this changes what the slot picker offers, and it never edits a menu on its own.</div>
+      <div class="tinyNote">Which rotations are allowed to put this dish on a menu. Recipes are shared between all the menus unless you say otherwise &mdash; pick <b>All menus</b>, or tap each menu that may use it. This changes what the slot picker offers, and it never edits a menu on its own.</div>
       <div class="segControl" id="availSeg" role="group" aria-label="Available at" style="margin-top:12px;">
-        ${options.map(o=> `<button type="button" data-key="${escapeHtml(o.key)}" aria-pressed="${o.key === selected ? 'true' : 'false'}">${escapeHtml(o.label)}</button>`).join('')}
+        ${options.map(o=> `<button type="button" data-key="${escapeHtml(o.key)}" aria-pressed="${isOn(o.key) ? 'true' : 'false'}">${escapeHtml(o.label)}</button>`).join('')}
       </div>
       <div class="tinyNote" style="margin-top:8px;">${isBoth
-        ? 'On both menus. Every recipe starts here.'
-        : 'Only the <b>' + escapeHtml(menuGroupLabel(current[0])) + '</b> rotation can use this dish.'}</div>
+        ? 'On every menu. Every recipe starts here.'
+        : 'Only the <b>' + current.map(g=> escapeHtml(menuGroupLabel(g))).join('</b> and <b>') + '</b> rotation' + (current.length === 1 ? '' : 's') + ' can use this dish.'}</div>
       ${stranded.length ? `<div class="warnNote" style="margin-top:10px;"><b>${stranded.length} slot${stranded.length===1?'':'s'} still using this dish on a menu it is no longer available to.</b><ul style="margin:6px 0 0;padding-left:18px;">${stranded.map(u=> `<li>${escapeHtml(menuGroupLabel(u.group))} &mdash; ${escapeHtml(u.seasonLabel)}, Week ${escapeHtml(u.week)}, ${escapeHtml(u.day)}, ${escapeHtml(u.course)}</li>`).join('')}</ul><div style="margin-top:6px;">Nothing has been deleted. Swap them on the rotation when you are ready.</div></div>` : ''}
     `;
     availCard.querySelector('#availSeg').addEventListener('click', (e)=>{
       const btn = e.target.closest('button');
       if(!btn) return;
       const key = btn.getAttribute('data-key');
-      const next = key === '*' ? allMenuGroups() : [key];
-      applyAvailability(next);
+      let next;
+      if(key === '*') next = allMenuGroups();
+      else if(isBoth) next = [key];
+      else {
+        next = current.indexOf(key) === -1 ? current.concat([key]) : current.filter(g=> g !== key);
+        if(!next.length) return; // a dish has to be on at least one menu
+      }
+      applyAvailability(allMenuGroups().filter(g=> next.indexOf(g) !== -1));
     });
   }
   function applyAvailability(next){
@@ -12984,7 +13148,7 @@ function renderRecipeView(recipeId, slotCtx){
     // warning stops meaning anything.
     const losing = findRecipeUsageAllMenus(recipeId).filter(u=> !isExtraMenu(u.group) && next.indexOf(u.group) === -1);
     const commit = ()=>{
-      recipe.menus = next.slice();
+      setRecipeMenus(recipe, next);
       logChange(recipeId, 'Available at: ' + recipeAvailabilityLabel(recipe));
       save();
       toast('Availability updated');
