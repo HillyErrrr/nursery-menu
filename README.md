@@ -2620,18 +2620,20 @@ John chose **Days A** from the top-bar mock-ups (row 3 of the canvas).
 The bar is now about **96px instead of 166px** on an iPad in landscape and on a wide screen, which gives the recipe, method and meal the room. In portrait it is 164px.
 - **One row:** the nursery's logo and name, then the days with the arrows (and Back to today on their left when you move off today), then **Menu**.
 - **A small Nursery / Holiday Club slider** under the nursery's name, where the season was. It shows each menu's short name (for example "Holiday Club"), with the full name as its tooltip. Kitchens with one menu still show the season there.
-- **Smaller day tiles:** an iPad shows five days and a wide screen shows seven. In portrait the days wrap to a second row under the name and Menu.
+- **Every day tile is the same size:** 108×62px, wide enough for "Wednesday", so nothing resizes as you move between days. The chosen day stands out by its colour (white; today is coral) and its raised shadow. An iPad shows five days and a wide screen shows seven. In portrait the days wrap to a second row under the name and Menu.
 - **"Today is …" is no longer shown,** because the ribbon already says it; screen readers still get it. The season and menu week are now at the top of **Menu**.
 - The arrows are 44px wide, so they meet the iPad's touch-target minimum.
 
 ## The menu pack from the kitchen's Menu (29 October 2026)
 
 The kitchen's **Menu** has a **MENU PACK** section with two options:
-- **Week N's menu pack:** the week on screen. It has that week's menu page with its allergy key, then that week's allergen matrix.
-- **Full menu pack:** every week. It has the weaning stages page (nursery menu only), every week's menu page, then each week's allergen matrix.
+- **Week N's menu pack:** the week on screen, as its menu page with the allergy icons and key.
+- **Full menu pack:** every week's menu page.
 
-Both use Staff admin's own Menu Pack design (`RB_CARD_KIT.menuPack` → `buildMenuPackHtml`, which now also takes `{season, weeks, note}`). They are built from this kitchen's **published** menu, the one on screen (Nursery or Holiday Club, which has its own layout), and they open with **⬇ Download PDF**. A course with more than one dish uses the first, and a dish served on several days appears once in the allergen matrix. Staff admin's Menu Pack screen is unchanged.
+Only the menu pages are included. The allergen matrix pages and the weaning stages page are left out, because the Menu has its own Allergy matrix and Print allergy matrix (`menuOnly`).
+
+Both use Staff admin's own Menu Pack design (`RB_CARD_KIT.menuPack` → `buildMenuPackHtml`, which now also takes `{season, weeks, menuOnly, note}`). They are built from this kitchen's **published** menu, the one on screen (Nursery or Holiday Club, which has its own layout), and they open with **⬇ Download PDF**. A course with more than one dish uses the first, Staff admin's Menu Pack screen is unchanged.
 
 **Also fixed:** opening Staff admin with no `?site=` threw "Cannot access 'ADDED_NURSERIES' before initialization". It is now declared before `siteSlugLabel` reads it.
 
-**Tests:** `menupack.js` (7 in SQLite mode, 6 in legacy). `docktest` (one line: Menu 52px, band ≤ 100px, hidden tiles ignored) and `menutest` M2 (the MENU PACK section) were updated.
+**Tests:** `menupack.js` (6 in SQLite mode, 5 in legacy). `docktest` (one line: Menu 52px, band ≤ 100px, hidden tiles ignored; D3: every day the same size) and `menutest` M2 (the MENU PACK section) were updated.

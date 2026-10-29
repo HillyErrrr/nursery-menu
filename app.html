@@ -408,18 +408,12 @@ body.booting #bootSplash{display:flex;flex-direction:column;position:fixed;inset
 #prepStation .stToday{height:52px;width:84px;border-radius:14px;font-size:12px;}
 #prepStation .stToday b{font-size:14px;}
 .stDockDiv{height:46px;}
-.stDockDay.d0{width:132px;height:72px;border-radius:18px;}
-.stDockDay.d1{width:104px;height:58px;border-radius:14px;}
-.stDockDay.d2{width:92px;height:52px;border-radius:14px;}
-.stDockDay.d3{width:84px;height:48px;border-radius:13px;}
+/* every day the same size, so nothing resizes as you move between days:
+   wide enough for "Wednesday" (John, 29 Oct) */
+.stDockDay.d0, .stDockDay.d1, .stDockDay.d2, .stDockDay.d3{width:108px;height:62px;border-radius:15px;opacity:1;}
 .stDockTag{font-size:9.5px;line-height:11px;}
-.stDockDay.d0 .stDockName{font-size:19px;}
-.stDockDay.d1 .stDockName{font-size:15.5px;}
-.stDockDay.d2 .stDockName{font-size:14px;}
-.stDockDay.d3 .stDockName{font-size:13.5px;}
-.stDockDay.d0 .stDockDate{font-size:13px;}
-.stDockDay.d1 .stDockDate{font-size:12px;}
-.stDockDay.d2 .stDockDate, .stDockDay.d3 .stDockDate{font-size:11.5px;}
+.stDockDay.d0 .stDockName, .stDockDay.d1 .stDockName, .stDockDay.d2 .stDockName, .stDockDay.d3 .stDockName{font-size:16px;}
+.stDockDay.d0 .stDockDate, .stDockDay.d1 .stDockDate, .stDockDay.d2 .stDockDate, .stDockDay.d3 .stDockDate{font-size:12px;}
 /* an iPad: five days; a wide screen: seven */
 @media (max-width:1500px){
   .stDockDay.d3, .stDockDay.d3 + .stDockDiv{display:none;}
@@ -5803,8 +5797,8 @@ function openKitchenMenu(anchor){
     ${kmItem('allergyprint', 'print', 'Print allergy matrix', 'Week ' + state.week + ', the same layout as Staff admin')}
     <div class="kmRule"></div>
     <div class="kmHead">MENU PACK</div>
-    ${kmItem('packweek', 'pack', 'Week ' + state.week + '’s menu pack', 'This week’s menu and its allergen matrix', {disabled: !MENU[state.week]})}
-    ${kmItem('packall', 'packs', 'Full menu pack', 'All ' + Object.keys(MENU).length + ' week' + (Object.keys(MENU).length === 1 ? '' : 's') + (ACTIVE_EXTRA ? '' : ', the weaning stages page') + ' and the allergen matrices', {disabled: !Object.keys(MENU).length})}
+    ${kmItem('packweek', 'pack', 'Week ' + state.week + '’s menu pack', 'This week’s menu, with its allergy icons', {disabled: !MENU[state.week]})}
+    ${kmItem('packall', 'packs', 'Full menu pack', Object.keys(MENU).length === 1 ? 'The whole menu, with its allergy icons' : 'All ' + Object.keys(MENU).length + ' weeks’ menus, with their allergy icons', {disabled: !Object.keys(MENU).length})}
     ${(wake || out.length) ? '<div class="kmRule"></div><div class="kmHead">THIS IPAD</div>' + wake + out.join('') : ''}
   </div>`;
   document.body.appendChild(wrap);
@@ -6244,7 +6238,7 @@ function openKitchenMenuPack(onlyWeek){
   const which = onlyWeek != null ? 'week ' + onlyWeek : 'all ' + Object.keys(weeks).length + ' weeks';
   const html = RB_CARD_KIT.menuPack({
     key: ACTIVE_EXTRA ? ACTIVE_EXTRA.key : SEASON_KEY, label, weeks,
-    only: onlyWeek != null ? [String(onlyWeek)] : null,
+    only: onlyWeek != null ? [String(onlyWeek)] : null, menuOnly: true,
     note: label + ', ' + which + (site ? ', ' + site : '') + '. From this kitchen’s published menu.',
   });
   const url = URL.createObjectURL(new Blob([html], {type: 'text/html'}));
@@ -20021,8 +20015,9 @@ function extraPackPagesHtml(key, season){
 
 /* opts (all optional): season -- a season-shaped menu to build from instead
    of this device's (the kitchen's published menu, see RB_CARD_KIT.menuPack);
-   weeks -- just these weeks (no weaning-stages page); note -- the toolbar's
-   line. */
+   weeks -- just these weeks (no weaning-stages page); menuOnly -- the menu
+   pages alone, without the weaning-stages page or the allergen matrices;
+   note -- the toolbar's line. */
 function buildMenuPackHtml(seasonKey, opts){
   opts = opts || {};
   const season = opts.season || ensureSeason(seasonKey);
@@ -20036,13 +20031,13 @@ function buildMenuPackHtml(seasonKey, opts){
   // one week to a page, and no weaning-stages page.
   const pages = extra
     ? weeks.map(wk=> extraPackPageHtml(seasonKey, season, [wk], allWeeks))
-    : (whole ? [menuPackIntroPageHtml(seasonLabel)] : []).concat(weeks.map(wk=> menuPackWeekPageHtml(season, wk, seasonLabel, seasonKey)));
+    : (whole && !opts.menuOnly ? [menuPackIntroPageHtml(seasonLabel)] : []).concat(weeks.map(wk=> menuPackWeekPageHtml(season, wk, seasonLabel, seasonKey)));
   // Phase 32: the Allergen Matrix is appended after the week menu pages,
   // in this same download, per John's choice -- one .mpAllergenSource
   // staging block per week (see that function's own comment), which
   // MENU_PACK_ALLERGEN_PAGINATE_SCRIPT expands into 1+ real pages once the
   // pack has loaded and real row heights can be measured.
-  const allergenSources = weeks.map(wk=>{
+  const allergenSources = opts.menuOnly ? '' : weeks.map(wk=>{
     const recipes = recipeIdsInWeek(season, wk).map(id=> DATA.recipeBank[id]).filter(Boolean)
       .filter(r=> !isRotationPlaceholderRecipe(r))
       .sort((a,b)=> (a.name||'').localeCompare(b.name||''));
@@ -21077,7 +21072,7 @@ RB_CARD_KIT = {css: RECIPE_CARD_CSS, pdf: RECIPE_CARD_PDF_SCRIPT,
      stand in for the recipe bank while the pack is built, then it is put
      back; a dish on several days is one recipe, so the allergen matrix
      lists it once. */
-  menuPack({key, label, weeks, only, note}){
+  menuPack({key, label, weeks, only, note, menuOnly}){
     const bank = {};
     const ids = {};
     const season = {label, weekCount: Object.keys(weeks).length, weeks: {}};
@@ -21095,7 +21090,7 @@ RB_CARD_KIT = {css: RECIPE_CARD_CSS, pdf: RECIPE_CARD_PDF_SCRIPT,
       });
     });
     const saved = DATA.recipeBank;
-    try{ DATA.recipeBank = bank; return buildMenuPackHtml(key, {season, weeks: only, note}); }
+    try{ DATA.recipeBank = bank; return buildMenuPackHtml(key, {season, weeks: only, note, menuOnly}); }
     finally{ DATA.recipeBank = saved; }
   },
 };
