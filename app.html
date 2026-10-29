@@ -212,6 +212,67 @@ button{font-family:inherit;cursor:pointer;}
   html.viewShop #shopPrintSheet{display:block !important;}
 }
 .shopBackBar{position:sticky;top:0;z-index:20;background:var(--paper);padding:10px 0;margin:0 0 6px;}
+/* ---- the station's Menu ---- */
+.stBtn.stMenuBtn{padding:0 18px 0 14px;font-size:15px;font-weight:800;}
+.stBtn.stMenuBtn[aria-expanded="true"]{background:rgba(255,255,255,0.16);border-color:#fff;}
+#kitchenMenu{position:fixed;inset:0;z-index:200;background:rgba(31,60,85,0.38);}
+#kitchenMenu .kmPanel{position:absolute;right:18px;width:392px;max-width:calc(100vw - 24px);max-height:calc(100vh - 100px);overflow:auto;background:#fff;border-radius:16px;box-shadow:0 18px 50px rgba(20,35,50,0.35);padding:6px 8px 8px;display:flex;flex-direction:column;-webkit-overflow-scrolling:touch;}
+#kitchenMenu .kmHead{font-size:12px;font-weight:800;letter-spacing:0.08em;color:var(--ink-soft);padding:10px 12px 2px;}
+#kitchenMenu .kmItem{display:flex;align-items:center;gap:14px;min-height:58px;padding:7px 12px;border:none;border-radius:12px;background:transparent;color:var(--ink);font:inherit;text-align:left;cursor:pointer;width:100%;}
+#kitchenMenu .kmItem:active,#kitchenMenu .kmItem:hover{background:var(--paper);}
+#kitchenMenu .kmItem:disabled{opacity:0.45;cursor:default;background:transparent;}
+#kitchenMenu .kmIcon{width:42px;height:42px;border-radius:21px;background:#EEF1F4;color:var(--ink);display:inline-flex;align-items:center;justify-content:center;flex:none;}
+#kitchenMenu .kmIcon svg{width:22px;height:22px;}
+#kitchenMenu .kmText{display:flex;flex-direction:column;gap:1px;flex:1 1 auto;min-width:0;}
+#kitchenMenu .kmTitle{font-size:16px;font-weight:800;}
+#kitchenMenu .kmSub{font-size:14px;color:var(--ink-soft);}
+#kitchenMenu .kmRule{height:1px;background:#E3DDD1;margin:6px 12px;flex:none;}
+#kitchenMenu .kmItem.wake .kmIcon{background:#FFF3D6;color:#A86E00;}
+#kitchenMenu .kmItem.out{color:var(--rust-text);}
+#kitchenMenu .kmItem.out .kmIcon{background:var(--rust-light);color:var(--rust-text);}
+#kitchenMenu .kmSwitch{width:52px;height:32px;border-radius:16px;background:#C9C2B4;position:relative;flex:none;transition:background .15s;}
+#kitchenMenu .kmSwitch::after{content:'';position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:13px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.25);transition:left .15s;}
+#kitchenMenu .kmItem[aria-checked="true"] .kmSwitch{background:var(--sage);}
+#kitchenMenu .kmItem[aria-checked="true"] .kmSwitch::after{left:23px;}
+/* ---- the allergy matrix ---- */
+#allergyView{position:fixed;inset:0;z-index:150;background:var(--paper);display:flex;flex-direction:column;color:var(--ink);}
+#allergyView .avHead{flex:none;display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 16px;padding:14px 16px 10px;}
+#allergyView .avTitles{flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:8px;}
+#allergyView .avTitles .shopBackBtn{align-self:flex-start;}
+#allergyView h1{margin:0;font-family:'Roca','Space Grotesk',serif;font-size:28px;line-height:1.15;}
+#allergyView .avSub{font-size:15px;color:var(--ink-soft);}
+#allergyView .avToggle{display:flex;background:var(--paper-dim);border-radius:24px;padding:4px;gap:4px;}
+#allergyView .avToggle button{min-height:44px;padding:0 16px;border-radius:20px;border:none;background:transparent;color:var(--ink);font:inherit;font-size:15px;font-weight:700;cursor:pointer;}
+#allergyView .avToggle button[aria-pressed="true"]{background:var(--ink);color:#fff;font-weight:800;}
+#allergyView .avPrint{min-height:48px;padding:0 20px 0 16px;border-radius:24px;border:none;background:var(--ink);color:#fff;display:inline-flex;align-items:center;gap:10px;font:inherit;font-size:16px;font-weight:800;cursor:pointer;}
+#allergyView .avPrint i{font-size:20px;}
+#allergyView .avLegend{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:8px 22px;padding:0 18px 10px;font-size:14px;color:var(--ink-soft);}
+#allergyView .avLegend span{display:inline-flex;align-items:center;gap:8px;}
+#allergyView .avLegend .allergen-badge{margin:0;width:26px;height:26px;cursor:default;}
+#allergyView .avScroll{flex:1 1 auto;min-height:0;overflow:auto;margin:0 16px 16px;background:#fff;border:1px solid var(--line);border-radius:12px;-webkit-overflow-scrolling:touch;}
+#allergyView table{width:100%;border-collapse:separate;border-spacing:0;min-width:900px;}
+#allergyView thead th{position:sticky;top:0;z-index:2;background:#fff;border-bottom:2px solid var(--ink);padding:10px 2px 8px;font-size:11px;font-weight:700;line-height:1.15;text-align:center;vertical-align:bottom;color:var(--ink);}
+#allergyView thead th.avDishHead{text-align:left;padding-left:16px;font-size:12px;font-weight:800;letter-spacing:0.08em;color:var(--ink-soft);width:300px;}
+#allergyView thead th img{width:30px;height:30px;border-radius:15px;display:block;margin:0 auto 4px;}
+#allergyView .avDay td{background:#F6F2EA;color:var(--ink-soft);padding:8px 16px;font-size:13px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;border-bottom:1px solid #E3DDD1;}
+#allergyView .avDay.today td{background:var(--butter-light);color:var(--butter-dark);}
+#allergyView tbody tr.avRow td{border-bottom:1px solid #ECE6DA;text-align:center;height:48px;padding:0 2px;}
+#allergyView tbody tr.avRow td.avDish{text-align:left;padding:6px 12px 6px 16px;}
+#allergyView .avCourse{display:block;font-size:11px;font-weight:800;letter-spacing:0.07em;color:var(--ink-soft);text-transform:uppercase;}
+#allergyView .avName{display:block;font-size:15px;font-weight:700;}
+#allergyView td .allergen-badge{margin:0;width:30px;height:30px;}
+#allergyView .avNone{display:inline-block;width:5px;height:5px;border-radius:3px;background:#DDD5C6;}
+#allergyView .avEmpty{padding:30px;text-align:center;color:var(--ink-soft);}
+body.allergyOpen{overflow:hidden;}
+@media (max-width:1000px){
+  #allergyView table{min-width:0;}
+  #allergyView thead th.avDishHead{width:190px;}
+  #allergyView thead th{font-size:10px;padding:8px 1px 6px;}
+  #allergyView thead th img{width:26px;height:26px;}
+  #allergyView td .allergen-badge{width:26px;height:26px;}
+  #allergyView tbody tr.avRow td.avDish{padding:6px 8px 6px 12px;}
+  #allergyView .avName{font-size:14px;}
+}
 .shopBackBtn{
   display:inline-flex;align-items:center;gap:10px;min-height:48px;padding:0 20px 0 14px;
   border-radius:24px;border:1.5px solid var(--line-strong);background:var(--card);color:var(--ink);
@@ -1042,10 +1103,9 @@ body.hcSheetOpen .hcSheetFoot{display:flex;justify-content:flex-end;padding:0 16
 .allDayLabel{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-right:6px;}
 .shopOtherNote{margin:0 16px 12px;padding:10px 14px;border-radius:8px;background:var(--sage-light);color:var(--sage-text);font-size:13px;line-height:1.45;}
 @media (max-width:1120px){
-  .stShopLabel{display:none;}
+  /* With only Shopping list and Menu in the bar, both keep their words. */
   .stTop{gap:10px 12px;}
   .stDay{min-width:50px;}
-  .stBtn.shop{padding:0;width:44px;}
 }
 @media (hover:none){
   #prepStation .ing-row:hover{background:none;}
@@ -1807,12 +1867,15 @@ function findOrganicMatch(name){
    this empty and the list falls back to PACK_RULES exactly as before this
    feature existed — it can never block the kitchen page from loading. */
 let INGREDIENT_DB_BY_NAME = new Map();
+// The same records by id: the printed recipe card's nutrition and swaps.
+let INGREDIENT_DB_BY_ID = {};
 async function loadIngredientDbForShop(){
   try{
     const res = await fetchSeasonJson('_config', 'ingredients.json');
     if(!res.ok) return;
     const data = await res.json();
     if(!data || !data.ingredients || typeof data.ingredients !== 'object') return;
+    INGREDIENT_DB_BY_ID = data.ingredients;
     const byName = new Map();
     Object.values(data.ingredients).forEach(rec=>{
       // Skip a malformed entry (null, or not an object — e.g. a corrupted
@@ -3170,6 +3233,12 @@ const ST_ICONS = {
   calendar: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
   bowl: '<path d="M3 12h18a9 9 0 01-18 0z"/><path d="M8.5 12a3 3 0 015.6-1.5M16 12a2.2 2.2 0 013.6-1.2"/>',
   cart: '<circle cx="9" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/><path d="M3 4h2.5l2.2 11h10.6l2-8H6.4"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+  matrix: '<rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M3.5 9h17M3.5 14.5h17M9 3.5v17M14.5 3.5v17"/>',
+  recipe: '<path d="M6 3.5h8.5l4 4v13H6z"/><path d="M14.5 3.5v4h4M9 12h6.5M9 15.5h6.5"/>',
+  sheets: '<path d="M8 6.5V3.5h11v14h-3"/><path d="M5 6.5h11v14H5z"/><path d="M8 11h5M8 14.5h5"/>',
+  logout: '<path d="M14 4h4.5A1.5 1.5 0 0120 5.5v13a1.5 1.5 0 01-1.5 1.5H14"/><path d="M10 16l-4-4 4-4M6 12h10"/>',
+  admin: '<circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0114 0"/>',
   sun: '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/>',
 };
 function stIcon(name){
@@ -3257,10 +3326,7 @@ function renderPrepStation(){
       <div class="stSpacer"></div>
       <div class="stActions">
         <button type="button" class="stBtn shop" data-act="shop" data-focus="shop" aria-label="Shopping list" title="Weekly shopping list"><span class="stShopIcon"></span><span class="stShopLabel">Shopping list</span></button>
-        <button type="button" class="stBtn icon" data-act="list" data-focus="list" aria-label="Switch to list view" title="List view">${stIcon('list')}</button>
-        <button type="button" class="stBtn icon" data-act="print" data-focus="print" aria-label="Print prep sheets" title="Print prep sheets">${stIcon('print')}</button>
-        <button type="button" class="stBtn icon" data-act="clear" data-focus="clear" aria-label="Clear today's ticks" title="Clear today's ticks">${stIcon('clear')}</button>
-        ${WAKE_SUPPORTED ? `<button type="button" class="stBtn icon stWake${keepAwakeWanted() ? ' on' : ''}" data-act="wake" data-focus="wake" aria-pressed="${keepAwakeWanted()}" aria-label="Keep the screen on" title="Keep the screen on (${KEEP_AWAKE_FROM}am to ${KEEP_AWAKE_UNTIL - 12}pm)">${stIcon('sun')}</button>` : ''}
+        <button type="button" class="stBtn stMenuBtn" id="stMenuBtn" data-act="kmenu" data-focus="kmenu" aria-haspopup="menu" aria-expanded="${document.getElementById('kitchenMenu') ? 'true' : 'false'}">${stIcon('menu')}<span>Menu</span></button>
       </div>
     </div>${strip}`;
 
@@ -4589,6 +4655,7 @@ document.getElementById('prepStation').addEventListener('click', async (e)=>{
     case 'list': setPrepMode('list', true); break;
     case 'print': openPrepSheets(); break;
     case 'wake': setKeepAwake(!keepAwakeWanted()); break;
+    case 'kmenu': openKitchenMenu(); break;
     case 'clear':
       // One tap on a counter-top tablet should not wipe a morning's work.
       if(!confirm("Clear every tick for today?")) return;
@@ -4702,6 +4769,333 @@ function printShopList(){
   }
   printShopSheet(html);
 }
+/* ================= The station's Menu =================
+   Option B of the top-bar mock-up: the station keeps Shopping list in the
+   bar and everything else lives here, each with a line saying what it
+   does. Built outside #prepStation so a tick (which redraws the station)
+   does not close it. */
+function currentStationItem(){
+  const items = stationDayItems();
+  return items.find(it=> it.key === state.stationSel) || items[0] || null;
+}
+function kmItem(act, icon, title, sub, extra){
+  return `<button type="button" class="kmItem${extra && extra.cls ? ' ' + extra.cls : ''}" role="${extra && extra.role || 'menuitem'}" data-km="${act}"${extra && extra.checked != null ? ' aria-checked="' + extra.checked + '"' : ''}${extra && extra.disabled ? ' disabled' : ''}>
+    <span class="kmIcon">${stIcon(icon)}</span>
+    <span class="kmText"><span class="kmTitle">${escapeHtml(title)}</span>${sub ? `<span class="kmSub">${escapeHtml(sub)}</span>` : ''}</span>${extra && extra.switchOn != null ? '<span class="kmSwitch" aria-hidden="true"></span>' : ''}
+  </button>`;
+}
+function openKitchenMenu(){
+  if(document.getElementById('kitchenMenu')){ closeKitchenMenu(); return; }
+  const it = currentStationItem();
+  const day = state.day;
+  const need = it ? roundQty(it.servings) : 0;
+  const recipeSub = !it ? 'Choose a dish first'
+    : (it.servings > 0 ? it.recipeName + ', for ' + need + ' today' : it.recipeName + ' (no numbers entered yet)');
+  const wake = WAKE_SUPPORTED ? kmItem('wake', 'sun', 'Keep screen on', KEEP_AWAKE_FROM + 'am to ' + (KEEP_AWAKE_UNTIL - 12) + 'pm while this page is open', {cls: 'wake', role: 'menuitemcheckbox', checked: keepAwakeWanted(), switchOn: true}) : '';
+  const session = (typeof KITCHEN_SESSION === 'object' && KITCHEN_SESSION) || {};
+  const site = SITE_CONFIG.siteName || 'this kitchen';
+  const out = [];
+  if(session.admin) out.push(kmItem('admin', 'admin', 'Staff admin', 'Recipes, menus and settings'));
+  if(session.enforced) out.push(kmItem('logout', 'logout', session.admin ? 'Log out of admin' : 'Log out of ' + site, '', {cls: 'out'}));
+  const wrap = document.createElement('div');
+  wrap.id = 'kitchenMenu';
+  wrap.innerHTML = `<div class="kmPanel" role="menu" aria-label="Kitchen menu">
+    <div class="kmHead">VIEW</div>
+    ${kmItem('allergy', 'matrix', 'Allergy matrix', 'This week’s dishes and their allergens')}
+    <div class="kmRule"></div>
+    <div class="kmHead">PRINT</div>
+    ${kmItem('recipe', 'recipe', 'This recipe', recipeSub, {disabled: !it})}
+    ${kmItem('prep', 'sheets', day + '’s prep sheets', 'One sheet per course')}
+    ${kmItem('shop', 'cart', 'Shopping list', 'Week ' + state.week + ', with the To order numbers')}
+    <div class="kmRule"></div>
+    <div class="kmHead">TODAY</div>
+    ${kmItem('clear', 'clear', 'Clear today’s ticks', 'Untick every ingredient for ' + day)}
+    ${wake}
+    ${out.length ? '<div class="kmRule"></div>' + out.join('') : ''}
+  </div>`;
+  document.body.appendChild(wrap);
+  const btn = document.getElementById('stMenuBtn');
+  const panel = wrap.querySelector('.kmPanel');
+  const r = btn ? btn.getBoundingClientRect() : null;
+  panel.style.top = (r ? Math.round(r.bottom + 8) : 76) + 'px';
+  if(btn) btn.setAttribute('aria-expanded', 'true');
+  wrap.addEventListener('click', (e)=>{
+    if(e.target === wrap){ closeKitchenMenu(); return; }
+    const b = e.target.closest('[data-km]');
+    if(!b || b.disabled) return;
+    kitchenMenuAction(b.dataset.km, b);
+  });
+  document.addEventListener('keydown', kitchenMenuKeys);
+  const first = panel.querySelector('.kmItem:not([disabled])');
+  if(first) first.focus({preventScroll: true});
+}
+function kitchenMenuKeys(e){ if(e.key === 'Escape') closeKitchenMenu(); }
+function closeKitchenMenu(){
+  const m = document.getElementById('kitchenMenu');
+  if(m) m.remove();
+  document.removeEventListener('keydown', kitchenMenuKeys);
+  const btn = document.getElementById('stMenuBtn');
+  if(btn) btn.setAttribute('aria-expanded', 'false');
+}
+async function kitchenMenuAction(act, b){
+  if(act === 'wake'){
+    setKeepAwake(!keepAwakeWanted());
+    b.setAttribute('aria-checked', String(keepAwakeWanted()));
+    return;   // the menu stays open: it is a switch
+  }
+  closeKitchenMenu();
+  if(act === 'allergy') openAllergyView();
+  else if(act === 'recipe') printThisRecipe();
+  else if(act === 'prep') openPrepSheets();
+  else if(act === 'shop') printShoppingListNow();
+  else if(act === 'clear'){
+    if(!confirm('Clear every tick for ' + state.day + '?')) return;
+    state.checked = {};
+    await saveChecked();
+    renderActivePrep();
+  }
+  else if(act === 'logout'){ const lo = document.getElementById('kitchenLogoutBtn'); if(lo) lo.click(); }
+  else if(act === 'admin'){ const t = document.getElementById('rbAdminTriggerBtn'); if(t) t.click(); }
+}
+/* The shopping list as Print list prints it, without going to the page. */
+function printShoppingListNow(){
+  renderShopGrid();
+  renderShopList();
+  printShopList();
+}
+
+/* ================= This recipe, as a recipe card for today =================
+   Staff admin's recipe card (same design, portions, allergy grid, chef
+   notes, nutrition), but scaled to the numbers in Who's eating: "Make
+   today", every quantity for today, and how many of each age group are
+   eating beside the portion sizes.
+
+   The dish itself -- ingredients, method, allergens -- is the one on this
+   kitchen's screen (the published menu), so the card and the screen can
+   never disagree. The recipe bank adds what a published menu does not
+   carry: portion sizes, diet, who reviewed it, its version. */
+let SHARED_RECIPES_FOR_CARD = null;
+async function sharedRecipesForCard(){
+  if(SHARED_RECIPES_FOR_CARD) return SHARED_RECIPES_FOR_CARD;
+  const controller = new AbortController();
+  const timer = setTimeout(()=> controller.abort(), 10000);
+  try{
+    const res = await fetch('/.netlify/functions/get-season?group=_config&file=recipes.json', {signal: controller.signal, cache: 'no-store'});
+    clearTimeout(timer);
+    if(!res.ok) return null;
+    const doc = await res.json();
+    SHARED_RECIPES_FOR_CARD = (doc && doc.recipes) || null;
+    return SHARED_RECIPES_FOR_CARD;
+  }catch(e){ clearTimeout(timer); return null; }
+}
+const normAllergens = (raw)=> splitAllergenTokens(raw || '').join(', ');
+function kitchenCardRecipe(it, bank){
+  const dish = it.recipe || {};
+  const norm = (n)=> String(n || '').replace(/\s+/g, ' ').trim().toLowerCase();
+  const b = (bank && ((dish.recipeId && bank[dish.recipeId]) || Object.values(bank).find(r=> r && norm(r.name) === norm(it.recipeName)))) || {};
+  const db = INGREDIENT_DB_BY_ID || {};
+  const tempDb = Object.assign({}, db);
+  const ingredients = (dish.ingredients || []).map(row=>{
+    const allergens = normAllergens(row.allergens);
+    const out = {name: row.name || '', qty: row.qty, unit: row.unit, prep: row.prep || '', allergens};
+    // Linked rows keep their link (nutrition, swaps) but show the
+    // allergens and name the kitchen sees; a link this page cannot
+    // resolve is dropped rather than printed as a missing ingredient.
+    if(row.ingredientId && db[row.ingredientId]){
+      out.ingredientId = row.ingredientId;
+      tempDb[row.ingredientId] = Object.assign({}, db[row.ingredientId], {allergens, productName: row.name || db[row.ingredientId].productName});
+    }
+    return out;
+  });
+  const method = (dish.method || []).map(step=>{
+    if(typeof step === 'string') return step;
+    const text = (step && step.text) || '';
+    const subs = (step && step.subs && step.subs.length) ? ' — ' + step.subs.join('; ') : '';
+    return text + subs;
+  });
+  const recipe = Object.assign({}, b, {
+    name: it.recipeName,
+    servings: dish.baseServings != null ? dish.baseServings : (b.servings != null ? b.servings : null),
+    description: dish.description || b.description || '',
+    ingredients, method, utensils: dish.utensils || b.utensils || [],
+  });
+  return {recipe, tempDb, fromBank: !!b.id};
+}
+function buildKitchenRecipeCardHtml(it, bank){
+  const {recipe, tempDb} = kitchenCardRecipe(it, bank);
+  const need = it.servings > 0 ? roundQty(it.servings) : null;
+  const seasonLabel = ACTIVE_EXTRA ? (ACTIVE_EXTRA.cfg.label || ACTIVE_EXTRA.key) : ((SEASONS.find(x=> x.key === SEASON_KEY) || {}).label || '');
+  const hc = state.headcounts || {};
+  // How many of each age are eating, beside the portion sizes -- only
+  // where every child eats this dish (a veg swap splits them unknowably).
+  const swapCourse = VEG_SWAP_PAIRS.some(p=> p.base === it.courseName || p.veg === it.courseName) && (Number(hc.veg) || 0) > 0;
+  const bandCounts = (!ACTIVE_EXTRA && need && !swapCourse) ? ['c1', 'c2', 'c3'].map(k=> Number(hc[k]) || 0) : null;
+  const printed = new Date().toLocaleDateString('en-GB', {weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'});
+  const ctx = {
+    course: it.courseName, week: state.week, day: state.day, seasonLabel,
+    scale: need ? it.scale : undefined, need: need || undefined, bandCounts,
+    printedFor: (SITE_CONFIG.siteName ? SITE_CONFIG.siteName + ' · ' : '') + 'printed ' + printed,
+  };
+  const card = RB_CARD_KIT.recipeCard(recipe, ctx, tempDb);
+  const line = need ? 'scaled for ' + need + ' servings today' : 'at its own size (no numbers entered for today)';
+  return `<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>${escapeHtml(recipe.name)} — recipe card</title>
+<style>${RB_CARD_KIT.css}</style>
+<style>.portionToday{display:block;font-size:6.8pt;font-weight:700;color:var(--teal-deep);margin-top:0.6pt;}</style>
+</head><body>
+<div class="rcToolbar"><button id="rcDownloadBtn" class="rcDownloadBtn" onclick="downloadRecipeCardsPdf()">&#11015; Download PDF</button><div>${escapeHtml(recipe.name)} &mdash; ${escapeHtml(line)} (Week ${escapeHtml(String(state.week))}, ${escapeHtml(state.day)}).</div></div>
+<div class="pageWrap">${card}</div>
+<script>${RB_CARD_KIT.paginate}<\/script>
+<script>${RB_CARD_KIT.pdf}<\/script>
+</body></html>`;
+}
+/* Opens a tab at once (an iPad only allows a new tab straight from the
+   tap) and fills it once the recipe bank has been read. */
+async function printThisRecipe(){
+  const it = currentStationItem();
+  if(!it){ alert('There is no dish on screen to print.'); return; }
+  if(!RB_CARD_KIT || !RB_CARD_KIT.recipeCard){ alert('The recipe card is still loading. Try again in a moment.'); return; }
+  if(!(it.servings > 0) && !confirm('No numbers have been entered in Who’s eating for today, so the card can’t be scaled yet.\n\nPrint it at the recipe’s own size' + (it.base ? ' (makes ' + it.base + ')' : '') + ' instead?')) return;
+  const w = window.open('', '_blank');
+  if(!w){ alert('Please allow pop-ups to open the recipe card.'); return; }
+  try{ w.document.title = 'Recipe card'; w.document.body.style.font = '16px system-ui, sans-serif'; w.document.body.textContent = 'Preparing the recipe card…'; }catch(e){}
+  const bank = await sharedRecipesForCard();
+  const html = buildKitchenRecipeCardHtml(it, bank);
+  const url = URL.createObjectURL(new Blob([html], {type: 'text/html'}));
+  w.location.href = url;
+  const release = setInterval(()=>{ if(w.closed){ URL.revokeObjectURL(url); clearInterval(release); } }, 2000);
+}
+
+/* ================= The allergy matrix =================
+   Every dish on this week's menu and the allergens in it, from the same
+   published menu (and the same allergen reading) as the rest of this
+   page. A full-screen view over the station, with Back; tapping an icon
+   opens the usual allergen information. "Print the week" prints Staff
+   admin's allergen matrix layout for this week. */
+const AV_SHORT = {gluten: 'Gluten', milk: 'Milk', egg: 'Egg', fish: 'Fish', crustaceans: 'Crusta­ceans', molluscs: 'Mol­luscs', peanut: 'Peanut', treenuts: 'Tree nuts', sesame: 'Sesame', soybean: 'Soya', celery: 'Celery', mustard: 'Mustard', lupin: 'Lupin', so2: 'Sul­phites'};
+const AV_DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+let ALLERGY_VIEW_DAY_ONLY = false;
+function allergyViewDishes(dayFilter){
+  const week = MENU[state.week] || {};
+  const days = AV_DAYS.filter(d=> week[d] && (!dayFilter || d === dayFilter));
+  return days.map(day=>{
+    const dayCourses = week[day] || {};
+    const rows = [];
+    COURSE_ORDER.filter(c=> courseHasRealDish(dayCourses[c])).forEach(courseName=>{
+      realDishNames(dayCourses[courseName]).forEach(name=>{
+        const tags = collectRecipeAllergens(dayCourses[courseName][name]);
+        const status = {};
+        tags.forEach(t=>{ if(t.key) status[t.key] = t.mayContainOnly ? 'may' : 'yes'; });
+        rows.push({courseName, name, status});
+      });
+    });
+    return {day, rows};
+  });
+}
+function allergyViewHtml(){
+  const seasonLabel = ACTIVE_EXTRA ? (ACTIVE_EXTRA.cfg.label || ACTIVE_EXTRA.key) : ((SEASONS.find(x=> x.key === SEASON_KEY) || {}).label || '');
+  const keys = ALLERGEN_OPTIONS.map(a=> a.key);
+  const badge = (k, may)=> `<span class="allergen-badge${may ? ' maybe' : ''}" role="button" tabindex="0" title="${may ? 'May contain ' : 'Contains '}${escapeHtml(ALLERGEN_INFO[k].name)}" data-allergen-key="${k}" data-allergen-label="${escapeHtml(ALLERGEN_INFO[k].name)}" data-allergen-maybe="${may ? '1' : '0'}"><img src="${ALLERGEN_ICONS[k]}" alt="${may ? 'May contain ' : 'Contains '}${escapeHtml(ALLERGEN_INFO[k].name)}"></span>`;
+  const days = allergyViewDishes(ALLERGY_VIEW_DAY_ONLY ? state.day : null);
+  const body = days.map(d=> `<tr class="avDay${isTodaysSlot(state.week, d.day) ? ' today' : ''}"><td colspan="${keys.length + 1}">${escapeHtml(d.day)}${isTodaysSlot(state.week, d.day) ? ' · today' : ''}</td></tr>` +
+    d.rows.map(r=> `<tr class="avRow"><td class="avDish"><span class="avCourse">${escapeHtml(courseLabel(r.courseName))}</span><span class="avName">${escapeHtml(r.name)}</span></td>${keys.map(k=> `<td>${r.status[k] ? badge(k, r.status[k] === 'may') : '<span class="avNone" aria-hidden="true"></span>'}</td>`).join('')}</tr>`).join('')
+  ).join('');
+  return `<div class="avHead">
+      <div class="avTitles">
+        <button type="button" class="shopBackBtn" id="avBack"><i class="ti ti-arrow-left"></i><span>Back to the daily prep</span></button>
+        <div><h1>Allergy matrix</h1><div class="avSub">Week ${escapeHtml(String(state.week))}${seasonLabel ? ' · ' + escapeHtml(seasonLabel) : ''} · every dish ${ALLERGY_VIEW_DAY_ONLY ? 'on ' + escapeHtml(state.day) : 'this week'} and the allergens in it</div></div>
+      </div>
+      <div class="avToggle" role="group" aria-label="Show">
+        <button type="button" data-av="week" aria-pressed="${!ALLERGY_VIEW_DAY_ONLY}">Whole week</button>
+        <button type="button" data-av="day" aria-pressed="${ALLERGY_VIEW_DAY_ONLY}">${escapeHtml(state.day)} only</button>
+      </div>
+      <button type="button" class="avPrint" id="avPrint"><i class="ti ti-printer"></i>Print the week</button>
+    </div>
+    <div class="avLegend">
+      <span><span class="allergen-badge" aria-hidden="true"><img src="${ALLERGEN_ICONS.gluten}" alt=""></span>Contains</span>
+      <span><span class="allergen-badge maybe" aria-hidden="true"><img src="${ALLERGEN_ICONS.gluten}" alt=""></span>May contain</span>
+      <span>Tap any icon for the allergen’s name and what it covers</span>
+    </div>
+    <div class="avScroll">${days.some(d=> d.rows.length) ? `<table>
+      <thead><tr><th class="avDishHead" scope="col">DISH</th>${keys.map(k=> `<th scope="col"><img src="${ALLERGEN_ICONS[k]}" alt="">${AV_SHORT[k] || escapeHtml(ALLERGEN_INFO[k].name)}</th>`).join('')}</tr></thead>
+      <tbody>${body}</tbody>
+    </table>` : '<div class="avEmpty">There is no menu on file for this week.</div>'}</div>`;
+}
+function openAllergyView(){
+  let v = document.getElementById('allergyView');
+  if(!v){
+    v = document.createElement('div');
+    v.id = 'allergyView';
+    v.setAttribute('role', 'dialog');
+    v.setAttribute('aria-modal', 'true');
+    v.setAttribute('aria-label', 'Allergy matrix');
+    document.body.appendChild(v);
+    v.addEventListener('click', (e)=>{
+      if(e.target.closest('#avBack')){ closeAllergyView(); return; }
+      if(e.target.closest('#avPrint')){ printAllergyMatrixWeek(); return; }
+      const t = e.target.closest('[data-av]');
+      if(t){ ALLERGY_VIEW_DAY_ONLY = t.dataset.av === 'day'; v.innerHTML = allergyViewHtml(); }
+    });
+  }
+  v.innerHTML = allergyViewHtml();
+  document.body.classList.add('allergyOpen');
+  document.addEventListener('keydown', allergyViewKeys);
+  const back = document.getElementById('avBack');
+  if(back) back.focus({preventScroll: true});
+}
+function allergyViewKeys(e){
+  if(e.key === 'Escape' && !document.querySelector('.allergen-modal-backdrop')) closeAllergyView();
+}
+function closeAllergyView(){
+  const v = document.getElementById('allergyView');
+  if(v) v.remove();
+  document.body.classList.remove('allergyOpen');
+  document.removeEventListener('keydown', allergyViewKeys);
+}
+/* Staff admin's allergen matrix layout (menuPackAllergenSourceHtml and the
+   Menu Pack's pagination and PDF), filled from this week's published
+   menu: every different dish once, A to Z, with its allergens read the
+   same way as this page shows them. */
+function buildKitchenAllergenMatrixHtml(){
+  const week = MENU[state.week] || {};
+  const seen = {};
+  const recipes = [];
+  AV_DAYS.forEach(day=>{
+    const dayCourses = week[day] || {};
+    COURSE_ORDER.filter(c=> courseHasRealDish(dayCourses[c])).forEach(courseName=>{
+      realDishNames(dayCourses[courseName]).forEach(name=>{
+        const key = name.trim().toLowerCase();
+        if(seen[key]) return;
+        seen[key] = 1;
+        const dish = dayCourses[courseName][name] || {};
+        recipes.push({name, description: dish.description || '', ingredients: (dish.ingredients || []).map(row=> ({name: row.name || '', allergens: normAllergens(row.allergens)}))});
+      });
+    });
+  });
+  recipes.sort((a, b)=> a.name.localeCompare(b.name));
+  const seasonLabel = ACTIVE_EXTRA ? (ACTIVE_EXTRA.cfg.label || ACTIVE_EXTRA.key) : ((SEASONS.find(x=> x.key === SEASON_KEY) || {}).label || '');
+  const css = RB_CARD_KIT.matrixCss();
+  const site = SITE_CONFIG.siteName || '';
+  return `<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>Allergen matrix — Week ${escapeHtml(String(state.week))}</title>
+<style>${css}</style>
+</head><body>
+<div class="mpToolbar"><button id="mpDownloadBtn" class="mpDownloadBtn" onclick="downloadMenuPackPdf()">⬇ Download PDF</button><div>Allergen matrix &mdash; ${escapeHtml(seasonLabel)}, week ${escapeHtml(String(state.week))}${site ? ', ' + escapeHtml(site) : ''}. From this kitchen’s published menu.</div></div>
+<div class="mpPortraitWarning"><div class="big">Use Download PDF instead</div><p>This matrix is built for A4 landscape. Cancel this print and use the green <b>⬇ Download PDF</b> button at the top of the page, then print the PDF.</p></div>
+<div class="mpDoc">${RB_CARD_KIT.matrixSource(recipes, state.week, seasonLabel)}</div>
+<script>${RB_CARD_KIT.matrixPaginate}<\/script>
+<script>${RB_CARD_KIT.matrixPdf}<\/script>
+</body></html>`;
+}
+function printAllergyMatrixWeek(){
+  if(!RB_CARD_KIT || !RB_CARD_KIT.matrixSource){ alert('The allergen matrix is still loading. Try again in a moment.'); return; }
+  const html = buildKitchenAllergenMatrixHtml();
+  const url = URL.createObjectURL(new Blob([html], {type: 'text/html'}));
+  const w = window.open(url, '_blank');
+  if(!w){ URL.revokeObjectURL(url); alert('Please allow pop-ups to open the allergen matrix.'); return; }
+  const release = setInterval(()=>{ if(w.closed){ URL.revokeObjectURL(url); clearInterval(release); } }, 2000);
+}
+
 /* Kept up to date while the shopping list is open, so a print started from
    Safari's own menu (where nothing runs first on an iPad) is right too. */
 function shopPrintSheetEl(){
@@ -18317,11 +18711,16 @@ function recipeCardIngredientTagsHtml(resolved){
   }).join('');
 }
 
-function recipeCardIngredientRowHtml(ing, idx){
+function recipeCardIngredientRowHtml(ing, idx, scale){
   const resolved = resolveIngredientRow(ing);
   const prep = ing.prep ? `<span class="prepNote">${escapeHtml(ing.prep)}</span>` : '';
   const tags = recipeCardIngredientTagsHtml(resolved);
   const oddClass = (idx % 2 === 1) ? ' class="odd"' : '';
+  // Scaled (the kitchen's "This recipe" print): the amount for today, in
+  // the same words as the kitchen page and prep sheets (formatQty).
+  if(scale != null){
+    return `<tr${oddClass}><td class="name">${escapeHtml(resolved.name||'')}${tags}${prep}</td><td class="qty" colspan="2">${escapeHtml(formatQty(ing, scale))}</td></tr>`;
+  }
   return `<tr${oddClass}><td class="name">${escapeHtml(resolved.name||'')}${tags}${prep}</td><td class="qty">${ing.qty!=null && ing.qty!=='' ? escapeHtml(String(ing.qty)) : '—'}</td><td class="unit">${escapeHtml(ing.unit||'')}</td></tr>`;
 }
 
@@ -18367,13 +18766,15 @@ function recipeCardAllergyGridHtml(recipe, portionsEmpty){
   </div>`;
 }
 
-function recipeCardPortionsHtml(recipe){
+function recipeCardPortionsHtml(recipe, bandCounts){
   const portions = recipe.portions || [];
   const anySet = PORTION_AGE_BANDS.some((band,i)=> (portions[i]||'').trim());
   if(!anySet) return {html:'', empty:true};
   const cards = PORTION_AGE_BANDS.map((band,i)=>{
     const amt = (portions[i]||'').trim();
-    return `<div class="portionCard p${i+1}"><span class="portionAge">${escapeHtml(band)}</span><span class="portionAmt">${amt ? escapeHtml(amt) : 'Not yet recorded'}</span></div>`;
+    // The kitchen's print adds how many of that age are eating today.
+    const today = bandCounts && bandCounts[i] != null ? `<span class="portionToday">${escapeHtml(String(bandCounts[i]))} today</span>` : '';
+    return `<div class="portionCard p${i+1}"><span class="portionAge">${escapeHtml(band)}${today}</span><span class="portionAmt">${amt ? escapeHtml(amt) : 'Not yet recorded'}</span></div>`;
   }).join('');
   return {html: `<div class="portionsCol"><div class="sectionLabel">Portions</div><div class="portionCards">${cards}</div></div>`, empty:false};
 }
@@ -18470,10 +18871,11 @@ function recipeCardNutritionHtml(recipe){
    measure and adjust" approach as the Menu Pack's own auto-fit script,
    adapted for splitting across pages instead of shrinking to fit one. */
 function buildRecipeCardHtml(recipe, ctx){
-  const ingredientsHtml = (recipe.ingredients||[]).map((ing,i)=> recipeCardIngredientRowHtml(ing,i)).join('');
+  const scaled = ctx && ctx.scale != null;
+  const ingredientsHtml = (recipe.ingredients||[]).map((ing,i)=> recipeCardIngredientRowHtml(ing, i, scaled ? ctx.scale : undefined)).join('');
   const methodHtml = (recipe.method||[]).map((step,i)=> `<li><span class="stepNum">${i+1}</span><p>${escapeHtml(step)}</p></li>`).join('')
     || '<li><span class="stepNum">1</span><p>No method recorded yet.</p></li>';
-  const portions = recipeCardPortionsHtml(recipe);
+  const portions = recipeCardPortionsHtml(recipe, ctx && ctx.bandCounts);
   const allergyHtml = recipeCardAllergyGridHtml(recipe, portions.empty);
   const chefNotesHtml = recipeCardChefNotesHtml(recipe);
   const nutritionHtml = recipeCardNutritionHtml(recipe);
@@ -18498,12 +18900,14 @@ function buildRecipeCardHtml(recipe, ctx){
   </div>
   <div class="titleRow">
     <h1 class="recipeName">${escapeHtml(recipe.name || 'Untitled recipe')}</h1>
-    <div class="metaRow"><div class="metaItem"><span class="metaLabel">Serves</span><span class="metaValue">${recipe.servings!=null ? escapeHtml(String(recipe.servings)) : '—'}</span></div></div>
+    <div class="metaRow">${scaled
+      ? `<div class="metaItem"><span class="metaLabel">Make today</span><span class="metaValue">${escapeHtml(String(ctx.need))}</span></div><div class="metaItem"><span class="metaLabel">Recipe makes</span><span class="metaValue">${recipe.servings!=null ? escapeHtml(String(recipe.servings)) : '—'}</span></div><div class="metaItem"><span class="metaLabel">Scale</span><span class="metaValue">${recipe.servings ? '&times;' + (Math.round(ctx.scale*100)/100) : 'not scaled'}</span></div>`
+      : `<div class="metaItem"><span class="metaLabel">Serves</span><span class="metaValue">${recipe.servings!=null ? escapeHtml(String(recipe.servings)) : '—'}</span></div>`}</div>
   </div>
   <div class="body">
     <div class="ingCol">
-      <div class="sectionLabel">Ingredients <span class="tagLegend">solid badge = contains &nbsp;&middot;&nbsp; outline = may contain</span></div>
-      <table class="ingTable"><thead><tr><th>Ingredient</th><th class="qtyHead">Qty</th><th>Unit</th></tr></thead><tbody>${ingredientsHtml || '<tr><td class="name" colspan="3">No ingredients recorded yet.</td></tr>'}</tbody></table>
+      <div class="sectionLabel">Ingredients${scaled ? ' &mdash; scaled for today' : ''} <span class="tagLegend">solid badge = contains &nbsp;&middot;&nbsp; outline = may contain</span></div>
+      <table class="ingTable"><thead><tr><th>Ingredient</th>${scaled ? '<th class="qtyHead" colspan="2">Today</th>' : '<th class="qtyHead">Qty</th><th>Unit</th>'}</tr></thead><tbody>${ingredientsHtml || '<tr><td class="name" colspan="3">No ingredients recorded yet.</td></tr>'}</tbody></table>
     </div>
     <div class="methodCol">
       <div class="sectionLabel">Method</div>
@@ -18524,6 +18928,7 @@ function buildRecipeCardHtml(recipe, ctx){
       </div>
       <div class="footMeta">
         <span class="footMetaItem">${escapeHtml(ctx.seasonLabel||'')}</span>
+        ${ctx.printedFor ? `<span class="footMetaItem">${escapeHtml(ctx.printedFor)}</span>` : ''}
         <span class="footMetaItem">Recipe <b>v${recipe.version||1}</b></span>
         <span class="footMetaItem">Updated <b>${escapeHtml(updatedStr)}</b></span>
         <span class="footMetaItem" data-page-indicator="1">Page <b>1 of 1</b></span>
@@ -19153,7 +19558,22 @@ const RECIPE_CARD_PDF_SCRIPT = `
    assigning this any earlier in the file reads them inside their temporal
    dead zone and throws on load -- which is exactly what happened on the
    first attempt. */
-RB_CARD_KIT = {css: RECIPE_CARD_CSS, pdf: RECIPE_CARD_PDF_SCRIPT};
+RB_CARD_KIT = {css: RECIPE_CARD_CSS, pdf: RECIPE_CARD_PDF_SCRIPT,
+  /* The kitchen page's prints (the station's Menu) use Staff admin's own
+     recipe card and allergen matrix through these, so there is one design
+     of each. ingredientsById stands in for the ingredient database while
+     the card is built (nutrition, swaps), then is put back. */
+  paginate: RECIPE_CARD_PAGINATE_SCRIPT,
+  recipeCard(recipe, ctx, ingredientsById){
+    const saved = DATA.ingredients;
+    try{ if(ingredientsById) DATA.ingredients = ingredientsById; return buildRecipeCardHtml(recipe, ctx); }
+    finally{ DATA.ingredients = saved; }
+  },
+  matrixCss(){ return MENU_PACK_CSS + MENU_PACK_TIGHT1_CSS + MENU_PACK_TIGHT2_CSS + MENU_PACK_ALLERGEN_CSS; },
+  matrixSource(recipes, wk, seasonLabel){ return menuPackAllergenSourceHtml(recipes, wk, seasonLabel); },
+  matrixPaginate: MENU_PACK_ALLERGEN_PAGINATE_SCRIPT,
+  matrixPdf: MENU_PACK_PDF_SCRIPT,
+};
 
 function buildRecipeCardsHtml(entries){
   const title = entries.length === 1

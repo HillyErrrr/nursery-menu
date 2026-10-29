@@ -2428,3 +2428,28 @@ A published dish names its recipe id, so that copy is kept. An older published f
 - Before this, an iPad printed the whole page: it fires its "after print" event before laying the page out, and the print-only switch was turned off at that moment. The switch now clears on the next tap instead, for Staff admin's Print list too.
 
 **Tests:** `ipadtest.js` (24 checks) and `shopback.js` (8 checks), in both storage modes.
+
+## Kitchen top bar: Shopping list + Menu (October 2026)
+
+**The bar.** John chose Option B of the top-bar mock-up (design canvas "Kitchen Top Bar Options"). The station's top bar now has two labelled buttons: **Shopping list** and **Menu**. The old icon buttons are gone: list view, print, clear ticks and screen on. Phones still open in the list view, but there's no switch to it on the station.
+
+**The Menu.** It's built outside `#prepStation`, so ticking doesn't close it. Its items:
+
+- **Allergy matrix:** a full-screen view of every dish this week, grouped by day with today highlighted, across the 14 allergens.
+  - Same icons as the rest of the page, and tapping one opens the usual allergen information.
+  - It reads the same published menu, through the same reader (`collectRecipeAllergens`), as the station.
+  - **Whole week / <day> only** narrows it to one day.
+  - **Print the week** prints Staff admin's allergen matrix layout for this week, every dish once, A to Z.
+- **Print:**
+  - **This recipe** prints Staff admin's recipe card for the dish on screen, scaled to today's numbers in Who's eating. It shows Make today, Recipe makes and Scale, with every quantity for today, worded the same way as the station.
+    - Beside each portion size, it shows how many of that age are eating today. This is left off for a main or tea when there's a veg swap, since the children are split between the two dishes.
+    - The dish itself (ingredients, method, allergens) is the published one on screen. Portion sizes, diet, reviewer and version come from the shared recipe bank. Nutrition and swaps come from the ingredient database.
+    - With no numbers entered, it asks first, then prints at the recipe's own size.
+  - **<Day>'s prep sheets**, as before.
+  - **Shopping list:** the same sheet as Print list, straight from the station.
+- **Today:** **Clear today's ticks**, which asks first, and **Keep screen on**, an on/off switch.
+- **Staff admin** (for the admin login) and **Log out**, when logins are on.
+
+**How the prints reach Staff admin's designs.** Staff admin's script is a closed function, so it hands the kitchen page its recipe card and allergen matrix builders through `RB_CARD_KIT`: `recipeCard(recipe, ctx, ingredientsById)`, `matrixCss()`, `matrixSource()`, `matrixPaginate` and `matrixPdf`. There's one design of each. `buildRecipeCardHtml` accepts `ctx.scale`, `ctx.need`, `ctx.bandCounts` and `ctx.printedFor`; without them, Staff admin's own cards are unchanged.
+
+**Tests:** `menutest.js`, 20 checks, in both storage modes.
