@@ -2561,3 +2561,25 @@ John chose **Days A** from the top-bar mock-ups (row 3 of the canvas).
 - The shopping page's bar no longer has a week picker; on a phone the week and day tabs are hidden on the shopping page.
 
 **Tests:** `docktest.js` (18, including D18 for the ingredient icons) and `shopdays.js` (13). `shopstation`, `shopback` and `menutest` were updated for choosing the days.
+
+**Ribbon, round 2.**
+- The week picker under the nursery's name is gone; the ribbon and its arrows are the way round the menu.
+- Every day in the ribbon shows its menu week (WEEK n).
+- **Back to today** appears as soon as the day showing is not today, as a coral button to the left of the days.
+- On a portrait iPad the tiles are a little smaller so the button fits.
+
+## Number pad, slider switch, no dish description (29 October 2026)
+
+**Numbers without the iPad keyboard** (option A from canvas round 7).
+- On a tablet-sized touch screen, these number boxes no longer bring up the iPad keyboard: the shopping list's Who's eating grid, its To order boxes, and today's Who's eating sheet.
+- Tapping a box opens a small number pad beside it, with 0–9, Clear, delete, **Done** and **Next**. Next goes down the groups on the same day, then on to the next day.
+- The pad says which box it is filling in and what it was. The first key replaces the number, and every key updates the totals and the list straight away.
+- Tapping elsewhere or pressing Escape closes it, and a plugged-in keyboard still types into it.
+- Phones and computers keep their own keyboards.
+- Code: `NUMPAD_SEL`, `numPadOpen`, `numPadPress`. The boxes are made read-only, with `inputmode="none"`, as they appear.
+
+**The Nursery / Holiday Club switch is a slider.** One raised thumb slides, with a little spring, to the side tapped, and the other menu loads as it lands. Tapping the side already chosen flips it to the other one. This works on the station and on the shopping list (`setUpMenuSwitch`).
+
+**No recipe description in the kitchen.** The Holiday Club dish no longer shows its description under its name. The description is the blurb for parents; Staff admin and the Menu Pack still show it.
+
+**Tests:** `numpad.js` (11) and `shopdays.js` SD14–SD15. `shopback` and `shopstation` now type through the pad (`t/pad.js`).

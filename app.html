@@ -300,14 +300,18 @@ body.booting #bootSplash{display:flex;flex-direction:column;position:fixed;inset
 #prepStation .stRow1 .stMenuSwitch{flex:none;}
 #prepStation .stRow1 .stActions{flex:1 1 0;display:flex;justify-content:flex-end;min-width:max-content;}
 #prepStation .stSite{max-width:220px;}
+#prepStation div.stSeason{margin-top:2px;}
 .stInfo{flex:none;display:flex;align-items:center;gap:14px;font-size:15px;color:#C9D2DA;white-space:nowrap;min-width:0;}
 .stInfo b{color:#fff;}
-.stBtn.stToday{background:var(--butter);border-color:var(--butter);color:#fff;font-size:15px;font-weight:800;padding:0 18px 0 14px;box-shadow:0 4px 12px rgba(0,0,0,0.25);}
+.stBtn.stToday{background:var(--butter);border-color:var(--butter);color:#fff;font-size:13.5px;font-weight:700;line-height:1.1;box-shadow:0 4px 12px rgba(0,0,0,0.25);
+  height:54px;width:92px;border-radius:14px;padding:0 8px;flex-direction:column;gap:2px;white-space:normal;text-align:center;flex:none;}
+.stBtn.stToday b{display:block;font-size:15px;font-weight:800;}
+.stBtn.stToday .stIco{width:18px;height:18px;}
 #prepStation .stMenuBtn{height:56px;padding:0 24px 0 18px;border-radius:28px;font-size:18px;gap:10px;}
 #prepStation .stMenuBtn .stIco{width:24px;height:24px;}
 #prepStation .stNav{display:flex;justify-content:center;align-items:center;gap:10px;margin:0;}
 #prepStation .stArrow{height:54px;border-radius:14px;}
-.stDock{display:flex;align-items:center;gap:10px;}
+.stDock{display:flex;align-items:center;gap:8px;}
 .stDockDiv{width:2px;height:54px;border-radius:1px;background:rgba(255,255,255,0.22);margin:0 2px;flex:none;}
 .stDockDay{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;flex:none;border-radius:16px;border:1.5px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.06);color:#D5DCE2;padding:0;font-family:inherit;cursor:pointer;transition:width .18s ease,height .18s ease,background .18s ease;}
 .stDockDay.d0{width:164px;height:80px;border-radius:22px;}
@@ -330,18 +334,18 @@ body.booting #bootSplash{display:flex;flex-direction:column;position:fixed;inset
 .stDockDay.today.sel{box-shadow:0 10px 26px rgba(0,0,0,0.30);}
 .stDockDay.sel:not(.today){background:#fff;border-color:#fff;color:var(--ink);box-shadow:0 10px 26px rgba(0,0,0,0.26);}
 .stDockDay.sel:not(.today) .stDockTag{color:#A8541F;}
-.stTagN1, .stTagN2{display:none;}
-@media (max-width:1100px){ .stTagN1{display:block;} }
-@media (max-width:700px){ .stTagN2{display:block;} .stTagN1{display:none;} }
+
 /* With the Holiday Club switch there is less room on the top row: the
    info line keeps its Back to today button and drops its words. */
 @media (max-width:1400px){ #prepStation .stTop.hasSwitch .stInfoText{display:none;} }
 @media (max-width:1100px){
   .stDockDay.d3, .stDockDay.d3 + .stDockDiv{display:none;}
   .stDockDiv:has(+ .stDockDay.d3){display:none;}
-  .stDockDay.d0{width:140px;height:74px;}
-  .stDockDay.d1{width:112px;height:60px;}
-  .stDockDay.d2{width:100px;height:54px;}
+  .stDockDay.d0{width:128px;height:72px;}
+  .stDockDay.d1{width:104px;height:60px;}
+  .stDockDay.d2{width:92px;height:54px;}
+  .stDockDay.d0 .stDockName{font-size:19px;}
+  .stDockDay.d2 .stDockName{font-size:14.5px;}
   #prepStation .stRow1 .stBrand, #prepStation .stRow1 .stActions{min-width:0;}
   #prepStation .stTop:not(.hasSwitch) .stInfoText{white-space:normal;}
 }
@@ -354,6 +358,30 @@ body.booting #bootSplash{display:flex;flex-direction:column;position:fixed;inset
   .stDockDay.d1 .stDockName{font-size:14px;}
 }
 @media (prefers-reduced-motion: reduce){ .stDockDay{transition:none;} }
+/* ---- the number pad (no iPad keyboard) ---- */
+#numPad{position:fixed;z-index:9600;width:300px;background:#F5F7F9;border-radius:18px;box-shadow:0 18px 50px rgba(20,40,60,0.35),0 2px 6px rgba(20,40,60,0.2);padding:14px;display:flex;flex-direction:column;gap:10px;font-family:inherit;color:var(--ink);box-sizing:border-box;}
+#numPad[hidden]{display:none;}
+#numPad .npArrow{position:absolute;width:18px;height:18px;background:#F5F7F9;transform:rotate(45deg);}
+#numPad.npRight .npArrow{left:-8px;box-shadow:-3px 3px 6px rgba(20,40,60,0.10);}
+#numPad.npLeft .npArrow{right:-8px;box-shadow:3px -3px 6px rgba(20,40,60,0.10);}
+#numPad.npBelow .npArrow{display:none;}
+#numPad .npHead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;}
+#numPad .npWhen{font-size:12px;font-weight:800;letter-spacing:.06em;color:var(--ink-soft);text-transform:uppercase;display:block;}
+#numPad .npWho{font-size:15px;font-weight:800;display:block;line-height:1.2;}
+#numPad .npWas{font-size:12px;color:var(--ink-faint);white-space:nowrap;}
+#numPad .npShow{height:56px;border-radius:12px;background:#fff;border:2px solid var(--butter);display:flex;align-items:center;justify-content:flex-end;padding:0 16px;font-size:32px;font-weight:800;font-variant-numeric:tabular-nums;}
+#numPad .npKeys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+#numPad .npKey{height:58px;border-radius:12px;background:#fff;border:1px solid #D5DCE2;box-shadow:0 2px 0 #C9D2DA;font:inherit;font-size:24px;font-weight:700;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;}
+#numPad .npKey:active{transform:translateY(1px);box-shadow:0 1px 0 #C9D2DA;background:#EEF2F5;}
+#numPad .npKey.npClear{font-size:15px;color:var(--rust-text);}
+#numPad .npKey.npDel{font-size:22px;}
+#numPad .npFoot{display:grid;grid-template-columns:1fr 1.4fr;gap:8px;}
+#numPad .npFoot.single{grid-template-columns:1fr;}
+#numPad .npDone,#numPad .npNext{height:52px;border-radius:26px;font:inherit;font-size:15px;font-weight:800;cursor:pointer;padding:0 10px;}
+#numPad .npDone{border:1.5px solid #C2B9A3;background:#fff;color:var(--ink);}
+#numPad .npNext{border:0;background:var(--ink);color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#numPad button:focus-visible{outline:3px solid var(--butter);outline-offset:2px;}
+input.npActive{outline:3px solid var(--butter) !important;outline-offset:1px;background:#FBEDE8 !important;}
 /* ---- the shopping list's days (STEP 1) ---- */
 .shopDays{background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:14px 16px;margin:0 0 14px;display:grid;grid-template-columns:minmax(0,1fr) 210px;gap:18px;}
 .shopDays.sdNudge{animation:sdNudge .7s ease;}
@@ -1320,7 +1348,18 @@ body.hcSheetOpen .hcSheetFoot{display:flex;justify-content:flex-end;padding:0 16
 .stMenuSwitch{display:flex;gap:2px;padding:4px;border-radius:26px;flex:none;
   background:linear-gradient(180deg,#132a3c 0%,#1a3348 100%);
   box-shadow:inset 0 2px 6px rgba(0,0,0,0.55),inset 0 -1px 0 rgba(255,255,255,0.10),0 1px 0 rgba(255,255,255,0.12);}
-.stMenuSeg{height:44px;border-radius:22px;border:0;background:transparent;color:#C9D2DA;font-size:14.5px;font-weight:700;padding:0 17px;white-space:nowrap;text-shadow:0 1px 1px rgba(0,0,0,0.45);transition:background .15s, box-shadow .15s;}
+.stMenuSeg{height:44px;border-radius:22px;border:0;background:transparent;color:#C9D2DA;font-size:14.5px;font-weight:700;padding:0 17px;white-space:nowrap;text-shadow:0 1px 1px rgba(0,0,0,0.45);transition:background .15s, box-shadow .15s, color .2s;}
+/* The slider: one thumb under the chosen side, sliding between them. */
+.stMenuSwitch{position:relative;}
+.stMenuSwitch .stMenuSeg{position:relative;z-index:1;cursor:pointer;}
+.stMenuThumb{position:absolute;top:4px;bottom:4px;left:4px;width:0;border-radius:22px;z-index:0;pointer-events:none;
+  background:linear-gradient(180deg,#ffffff 0%,#e4eaef 100%);
+  box-shadow:0 3px 8px rgba(0,0,0,0.45),0 1px 2px rgba(0,0,0,0.3),inset 0 1px 0 #ffffff,inset 0 -2px 0 rgba(31,60,85,0.14);
+  transition:left .32s cubic-bezier(.34,1.42,.5,1), width .32s cubic-bezier(.34,1.42,.5,1);}
+.stMenuSwitch.npInstant .stMenuThumb{transition:none;}
+.stMenuSwitch.hasThumb .stMenuSeg.on{background:transparent;box-shadow:none;}
+.stMenuSwitch.hasThumb .stMenuSeg:active{transform:scale(.97);}
+@media (prefers-reduced-motion: reduce){ .stMenuThumb{transition:none;} }
 .stMenuSeg.on{background:linear-gradient(180deg,#ffffff 0%,#e4eaef 100%);color:var(--ink);text-shadow:none;
   box-shadow:0 3px 8px rgba(0,0,0,0.45),0 1px 2px rgba(0,0,0,0.3),inset 0 1px 0 #ffffff,inset 0 -2px 0 rgba(31,60,85,0.14);}
 .stTop.hasSwitch .stShopLabel{display:none;}
@@ -3662,16 +3701,12 @@ function stationDockHtml(){
     const today = isTodaysSlot(x.week, x.day);
     const sel = x.off === 0;
     const newWeek = i > 0 && slots[i - 1].week !== x.week;
-    const tag = (i === 0 || newWeek) ? 'WEEK ' + x.week : '';
-    // On a narrower screen the outer days are hidden: the first day still
-    // showing then carries its week's tag instead.
-    const firstOfWeekShown = !tag && !newWeek && (i === 1 || i === 2) && slots.slice(0, i).every(y=> y.week === x.week);
-    const narrowTag = firstOfWeekShown ? `<span class="stDockTag stTagN${i}">WEEK ${x.week}</span>` : '';
+    const tag = (ACTIVE_EXTRA ? 'WEEK ' : 'WEEK ') + x.week;
     const long = x.date ? x.date.toLocaleDateString('en-GB', {weekday: 'long', day: 'numeric', month: 'long'}) : x.day;
     const label = long + (today ? ', today' : '') + ', menu week ' + x.week;
     const second = today ? 'Today' : (x.date ? x.date.getDate() + ' ' + mon(x.date) : '');
     return `${newWeek ? '<span class="stDockDiv" aria-hidden="true"></span>' : ''}<button type="button" class="stDockDay d${x.dist}${today ? ' today' : ''}${sel ? ' sel' : ''}" data-act="slot" data-week="${x.week}" data-day="${escapeHtml(x.day)}" data-focus="slot:${x.week}|${escapeHtml(x.day)}" aria-pressed="${sel}"${today ? ' aria-current="date"' : ''} aria-label="${escapeHtml(label)}">
-      ${tag ? `<span class="stDockTag">${tag}</span>` : narrowTag}
+      <span class="stDockTag">${tag}</span>
       <span class="stDockName">${escapeHtml(x.day)}</span>
       ${second ? `<span class="stDockDate">${escapeHtml(second)}</span>` : ''}
     </button>`;
@@ -3686,11 +3721,15 @@ function stationInfoHtml(todaySlot){
     ? slot.date.toLocaleDateString('en-GB', {weekday: 'long', day: 'numeric', month: 'long'})
     : state.day;
   const text = (isToday ? 'Today is ' : 'Looking at ') + '<b>' + escapeHtml(when) + '</b> · ' + (ACTIVE_EXTRA ? 'week ' : 'menu week ') + escapeHtml(String(state.week));
-  const away = todaySlot && !stationDockShowsToday() && !(Number(todaySlot.week) === Number(state.week) && todaySlot.day === state.day);
-  const back = away
-    ? `<button type="button" class="stBtn stToday" data-act="today" data-focus="today" title="Go to ${todaySlot.weekend ? 'Monday’s' : 'today’s'} menu">${stIcon('back')}<span>${todaySlot.weekend ? 'Back to Monday' : 'Back to today'}</span></button>`
-    : '';
-  return `<div class="stInfo"><span class="stInfoText">${text}</span>${back}</div>`;
+  return `<div class="stInfo"><span class="stInfoText">${text}</span></div>`;
+}
+/* Back to today, at the left of the days: shown whenever the day showing
+   is not today (at the weekend, Monday). */
+function stationBackTodayHtml(todaySlot){
+  const away = todaySlot && !(Number(todaySlot.week) === Number(state.week) && todaySlot.day === state.day);
+  if(!away) return '';
+  const word = todaySlot.weekend ? 'Monday' : 'today';
+  return `<button type="button" class="stBtn stToday" data-act="today" data-focus="today" title="Go to ${todaySlot.weekend ? 'Monday’s' : 'today’s'} menu">${stIcon('back')}<span>Back to <b>${word}</b></span></button>`;
 }
 
 function stationDayItems(){
@@ -3837,11 +3876,7 @@ function renderPrepStation(){
         <span class="stLogo"><img alt=""></span>
         <div class="stBrandText">
           <div class="stSite">${escapeHtml(site)}</div>
-          <label class="stSeason">${season ? escapeHtml(season) + ' ·' : ''}
-            <select class="stWeekSel" id="stWeekSel" aria-label="Menu week" data-focus="week">
-              ${weeks.map(wk=> `<option value="${fa(wk)}"${Number(wk) === Number(state.week) ? ' selected' : ''}>Week ${escapeHtml(wk)}</option>`).join('')}
-            </select>
-          </label>
+          <div class="stSeason">${escapeHtml(season)}</div>
         </div>
       </div>
       ${menuSwitch}
@@ -3851,6 +3886,7 @@ function renderPrepStation(){
       </div>
       </div>
       <div class="stNav" role="group" aria-label="Day">
+        ${stationBackTodayHtml(todaySlot)}
         <button type="button" class="stBtn icon stArrow" data-act="prev" data-focus="prev" aria-label="Previous day" title="Previous day">${stIcon('prev')}</button>
         ${stationDockHtml()}
         <button type="button" class="stBtn icon stArrow" data-act="next" data-focus="next" aria-label="Next day" title="Next day">${stIcon('next')}</button>
@@ -3900,7 +3936,6 @@ function renderPrepStation(){
           <div class="stHeadText">
             <div class="stEyebrow">${isTodaysSlot(state.week, state.day) ? 'Today · ' : ''}${escapeHtml(state.day)} · ${escapeHtml(courseLabel(sel.courseName))}</div>
             <h2 class="stDish">${escapeHtml(sel.recipeName)}</h2>
-            ${ACTIVE_EXTRA && r.description ? `<div class="stDishDesc">${escapeHtml(r.description)}</div>` : ''}
             ${make}
           </div>
           <div class="stAllergens" aria-label="Allergens">${stationAllergensHtml(r)}</div>
@@ -5264,6 +5299,266 @@ function shopNeedsDays(){
   if(card){ card.classList.remove('sdNudge'); void card.offsetWidth; card.classList.add('sdNudge'); card.scrollIntoView({block: 'nearest', behavior: 'smooth'}); }
   return true;
 }
+/* ================= The menu switch as a slider =================
+   Each time a switch is drawn (the page redraws it when the menu
+   changes), its thumb starts where the last one was and slides to the
+   chosen side. */
+const SWITCH_THUMB = {left: null, width: null};
+function setUpMenuSwitch(sw){
+  if(!sw || sw.dataset.slider) return;
+  const first = sw.querySelector('.stMenuSeg.on') || sw.querySelector('.stMenuSeg');
+  if(!first || !first.offsetWidth) return; // not on screen yet: set up when it is drawn again
+  sw.dataset.slider = '1';
+  const thumb = document.createElement('span');
+  thumb.className = 'stMenuThumb';
+  thumb.setAttribute('aria-hidden', 'true');
+  sw.insertBefore(thumb, sw.firstChild);
+  sw.classList.add('hasThumb');
+  const on = sw.querySelector('.stMenuSeg.on') || sw.querySelector('.stMenuSeg');
+  if(!on) return;
+  const to = {left: on.offsetLeft, width: on.offsetWidth};
+  if(SWITCH_THUMB.left !== null && (SWITCH_THUMB.left !== to.left || SWITCH_THUMB.width !== to.width)){
+    sw.classList.add('npInstant');
+    thumb.style.left = SWITCH_THUMB.left + 'px';
+    thumb.style.width = SWITCH_THUMB.width + 'px';
+    void thumb.offsetWidth;
+    sw.classList.remove('npInstant');
+    requestAnimationFrame(()=>{ thumb.style.left = to.left + 'px'; thumb.style.width = to.width + 'px'; });
+  }else{
+    sw.classList.add('npInstant');
+    thumb.style.left = to.left + 'px';
+    thumb.style.width = to.width + 'px';
+    void thumb.offsetWidth;
+    sw.classList.remove('npInstant');
+  }
+  SWITCH_THUMB.left = to.left; SWITCH_THUMB.width = to.width;
+}
+function setUpMenuSwitches(){ document.querySelectorAll('.stMenuSwitch').forEach(setUpMenuSwitch); }
+/* A tap slides the thumb, and the other menu loads as it lands;
+   tapping the side already chosen flips to the other one. */
+document.addEventListener('click', (e)=>{
+  const seg = e.target.closest && e.target.closest('.stMenuSwitch .stMenuSeg');
+  if(!seg) return;
+  const sw = seg.closest('.stMenuSwitch');
+  const segs = [...sw.querySelectorAll('.stMenuSeg')];
+  let target = seg;
+  if(seg.classList.contains('on')){
+    if(segs.length !== 2) return;
+    target = segs.find(x=> x !== seg);
+  }
+  // The thumb slides first; the other menu loads as it lands.
+  e.preventDefault(); e.stopPropagation();
+  if(typeof useKitchenMenu === 'function') setTimeout(()=> useKitchenMenu(target.dataset.menu), 300);
+  const thumb = sw.querySelector('.stMenuThumb');
+  if(thumb){ thumb.style.left = target.offsetLeft + 'px'; thumb.style.width = target.offsetWidth + 'px'; }
+  SWITCH_THUMB.left = target.offsetLeft; SWITCH_THUMB.width = target.offsetWidth;
+  segs.forEach(x=>{ x.classList.toggle('on', x === target); x.setAttribute('aria-pressed', String(x === target)); });
+}, true);
+try{
+  new MutationObserver(()=> setUpMenuSwitches()).observe(document.body, {childList: true, subtree: true});
+}catch(e){}
+window.addEventListener('resize', ()=>{
+  document.querySelectorAll('.stMenuSwitch.hasThumb').forEach(sw=>{
+    const on = sw.querySelector('.stMenuSeg.on'); const t = sw.querySelector('.stMenuThumb');
+    if(on && t){ sw.classList.add('npInstant'); t.style.left = on.offsetLeft + 'px'; t.style.width = on.offsetWidth + 'px'; void t.offsetWidth; sw.classList.remove('npInstant'); }
+  });
+});
+setUpMenuSwitches();
+
+/* ================= The number pad =================
+   Instead of the iPad keyboard, which covers half the screen (and the
+   list being worked out), the number boxes open a small pad beside
+   themselves. Only on a tablet-sized touch screen: phones and computers
+   keep their own keyboards. The boxes are made read-only there, which is
+   what stops Safari bringing the keyboard up. */
+const NUMPAD_SEL = '#shopGridBody input.hc-input, #shopListCard input.orderInput, #headcountBody input.hc-input';
+function numPadWanted(){
+  try{
+    if(window.__forceNumPad !== undefined) return !!window.__forceNumPad;
+    return window.matchMedia('(pointer: coarse)').matches && Math.min(window.innerWidth, window.innerHeight) >= 600;
+  }catch(e){ return false; }
+}
+function numPadPrepare(root){
+  if(!numPadWanted()) return;
+  (root && root.querySelectorAll ? root : document).querySelectorAll(NUMPAD_SEL).forEach(inp=>{
+    if(inp.dataset.np) return;
+    inp.dataset.np = '1';
+    inp.readOnly = true;
+    inp.setAttribute('inputmode', 'none');
+    inp.setAttribute('aria-haspopup', 'dialog');
+  });
+}
+const NUMPAD = {el: null, input: null, sel: null, value: '', fresh: true, was: ''};
+/* Enough to find the same box again if the list is redrawn. */
+function numPadKeyOf(inp){
+  if(inp.dataset.day) return `#shopGridBody input.hc-input[data-day="${inp.dataset.day}"][data-key="${inp.dataset.key}"]`;
+  if(inp.dataset.orderId) return `#shopListCard input.orderInput[data-order-id="${CSS.escape(inp.dataset.orderId)}"]`;
+  const all = [...document.querySelectorAll('#headcountBody input.hc-input')];
+  return {hc: all.indexOf(inp)};
+}
+function numPadFind(sel){
+  if(!sel) return null;
+  if(typeof sel === 'string') return document.querySelector(sel);
+  return [...document.querySelectorAll('#headcountBody input.hc-input')][sel.hc] || null;
+}
+function numPadLabel(inp){
+  if(inp.dataset.day){
+    const info = typeof shopDayInfo === 'function' ? shopDayInfo(inp.dataset.day) : null;
+    const g = GROUPS.find(x=> x.key === inp.dataset.key);
+    return {when: info ? info.d.toLocaleDateString('en-GB', {weekday: 'short'}) + ' ' + info.d.getDate() + ' ' + info.d.toLocaleDateString('en-GB', {month: 'short'}) : inp.dataset.day,
+      who: g ? g.label : (inp.dataset.key === 'veg' ? 'Veg option' : inp.dataset.key)};
+  }
+  if(inp.classList.contains('orderInput')){
+    const tr = inp.closest('tr');
+    const n = tr && tr.querySelector('.ing-name');
+    return {when: 'To order', who: n ? n.textContent.trim() : 'This item'};
+  }
+  const row = inp.closest('.hc-row');
+  const l = row && row.querySelector('.hc-label');
+  return {when: 'Who’s eating', who: l ? l.textContent.trim() : (inp.id === 'vegInput' ? 'Vegetarian option' : 'Number')};
+}
+/* The box after this one: down the same day, then the next day. */
+function numPadNextOf(inp){
+  let list;
+  if(inp.dataset.day){
+    const cells = [...document.querySelectorAll('#shopGridBody input.hc-input')];
+    const days = [...new Set(cells.map(c=> c.dataset.day))];
+    list = days.flatMap(d=> cells.filter(c=> c.dataset.day === d));
+  }else if(inp.classList.contains('orderInput')){
+    list = [...document.querySelectorAll('#shopListCard input.orderInput')];
+  }else{
+    list = [...document.querySelectorAll('#headcountBody input.hc-input')];
+  }
+  const i = list.indexOf(inp);
+  return i >= 0 && i < list.length - 1 ? list[i + 1] : null;
+}
+function numPadEl(){
+  if(NUMPAD.el) return NUMPAD.el;
+  const el = document.createElement('div');
+  el.id = 'numPad';
+  el.hidden = true;
+  el.setAttribute('role', 'dialog');
+  el.innerHTML = `<span class="npArrow" aria-hidden="true"></span>
+    <div class="npHead"><div><span class="npWhen"></span><span class="npWho"></span></div><span class="npWas"></span></div>
+    <div class="npShow" aria-live="polite"></div>
+    <div class="npKeys">${[1,2,3,4,5,6,7,8,9].map(n=> `<button type="button" class="npKey" data-np-key="${n}">${n}</button>`).join('')}
+      <button type="button" class="npKey npClear" data-np-key="clear">Clear</button>
+      <button type="button" class="npKey" data-np-key="0">0</button>
+      <button type="button" class="npKey npDel" data-np-key="del" aria-label="Delete">⌫</button></div>
+    <div class="npFoot"><button type="button" class="npDone" data-np-key="done">Done</button><button type="button" class="npNext" data-np-key="next"></button></div>`;
+  el.addEventListener('pointerdown', e=> e.preventDefault()); // keep the page from scrolling or focusing behind
+  el.addEventListener('click', e=>{
+    const b = e.target.closest('[data-np-key]');
+    if(b) numPadPress(b.dataset.npKey);
+  });
+  document.body.appendChild(el);
+  NUMPAD.el = el;
+  return el;
+}
+function numPadPlace(){
+  const el = NUMPAD.el, inp = NUMPAD.input;
+  if(!el || !inp || !inp.isConnected) return;
+  const r = inp.getBoundingClientRect();
+  const W = 300, H = el.offsetHeight || 470, gap = 14, vw = window.innerWidth, vh = window.innerHeight;
+  let left, side;
+  if(r.right + gap + W <= vw - 8){ left = r.right + gap; side = 'npRight'; }
+  else if(r.left - gap - W >= 8){ left = r.left - gap - W; side = 'npLeft'; }
+  else { left = Math.max(8, Math.min(vw - W - 8, r.left + r.width / 2 - W / 2)); side = 'npBelow'; }
+  let top = side === 'npBelow' ? r.bottom + gap : r.top + r.height / 2 - 120;
+  top = Math.max(8, Math.min(vh - H - 8, top));
+  el.style.left = Math.round(left) + 'px';
+  el.style.top = Math.round(top) + 'px';
+  el.className = side;
+  const arrow = el.querySelector('.npArrow');
+  if(arrow) arrow.style.top = Math.round(Math.max(16, Math.min(H - 34, r.top + r.height / 2 - top - 9))) + 'px';
+}
+function numPadShow(){
+  const el = NUMPAD.el;
+  el.querySelector('.npShow').textContent = NUMPAD.value === '' ? '0' : NUMPAD.value;
+}
+function numPadOpen(inp){
+  if(NUMPAD.input && NUMPAD.input !== inp) NUMPAD.input.classList.remove('npActive');
+  const el = numPadEl();
+  NUMPAD.input = inp;
+  NUMPAD.sel = numPadKeyOf(inp);
+  NUMPAD.was = String(inp.value === '' ? 0 : inp.value);
+  NUMPAD.value = NUMPAD.was === '0' ? '' : NUMPAD.was;
+  NUMPAD.fresh = true;
+  inp.classList.add('npActive');
+  const lab = numPadLabel(inp);
+  el.querySelector('.npWhen').textContent = lab.when;
+  el.querySelector('.npWho').textContent = lab.who;
+  el.querySelector('.npWas').textContent = 'was ' + NUMPAD.was;
+  el.setAttribute('aria-label', lab.who + ', ' + lab.when);
+  const next = numPadNextOf(inp);
+  const nb = el.querySelector('.npNext');
+  nb.hidden = !next;
+  el.querySelector('.npFoot').classList.toggle('single', !next);
+  if(next){ const nl = numPadLabel(next); nb.textContent = 'Next: ' + (inp.dataset.day && next.dataset.day !== inp.dataset.day ? nl.when : nl.who.replace(/ years$/, '')) + ' ↓'; }
+  numPadShow();
+  el.hidden = false;
+  numPadPlace();
+}
+function numPadClose(){
+  if(NUMPAD.input) NUMPAD.input.classList.remove('npActive');
+  NUMPAD.input = null; NUMPAD.sel = null;
+  if(NUMPAD.el) NUMPAD.el.hidden = true;
+}
+function numPadApply(){
+  let inp = NUMPAD.input;
+  if(!inp || !inp.isConnected){ inp = numPadFind(NUMPAD.sel); NUMPAD.input = inp; if(inp) inp.classList.add('npActive'); }
+  if(!inp) return;
+  inp.value = String(NUMPAD.value === '' ? 0 : Number(NUMPAD.value));
+  inp.dispatchEvent(new Event('input', {bubbles: true}));
+  inp.dispatchEvent(new Event('change', {bubbles: true}));
+  // The handlers may have redrawn the list: find the box again.
+  if(!inp.isConnected){ const again = numPadFind(NUMPAD.sel); if(again){ NUMPAD.input = again; again.classList.add('npActive'); } }
+}
+function numPadPress(k){
+  if(!NUMPAD.input) return;
+  if(k === 'done'){ numPadClose(); return; }
+  if(k === 'next'){ const n = numPadNextOf(NUMPAD.input); if(n){ n.scrollIntoView({block: 'nearest'}); numPadOpen(n); } else numPadClose(); return; }
+  if(k === 'clear'){ NUMPAD.value = ''; NUMPAD.fresh = false; }
+  else if(k === 'del'){ NUMPAD.value = NUMPAD.fresh ? '' : NUMPAD.value.slice(0, -1); NUMPAD.fresh = false; }
+  else if(/^\d$/.test(k)){
+    const base = NUMPAD.fresh ? '' : NUMPAD.value;
+    NUMPAD.value = (base + k).replace(/^0+(?=\d)/, '').slice(0, 4);
+    NUMPAD.fresh = false;
+  }else return;
+  numPadShow();
+  numPadApply();
+}
+// Tapping a box opens the pad (and never the keyboard).
+document.addEventListener('click', (e)=>{
+  if(!numPadWanted()) return;
+  const inp = e.target.closest && e.target.closest(NUMPAD_SEL);
+  if(inp){
+    numPadPrepare(document);
+    e.preventDefault();
+    inp.blur();
+    numPadOpen(inp);
+    return;
+  }
+  if(NUMPAD.input && NUMPAD.el && !NUMPAD.el.contains(e.target)) numPadClose();
+}, true);
+document.addEventListener('keydown', (e)=>{
+  if(!NUMPAD.input || !NUMPAD.el || NUMPAD.el.hidden) return;
+  if(/^\d$/.test(e.key)){ e.preventDefault(); numPadPress(e.key); }
+  else if(e.key === 'Backspace'){ e.preventDefault(); numPadPress('del'); }
+  else if(e.key === 'Enter' || e.key === 'Tab'){ e.preventDefault(); numPadPress(NUMPAD.el.querySelector('.npNext').hidden ? 'done' : 'next'); }
+  else if(e.key === 'Escape'){ e.preventDefault(); numPadClose(); }
+});
+window.addEventListener('resize', ()=> numPadPlace());
+window.addEventListener('scroll', ()=> numPadPlace(), true);
+// New boxes (the list and grid are redrawn often) are made keyboard-free as they appear.
+try{
+  new MutationObserver((muts)=>{
+    if(!numPadWanted()) return;
+    for(const m of muts){ if(m.addedNodes && m.addedNodes.length){ numPadPrepare(document); break; } }
+  }).observe(document.body, {childList: true, subtree: true});
+}catch(e){}
+numPadPrepare(document);
+
 document.getElementById('clearShopBtn').addEventListener('click', async ()=>{
   state.shopChecked = {};
   await saveShopChecked();
