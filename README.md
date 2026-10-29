@@ -2495,3 +2495,9 @@ John chose **Days A** from the top-bar mock-ups (row 3 of the canvas).
 **The course list.** Each course's allergen icons now sit beside its name, next to the progress count, instead of on a line of their own. A dish with none says "No allergens".
 
 **Tests:** `docktest.js`, 11 checks, in both storage modes.
+
+**Back in one place.**
+- The pages opened from the station, the Weekly shopping list and the Allergy matrix, share one top bar (`pageTopBarHtml`). Its **Daily prep** back button is always the first thing in it, at the top left, in exactly the same spot on both pages.
+- The rest of the bar is the same on both: the nursery and its week picker, the page's name, and the Menu.
+- The allergy matrix's week picker shows another week's matrix.
+- Going to the shopping list from the Menu while the matrix is open closes the matrix.

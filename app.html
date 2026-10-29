@@ -236,6 +236,7 @@ button{font-family:inherit;cursor:pointer;}
 #kitchenMenu .kmItem[aria-checked="true"] .kmSwitch::after{left:23px;}
 /* ---- the allergy matrix ---- */
 #allergyView{position:fixed;inset:0;z-index:150;background:var(--paper);display:flex;flex-direction:column;color:var(--ink);}
+#allergyView .stTop{flex:none;}
 #allergyView .avHead{flex:none;display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 16px;padding:14px 16px 10px;}
 #allergyView .avTitles{flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:8px;}
 #allergyView .avTitles .shopBackBtn{align-self:flex-start;}
@@ -332,7 +333,7 @@ body.shopStation #shopView{display:grid !important;grid-template-columns:minmax(
 .shTitle{display:flex;flex-direction:column;gap:2px;margin-left:6px;}
 .shTitle span{font-size:12px;font-weight:800;letter-spacing:.08em;color:#C9D2DA;}
 .shTitle b{font-family:'Roca','Space Grotesk',serif;font-size:20px;line-height:1.15;}
-.stBtn.shBack{padding:0 18px 0 12px;font-size:15px;font-weight:800;}
+.stBtn.shBack{padding:0 18px 0 12px;font-size:15px;font-weight:800;flex:none;background:rgba(255,255,255,0.10);border-color:rgba(255,255,255,0.5);}
 body.shopStation .shop-grid{grid-area:grid;margin:0;position:sticky;top:90px;overflow:hidden;border-radius:12px;}
 body.shopStation .shopGridHead{display:flex;flex-direction:column;gap:2px;padding:14px 16px 10px;border-bottom:1px solid var(--line);text-align:left;}
 body.shopStation .shopGridHead h2{margin:0;font-family:'Roca','Space Grotesk',serif;font-size:18px;}
@@ -4996,7 +4997,7 @@ function openKitchenMenu(anchor){
     ${kmItem('shop', 'print', 'Print shopping list', 'Week ' + state.week + ', with the To order numbers')}
     <div class="kmRule"></div>
     <div class="kmHead">ALLERGIES</div>
-    ${kmItem('allergy', 'matrix', 'Allergy matrix', 'Every dish this week, down to each ingredient')}
+    ${kmItem('allergy', 'matrix', 'Allergy matrix', document.getElementById('allergyView') ? 'Open now' : 'Every dish this week, down to each ingredient', {disabled: !!document.getElementById('allergyView')})}
     ${kmItem('allergyprint', 'print', 'Print allergy matrix', 'Week ' + state.week + ', the same layout as Staff admin')}
     ${(wake || out.length) ? '<div class="kmRule"></div><div class="kmHead">THIS IPAD</div>' + wake + out.join('') : ''}
   </div>`;
@@ -5036,7 +5037,7 @@ async function kitchenMenuAction(act, b){
   else if(act === 'recipe') printThisRecipe();
   else if(act === 'prep') openPrepSheets();
   else if(act === 'shop') printShoppingListNow();
-  else if(act === 'shopopen'){ setView('shop'); window.scrollTo(0, 0); }
+  else if(act === 'shopopen'){ closeAllergyView(); setView('shop'); window.scrollTo(0, 0); }
   else if(act === 'allergyprint') printAllergyMatrixWeek();
   else if(act === 'clear'){
     if(!confirm('Clear every tick for ' + state.day + '?')) return;
@@ -5050,6 +5051,35 @@ async function kitchenMenuAction(act, b){
 /* The top bar of a tablet's shopping list, in the station's style: the
    nursery and week, the page's name, the Nursery / Holiday Club switch
    when one is running, Daily prep to go back, and the Menu. */
+/* The bar of a page opened from the station: Back (always first, top
+   left), the nursery and its week, the page's name, an optional extra
+   (the Nursery/Holiday Club switch), and the Menu. */
+function pageTopBarHtml(o){
+  const weeks = Object.keys(MENU).sort((a, b)=> a - b);
+  const season = ACTIVE_EXTRA ? (ACTIVE_EXTRA.cfg.label || ACTIVE_EXTRA.key) : ((SEASONS.find(x=> x.key === SEASON_KEY) || {}).label || '');
+  const site = SITE_CONFIG.siteName || SITE_CONFIG.subBrand || SITE_CONFIG.brand || 'Kitchen';
+  const logo = document.querySelector('.brandmark .badge img');
+  return `<div class="stTop shTop">
+    <button type="button" class="stBtn shBack" ${o.backAttr}>${stIcon('prev')}<span>Daily prep</span></button>
+    <div class="stBrand">
+      ${logo ? `<span class="stLogo"><img src="${escapeHtml(logo.src)}" alt=""></span>` : ''}
+      <div class="stBrandText">
+        <div class="stSite">${escapeHtml(site)}</div>
+        <label class="stSeason">${season ? escapeHtml(season) + ' ·' : ''}
+          <select class="stWeekSel" id="${o.weekId}" aria-label="Menu week">
+            ${weeks.map(wk=> `<option value="${escapeHtml(String(wk))}"${Number(wk) === Number(state.week) ? ' selected' : ''}>Week ${escapeHtml(String(wk))}</option>`).join('')}
+          </select>
+        </label>
+      </div>
+    </div>
+    <div class="shTitle"><span>THIS WEEK</span><b>${escapeHtml(o.title)}</b></div>
+    ${o.extra || ''}
+    <div class="stSpacer"></div>
+    <div class="stActions">
+      <button type="button" class="stBtn stMenuBtn" id="${o.menuId}" data-kmenu-btn="1" ${o.menuAttr || ''} aria-haspopup="menu" aria-expanded="false">${stIcon('menu')}<span>Menu</span></button>
+    </div>
+  </div>`;
+}
 function renderShopTop(){
   const el = document.getElementById('shopTop');
   if(!el) return;
@@ -5063,26 +5093,7 @@ function renderShopTop(){
         return `<button type="button" class="stMenuSeg${on ? ' on' : ''}" data-sh="switch" data-menu="${escapeHtml(String(m.key))}" aria-pressed="${on}">${escapeHtml(m.label)}</button>`;
       }).join('')}</div>`
     : '';
-  el.innerHTML = `<div class="stTop shTop">
-    <div class="stBrand">
-      ${logo ? `<span class="stLogo"><img src="${escapeHtml(logo.src)}" alt=""></span>` : ''}
-      <div class="stBrandText">
-        <div class="stSite">${escapeHtml(site)}</div>
-        <label class="stSeason">${season ? escapeHtml(season) + ' ·' : ''}
-          <select class="stWeekSel" id="shopWeekSel" aria-label="Menu week">
-            ${weeks.map(wk=> `<option value="${escapeHtml(String(wk))}"${Number(wk) === Number(state.week) ? ' selected' : ''}>Week ${escapeHtml(String(wk))}</option>`).join('')}
-          </select>
-        </label>
-      </div>
-    </div>
-    <div class="shTitle"><span>THIS WEEK</span><b>Weekly shopping list</b></div>
-    ${sw}
-    <div class="stSpacer"></div>
-    <div class="stActions">
-      <button type="button" class="stBtn shBack" data-sh="back">${stIcon('prev')}<span>Daily prep</span></button>
-      <button type="button" class="stBtn stMenuBtn" id="shopMenuBtn" data-kmenu-btn="1" data-sh="menu" aria-haspopup="menu" aria-expanded="false">${stIcon('menu')}<span>Menu</span></button>
-    </div>
-  </div>`;
+  el.innerHTML = pageTopBarHtml({title: 'Weekly shopping list', backAttr: 'data-sh="back"', weekId: 'shopWeekSel', menuId: 'shopMenuBtn', menuAttr: 'data-sh="menu"', extra: sw});
 }
 (function(){
   const el = document.getElementById('shopTop');
@@ -5261,10 +5272,9 @@ function allergyViewHtml(){
     }).join('')
   ).join('');
   const allOpen = days.every(d=> d.rows.every(r=> ALLERGY_EXPANDED.has(r.key)));
-  return `<div class="avHead">
+  return pageTopBarHtml({title: 'Allergy matrix', backAttr: 'id="avBack"', weekId: 'avWeekSel', menuId: 'avMenuBtn'}) + `<div class="avHead">
       <div class="avTitles">
-        <button type="button" class="shopBackBtn" id="avBack"><i class="ti ti-arrow-left"></i><span>Back to the daily prep</span></button>
-        <div><h1>Allergy matrix</h1><div class="avSub">Week ${escapeHtml(String(state.week))}${seasonLabel ? ' · ' + escapeHtml(seasonLabel) : ''} · every dish ${ALLERGY_VIEW_DAY_ONLY ? 'on ' + escapeHtml(state.day) : 'this week'} and the allergens in it</div></div>
+        <div class="avSub">Week ${escapeHtml(String(state.week))}${seasonLabel ? ' · ' + escapeHtml(seasonLabel) : ''} · every dish ${ALLERGY_VIEW_DAY_ONLY ? 'on ' + escapeHtml(state.day) : 'this week'} and the allergens in it</div>
       </div>
       <div class="avToggle" role="group" aria-label="Show">
         <button type="button" data-av="week" aria-pressed="${!ALLERGY_VIEW_DAY_ONLY}">Whole week</button>
@@ -5291,9 +5301,18 @@ function openAllergyView(){
     v.setAttribute('role', 'dialog');
     v.setAttribute('aria-modal', 'true');
     v.setAttribute('aria-label', 'Allergy matrix');
+    v.addEventListener('change', async (e)=>{
+      if(e.target && e.target.id === 'avWeekSel'){
+        state.week = Number(e.target.value);
+        await onDayOrWeekChange();
+        v.innerHTML = allergyViewHtml();
+      }
+    });
     document.body.appendChild(v);
     v.addEventListener('click', (e)=>{
       if(e.target.closest('#avBack')){ closeAllergyView(); return; }
+      const mb = e.target.closest('#avMenuBtn');
+      if(mb){ openKitchenMenu(mb); return; }
       if(e.target.closest('#avPrint')){ printAllergyMatrixWeek(); return; }
       const t = e.target.closest('[data-av]');
       if(t){ ALLERGY_VIEW_DAY_ONLY = t.dataset.av === 'day'; v.innerHTML = allergyViewHtml(); return; }
