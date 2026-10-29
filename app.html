@@ -4,6 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nursery kitchen prep list</title>
+<meta name="theme-color" content="#1F3C55">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Kitchen" id="appTitleMeta">
+<link rel="apple-touch-icon" href="icons/kitchen-180.png" id="appTouchIcon">
+<link rel="manifest" href="manifest.webmanifest" id="appManifest">
+<script>
+/* Added to an iPad's home screen from a nursery's page, the app opens that
+   nursery, with its own logo and name. */
+(function(){
+  try{
+    var slug = new URLSearchParams(location.search).get('site');
+    if(slug && /^[a-z0-9-]+$/.test(slug)){
+      document.getElementById('appManifest').href = 'sites/' + slug + '/manifest.webmanifest';
+      document.getElementById('appTouchIcon').href = 'sites/' + slug + '/assets/icon-180.png';
+    }
+  }catch(e){}
+})();
+</script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css">
 <style>
 /* ---- brand fonts (Family Adventures Group / Little Adventures Nursery brand guide) ----
@@ -185,7 +205,20 @@ button{font-family:inherit;cursor:pointer;}
   html.printingShop, html.printingShop body{background:#fff !important;}
   html.printingShop body > *:not(#shopPrintSheet){display:none !important;}
   html.printingShop #shopPrintSheet{display:block !important;}
+  /* The kitchen's shopping list: whenever it is the page showing, printing
+     (from Print list, or from Safari's own Print) gives the sheet alone. */
+  html.viewShop, html.viewShop body{background:#fff !important;}
+  html.viewShop body > *:not(#shopPrintSheet){display:none !important;}
+  html.viewShop #shopPrintSheet{display:block !important;}
 }
+.shopBackBar{position:sticky;top:0;z-index:20;background:var(--paper);padding:10px 0;margin:0 0 6px;}
+.shopBackBtn{
+  display:inline-flex;align-items:center;gap:10px;min-height:48px;padding:0 20px 0 14px;
+  border-radius:24px;border:1.5px solid var(--line-strong);background:var(--card);color:var(--ink);
+  font:inherit;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 1px 3px rgba(31,60,85,0.10);
+}
+.shopBackBtn i{font-size:20px;}
+.shopBackBtn:active{transform:scale(.98);}
 #shopPrintSheet{font-family:'Museo Sans','Inter',system-ui,sans-serif;color:#1d2a35;font-size:9.5pt;line-height:1.3;}
 #shopPrintSheet .spHead{display:flex;justify-content:space-between;align-items:flex-end;gap:6mm;border-bottom:0.6mm solid #1d2a35;padding-bottom:2.5mm;margin-bottom:3mm;}
 #shopPrintSheet .spKicker{font-size:8pt;letter-spacing:.08em;text-transform:uppercase;color:#6a5a48;}
@@ -395,10 +428,11 @@ button{font-family:inherit;cursor:pointer;}
 .ing-row:hover{background:var(--paper-dim);}
 .ing-row.checked .ing-name{color:var(--ink-faint);text-decoration:line-through;}
 .ing-row.checked .ing-qty{color:var(--ink-faint);}
+/* 44px: Apple's smallest comfortable size for a finger, wet or gloved. */
 .checkbox{
-  width:30px;height:30px;flex:none;border-radius:8px;border:1.5px solid var(--line-strong);
-  background:#fff;display:flex;align-items:center;justify-content:center;margin-top:1px;
-  color:#fff;font-size:17px;transition:all .12s;
+  width:44px;height:44px;flex:none;border-radius:11px;border:2px solid var(--line-strong);
+  background:#fff;display:flex;align-items:center;justify-content:center;margin-top:-6px;
+  color:#fff;font-size:24px;transition:all .12s;
 }
 .checkbox.checked{background:var(--sage);border-color:var(--sage);}
 .ing-body{flex:1;min-width:0;}
@@ -770,7 +804,13 @@ body.draggingIngredient{-webkit-user-select:none;user-select:none;}
 .rbTopbarBtn:hover{background:rgba(255,255,255,0.12);}
 
 /* ---- Footer entry point (outside #rbAdminRoot, so unscoped by design) ---- */
-.rbAdminTriggerBtn{background:none;border:none;padding:0;color:var(--ink-soft, #566C7F);font-size:12px;text-decoration:underline;cursor:pointer;font-family:inherit;}
+.rbAdminTriggerBtn{background:none;border:none;padding:0 6px;min-height:44px;color:var(--ink-soft, #566C7F);font-size:13px;text-decoration:underline;cursor:pointer;font-family:inherit;}
+.ing-row .allergen-badge{width:36px;height:36px;}
+.stBtn.stWake.on{color:#FFD27A;border-color:#FFD27A;background:rgba(255,210,122,0.12);}
+.clear-btn#wakeBtn.on{color:#FFD27A;border-color:#FFD27A;}
+.deviceCopyBanner{background:#FDF0D5;color:#6A4E12;border-bottom:1px solid #E8D3A2;font-weight:600;font-size:14px;text-align:center;padding:10px 14px;display:flex;gap:8px;align-items:center;justify-content:center;}
+.deviceCopyBanner i{font-size:18px;}
+#kitchenNote{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink, #1F3C55);color:#fff;padding:12px 20px;border-radius:999px;font-size:15px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,0.25);z-index:300;max-width:calc(100vw - 32px);text-align:center;}
 .rbAdminTriggerBtn:hover{color:var(--ink, #1F3C55);}
 #rbAdminRoot .btn.hasUnsaved{background:#B8860B;border-color:#B8860B;color:#fff;}
 
@@ -839,7 +879,7 @@ body.stationMode #prepStation{
 .stWeekSel{
   -webkit-appearance:none;appearance:none;font:inherit;font-weight:700;color:#fff;
   background:rgba(255,255,255,0.10) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M1.5 3.5l3.5 3.5 3.5-3.5' fill='none' stroke='%23fff' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 8px center;
-  border:1px solid rgba(255,255,255,0.28);border-radius:8px;padding:4px 26px 4px 9px;min-height:34px;cursor:pointer;
+  border:1px solid rgba(255,255,255,0.28);border-radius:10px;padding:4px 30px 4px 12px;min-height:44px;cursor:pointer;font-size:15px;
 }
 .stWeekSel option{color:var(--ink);background:#fff;}
 
@@ -1060,6 +1100,7 @@ body.hcSheetOpen .hcSheetFoot{display:flex;justify-content:flex-end;padding:0 16
       <button class="clear-btn" id="prepModeToggle"><i class="ti ti-layout-sidebar"></i>Station view</button>
       <button class="clear-btn" id="prepPrintBtn" title="One prep sheet per course for this day, scaled to the headcount above"><i class="ti ti-printer"></i>Print prep sheets</button>
       <button class="clear-btn" id="resetBtn"><i class="ti ti-eraser"></i>Clear ticks</button>
+      <button class="clear-btn" id="wakeBtn" style="display:none" aria-pressed="true" title="Keeps the screen from locking while this page is open"><i class="ti ti-sun"></i><span>Keep screen on</span></button>
     </div>
     <h1 id="pageTitle">Nursery kitchen prep list</h1>
     <div class="ticket-sub" id="menuSummary"></div>
@@ -1085,6 +1126,7 @@ body.hcSheetOpen .hcSheetFoot{display:flex;justify-content:flex-end;padding:0 16
   <div id="courses"></div>
 
   <div id="shopView" style="display:none;">
+    <div class="shopBackBar"><button type="button" class="shopBackBtn" id="shopBackBtn"><i class="ti ti-arrow-left"></i><span>Back to the daily prep</span></button></div>
     <div class="shop-grid">
       <table>
         <thead><tr id="shopGridHead"></tr></thead>
@@ -1283,7 +1325,7 @@ function applySiteMenusConfig(cfg){
 }
 async function loadSiteMenusConfig(){
   try{
-    const res = await fetchSeasonJson('_config', 'site-menus.json');
+    const res = await fetchSeasonJson('_config', 'site-menus.json', {keepCopy: true});
     if(res.ok) applySiteMenusConfig(await res.json());
   }catch(e){}
 }
@@ -1312,10 +1354,121 @@ const DAILY_REFRESH_HOUR = 5;
       setTimeout(refreshWhenSafe, 60 * 1000);
       return;
     }
-    location.reload();
+    /* Only reload when the site answers: reloading with the Wi-Fi down
+       used to swap a working menu for Safari's "not connected" page. Tries
+       again every five minutes until it does. */
+    kitchenSiteReachable().then(ok=>{
+      if(ok) kitchenReloadWhenSafe();
+      else setTimeout(refreshWhenSafe, 5 * 60 * 1000);
+    });
   }
   setTimeout(refreshWhenSafe, msUntilNextRefresh());
 })();
+async function kitchenSiteReachable(){
+  const controller = new AbortController();
+  const timer = setTimeout(()=> controller.abort(), 8000);
+  try{
+    const res = await fetch(location.pathname + '?reachable=' + Date.now(), {method: 'HEAD', cache: 'no-store', signal: controller.signal});
+    clearTimeout(timer);
+    return res.ok;
+  }catch(e){ clearTimeout(timer); return false; }
+}
+/* Reload, but not over somebody's work: an open dialogue, Staff admin, the
+   headcount sheet, or a box being typed in. Tries again a minute later. */
+function kitchenReloadWhenSafe(){
+  const admin = document.getElementById('rbAdminRoot');
+  const ae = document.activeElement;
+  const busy = document.querySelector('.modalOverlay')
+    || (admin && admin.style.display !== 'none' && admin.offsetParent !== null)
+    || (typeof state === 'object' && state && state.hcSheetOpen)
+    || (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName));
+  if(busy){ setTimeout(kitchenReloadWhenSafe, 60 * 1000); return; }
+  location.reload();
+}
+
+/* ---------- Keep the screen on ----------
+   An iPad locks after a minute or two, which is no use in the middle of a
+   recipe. While this page is open the screen stays on during the kitchen
+   day (KEEP_AWAKE_FROM to KEEP_AWAKE_UNTIL, device time) and can sleep as
+   normal overnight. On by default; the sun button in the top bar (or
+   "Keep screen on" in the list view) switches it off for this device.
+   Needs iPadOS 16.4 or later (18.4 in a home-screen app); where the iPad
+   cannot do it, the button is not shown. */
+const KEEP_AWAKE_KEY = 'kitchenKeepAwake.v1';
+const KEEP_AWAKE_FROM = 6, KEEP_AWAKE_UNTIL = 19;
+const WAKE_SUPPORTED = !!(navigator.wakeLock && navigator.wakeLock.request);
+let WAKE_SENTINEL = null;
+let WAKE_NEEDS_TAP = false;
+function keepAwakeWanted(){
+  try{ return localStorage.getItem(KEEP_AWAKE_KEY) !== 'off'; }catch(e){ return true; }
+}
+function keepAwakeHours(){
+  const h = new Date().getHours();
+  return h >= KEEP_AWAKE_FROM && h < KEEP_AWAKE_UNTIL;
+}
+async function syncWakeLock(){
+  if(!WAKE_SUPPORTED) return;
+  const want = keepAwakeWanted() && keepAwakeHours() && document.visibilityState === 'visible';
+  if(want && !WAKE_SENTINEL){
+    try{
+      const s = await navigator.wakeLock.request('screen');
+      WAKE_SENTINEL = s;
+      WAKE_NEEDS_TAP = false;
+      s.addEventListener('release', ()=>{ if(WAKE_SENTINEL === s) WAKE_SENTINEL = null; });
+    }catch(e){
+      // Some iPads only allow it after a tap: try again on the next one.
+      WAKE_NEEDS_TAP = true;
+    }
+  } else if(!want && WAKE_SENTINEL){
+    const s = WAKE_SENTINEL; WAKE_SENTINEL = null;
+    try{ await s.release(); }catch(e){}
+  }
+}
+function setKeepAwake(on){
+  try{ localStorage.setItem(KEEP_AWAKE_KEY, on ? 'on' : 'off'); }catch(e){}
+  syncWakeLock();
+  updateKeepAwakeButtons();
+  kitchenNote(on
+    ? 'The screen stays on while this page is open (' + KEEP_AWAKE_FROM + 'am to ' + (KEEP_AWAKE_UNTIL - 12) + 'pm)'
+    : 'The screen can lock as normal');
+}
+function updateKeepAwakeButtons(){
+  const on = keepAwakeWanted();
+  document.querySelectorAll('[data-act="wake"]').forEach(b=>{
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', String(on));
+  });
+  const lb = document.getElementById('wakeBtn');
+  if(lb){
+    lb.style.display = WAKE_SUPPORTED ? '' : 'none';
+    lb.classList.toggle('on', on);
+    lb.setAttribute('aria-pressed', String(on));
+    const label = lb.querySelector('span');
+    if(label) label.textContent = on ? 'Screen stays on' : 'Keep screen on';
+  }
+}
+if(WAKE_SUPPORTED){
+  document.addEventListener('visibilitychange', syncWakeLock);
+  document.addEventListener('pointerdown', ()=>{ if(WAKE_NEEDS_TAP) syncWakeLock(); }, true);
+  setInterval(syncWakeLock, 5 * 60 * 1000);   // picks up the start and end of the kitchen day
+  syncWakeLock();
+}
+/* A short message at the bottom of the kitchen page. */
+function kitchenNote(msg){
+  const old = document.getElementById('kitchenNote');
+  if(old) old.remove();
+  const n = document.createElement('div');
+  n.id = 'kitchenNote';
+  n.setAttribute('role', 'status');
+  n.textContent = msg;
+  document.body.appendChild(n);
+  setTimeout(()=>{ if(n.isConnected) n.remove(); }, 3000);
+}
+/* Keeps a copy of the page so an iPad that reloads with the Wi-Fi down
+   still opens (sw.js). Only on the real site or this machine. */
+if('serviceWorker' in navigator && (location.protocol === 'https:' || /^(localhost|127\.0\.0\.1)$/.test(location.hostname))){
+  window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
 const COURSE_ORDER = ['Breakfast','Main','Vegetarian Option','Dessert','Snack','Tea','Tea Vegetarian Option'];
 /* Course pairs that swap against each other: the second slot replaces the
    first when a child needs the vegetarian/vegan alternative. Shopping-list
@@ -1435,7 +1588,7 @@ function extraMenuGroups(cfg){
 }
 async function loadExtraMenusConfig(){
   try{
-    const res = await fetchSeasonJson('_config', 'extra-menus.json');
+    const res = await fetchSeasonJson('_config', 'extra-menus.json', {keepCopy: true});
     if(res.ok){
       const data = await res.json();
       if(data && data.menus && typeof data.menus === 'object' && !Array.isArray(data.menus)) return withTeaVegCourse(data.menus);
@@ -2231,7 +2384,7 @@ async function loadExtraMenusHere(configPromise){
     const preview = key === forced;
     let menu = null;
     try{
-      const res = await fetchSeasonJson(key, key + '.json');
+      const res = await fetchSeasonJson(key, key + '.json', {keepCopy: true});
       if(res.ok) menu = await res.json();
     }catch(e){}
     if(!menu || typeof menu !== 'object' || !Object.keys(menu).length){
@@ -3017,6 +3170,7 @@ const ST_ICONS = {
   calendar: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
   bowl: '<path d="M3 12h18a9 9 0 01-18 0z"/><path d="M8.5 12a3 3 0 015.6-1.5M16 12a2.2 2.2 0 013.6-1.2"/>',
   cart: '<circle cx="9" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/><path d="M3 4h2.5l2.2 11h10.6l2-8H6.4"/>',
+  sun: '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/>',
 };
 function stIcon(name){
   return `<svg class="stIco" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ST_ICONS[name]}</svg>`;
@@ -3106,6 +3260,7 @@ function renderPrepStation(){
         <button type="button" class="stBtn icon" data-act="list" data-focus="list" aria-label="Switch to list view" title="List view">${stIcon('list')}</button>
         <button type="button" class="stBtn icon" data-act="print" data-focus="print" aria-label="Print prep sheets" title="Print prep sheets">${stIcon('print')}</button>
         <button type="button" class="stBtn icon" data-act="clear" data-focus="clear" aria-label="Clear today's ticks" title="Clear today's ticks">${stIcon('clear')}</button>
+        ${WAKE_SUPPORTED ? `<button type="button" class="stBtn icon stWake${keepAwakeWanted() ? ' on' : ''}" data-act="wake" data-focus="wake" aria-pressed="${keepAwakeWanted()}" aria-label="Keep the screen on" title="Keep the screen on (${KEEP_AWAKE_FROM}am to ${KEEP_AWAKE_UNTIL - 12}pm)">${stIcon('sun')}</button>` : ''}
       </div>
     </div>${strip}`;
 
@@ -4367,6 +4522,7 @@ function buildShopListText(){
 
 function setView(view){
   state.view = view;
+  document.documentElement.classList.toggle('viewShop', view === 'shop');
   document.querySelectorAll('.viewtab').forEach(b=> b.classList.toggle('active', b.dataset.view===view));
   const isShop = view === 'shop';
   document.getElementById('dayTabs').style.display = isShop ? 'none' : 'flex';
@@ -4406,6 +4562,8 @@ document.getElementById('headcountToggle').addEventListener('click', ()=>{
 });
 
 document.getElementById('prepPrintBtn').addEventListener('click', ()=> openPrepSheets());
+document.getElementById('wakeBtn').addEventListener('click', ()=> setKeepAwake(!keepAwakeWanted()));
+updateKeepAwakeButtons();
 
 document.getElementById('prepModeToggle').addEventListener('click', ()=>{
   setPrepMode('station', true);
@@ -4430,6 +4588,7 @@ document.getElementById('prepStation').addEventListener('click', async (e)=>{
     case 'shop': setView('shop'); window.scrollTo(0, 0); break;
     case 'list': setPrepMode('list', true); break;
     case 'print': openPrepSheets(); break;
+    case 'wake': setKeepAwake(!keepAwakeWanted()); break;
     case 'clear':
       // One tap on a counter-top tablet should not wipe a morning's work.
       if(!confirm("Clear every tick for today?")) return;
@@ -4543,6 +4702,42 @@ function printShopList(){
   }
   printShopSheet(html);
 }
+/* Kept up to date while the shopping list is open, so a print started from
+   Safari's own menu (where nothing runs first on an iPad) is right too. */
+function shopPrintSheetEl(){
+  let sheet = document.getElementById('shopPrintSheet');
+  if(!sheet){
+    sheet = document.createElement('div');
+    sheet.id = 'shopPrintSheet';
+    document.body.appendChild(sheet);
+  }
+  return sheet;
+}
+let SHOP_SHEET_TIMER = null;
+function refreshShopPrintSheet(){
+  if(SHOP_SHEET_TIMER){ clearTimeout(SHOP_SHEET_TIMER); SHOP_SHEET_TIMER = null; }
+  if(state.view !== 'shop') return;
+  const html = buildShopPrintHtml();
+  shopPrintSheetEl().innerHTML = html || '<div class="spHead"><div><div class="spTitle">Weekly shopping list</div><div class="spSub">Nothing to order yet: fill in how many are eating each day.</div></div></div>';
+}
+function refreshShopPrintSheetSoon(){
+  if(SHOP_SHEET_TIMER) clearTimeout(SHOP_SHEET_TIMER);
+  SHOP_SHEET_TIMER = setTimeout(refreshShopPrintSheet, 150);
+}
+(function(){
+  const watch = new MutationObserver(refreshShopPrintSheetSoon);
+  const card = document.getElementById('shopListCard');
+  if(card){
+    watch.observe(card, {childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['class']});
+    card.addEventListener('input', refreshShopPrintSheetSoon);
+    card.addEventListener('change', refreshShopPrintSheetSoon);
+  }
+  window.addEventListener('beforeprint', ()=>{ if(state.view === 'shop') refreshShopPrintSheet(); });
+})();
+document.getElementById('shopBackBtn').addEventListener('click', ()=>{
+  setView('prep');
+  window.scrollTo(0, 0);
+});
 /* Prints `html` as the only thing on the page (see the #shopPrintSheet
    styles). Used by the kitchen's Weekly shopping list and Staff admin's
    Shopping list. */
@@ -4556,8 +4751,19 @@ function printShopSheet(html){
   sheet.innerHTML = html;
   const root = document.documentElement;
   root.classList.add('printingShop');
-  const done = ()=>{ root.classList.remove('printingShop'); window.removeEventListener('afterprint', done); };
-  window.addEventListener('afterprint', done);
+  /* Not "afterprint": an iPad fires it as soon as the print sheet opens,
+     before the page is laid out for printing, which is how the whole page
+     came to be printed. The switch only affects printing, so it is simply
+     left on until the next tap or key press after the print. */
+  const started = Date.now();
+  const done = ()=>{
+    if(Date.now() - started < 1000) return;
+    root.classList.remove('printingShop');
+    window.removeEventListener('pointerdown', done, true);
+    window.removeEventListener('keydown', done, true);
+  };
+  window.addEventListener('pointerdown', done, true);
+  window.addEventListener('keydown', done, true);
   window.print();
 }
 document.getElementById('printShopBtn').addEventListener('click', printShopList);
@@ -4673,7 +4879,48 @@ function showNoSiteMessage(text){
    this file with no Functions set up whatsoever (e.g. testing locally, or
    a deployment that only ever gets updated by hand-editing the JSON and
    redeploying). */
-async function fetchSeasonJson(group, file){
+/* The kitchen keeps its own copy of the last menu (and the few settings
+   that go with it) it loaded from the live site. If the Wi-Fi drops, that
+   copy -- this morning's real menu, allergens and all -- is shown instead
+   of the much older copy shipped with the website, with a banner saying
+   so. Only the kitchen's own reads ask for this (keepCopy); Staff admin
+   never gets an old copy in place of the live one.
+
+   Small on purpose: one copy per file, and one menu file per menu, so it
+   cannot crowd out Staff admin's own saved work on a shared device. */
+const DEVICE_COPY_PREFIX = 'kitchenCopy:';
+const DEVICE_COPY_MAX_CHARS = 900000;
+function rememberDeviceCopy(group, file, res){
+  try{
+    res.clone().text().then(body=>{
+      if(!body || body.length > DEVICE_COPY_MAX_CHARS) return;
+      try{ JSON.parse(body); }catch(e){ return; }
+      try{
+        // one menu file per menu: drop the copy of another season's file
+        if(group !== '_config'){
+          for(let i = localStorage.length - 1; i >= 0; i--){
+            const k = localStorage.key(i);
+            if(k && k.indexOf(DEVICE_COPY_PREFIX + group + '/') === 0 && k !== DEVICE_COPY_PREFIX + group + '/' + file) localStorage.removeItem(k);
+          }
+        }
+        localStorage.setItem(DEVICE_COPY_PREFIX + group + '/' + file, JSON.stringify({at: Date.now(), body}));
+      }catch(e){ /* full or blocked: the website copy is still there */ }
+    }).catch(()=>{});
+  }catch(e){}
+}
+function deviceCopyResponse(group, file){
+  try{
+    const raw = localStorage.getItem(DEVICE_COPY_PREFIX + group + '/' + file);
+    if(!raw) return null;
+    const c = JSON.parse(raw);
+    if(!c || !c.body) return null;
+    const res = new Response(c.body, {status: 200, headers: {'content-type': 'application/json'}});
+    res.__fromDeviceCopy = c.at || true;
+    return res;
+  }catch(e){ return null; }
+}
+async function fetchSeasonJson(group, file, opts){
+  const keepCopy = !!(opts && opts.keepCopy);
   let functionAnswered = false;
   try{
     const controller = new AbortController();
@@ -4683,12 +4930,16 @@ async function fetchSeasonJson(group, file){
       {signal: controller.signal}
     );
     clearTimeout(timeout);
-    if(res.ok) return res;
+    if(res.ok){ if(keepCopy) rememberDeviceCopy(group, file, res); return res; }
     // 404 is the Function's own considered answer ("nothing saved, and no
     // shipped copy either") -- not an outage, so not worth a warning.
     if(res.status === 404) functionAnswered = true;
   }catch(e){
     /* function unreachable/erroring/timed out — fall through to the static file */
+  }
+  if(keepCopy && !functionAnswered){
+    const copy = deviceCopyResponse(group, file);
+    if(copy) return copy;
   }
   const backup = await fetch('groups/'+encodeURIComponent(group)+'/seasons/'+encodeURIComponent(file));
   // Marked so the kitchen page can say it is showing the backup copy (see
@@ -4699,6 +4950,8 @@ async function fetchSeasonJson(group, file){
 }
 let MENU_FROM_BACKUP = false;
 let LAST_SEASONS_CONFIG_FROM_BACKUP = false;
+// When the menu on screen is this device's own copy: the time it was saved.
+let MENU_FROM_DEVICE_COPY = null;
 /* Allergen wording for a dish with nothing recorded. On the backup copy
    "none" is not something the page can know, so it must not say it. */
 function noAllergensText(){
@@ -4706,15 +4959,51 @@ function noAllergensText(){
     ? 'Allergen details are not available in the backup menu — check the recipe card before serving.'
     : 'None recorded from the linked ingredients.';
 }
+function deviceCopyWhen(at){
+  const d = new Date(typeof at === 'number' ? at : Date.now());
+  const time = d.toLocaleTimeString('en-GB', {hour: '2-digit', minute: '2-digit'});
+  const today = new Date();
+  const yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
+  if(d.toDateString() === today.toDateString()) return 'at ' + time + ' today';
+  if(d.toDateString() === yesterday.toDateString()) return 'at ' + time + ' yesterday';
+  return 'at ' + time + ' on ' + d.toLocaleDateString('en-GB', {weekday: 'long', day: 'numeric', month: 'long'});
+}
+/* While an old copy is showing, check every minute (and the moment the
+   iPad says it is back online) whether the live site answers, and reload
+   when it does -- unless someone is in the middle of something. */
+let CONNECTION_WATCH = null;
+function watchForConnection(){
+  if(CONNECTION_WATCH) return;
+  const probe = async ()=>{
+    const controller = new AbortController();
+    const timer = setTimeout(()=> controller.abort(), 6000);
+    try{
+      const res = await fetch('/.netlify/functions/get-season?group=_config&file=seasons.json', {signal: controller.signal, cache: 'no-store'});
+      clearTimeout(timer);
+      if(res.ok || res.status === 404){
+        clearInterval(CONNECTION_WATCH);
+        kitchenReloadWhenSafe();
+      }
+    }catch(e){ clearTimeout(timer); }
+  };
+  CONNECTION_WATCH = setInterval(probe, 60 * 1000);
+  window.addEventListener('online', probe);
+}
 function applyBackupMenuBanner(){
   const existing = document.getElementById('backupMenuBanner');
   if(existing) existing.remove();
-  if(!MENU_FROM_BACKUP) return;
+  if(!MENU_FROM_BACKUP && !MENU_FROM_DEVICE_COPY) return;
   const banner = document.createElement('div');
   banner.id = 'backupMenuBanner';
   banner.setAttribute('role', 'alert');
-  banner.style.cssText = 'background:#9F383C;color:#fff;font-weight:600;font-size:13.5px;text-align:center;padding:9px 12px;';
-  banner.innerHTML = '<i class="ti ti-alert-triangle"></i> Couldn’t reach the live menu, so this is the backup copy saved with the website. It may be out of date and allergen details may be missing — check the recipe card before serving, and reload the page to try again.';
+  if(MENU_FROM_BACKUP){
+    banner.style.cssText = 'background:#9F383C;color:#fff;font-weight:600;font-size:13.5px;text-align:center;padding:9px 12px;';
+    banner.innerHTML = '<i class="ti ti-alert-triangle"></i> Couldn’t reach the live menu, so this is the backup copy saved with the website. It may be out of date and allergen details may be missing — check the recipe card before serving. The page updates by itself when the connection is back.';
+  } else {
+    banner.className = 'deviceCopyBanner';
+    banner.innerHTML = '<i class="ti ti-wifi-off"></i> <span>No connection to the live site just now, so this is the menu this iPad saved ' + escapeHtml(deviceCopyWhen(MENU_FROM_DEVICE_COPY)) + '. It updates by itself when the connection is back.</span>';
+  }
+  watchForConnection();
   // Above the header rather than inside it: the station hides the header.
   const head = document.querySelector('.ticket-head');
   if(head) head.parentNode.insertBefore(banner, head);
@@ -4735,7 +5024,7 @@ function applyBackupMenuBanner(){
 async function loadSeasonsConfig(){
   LAST_SEASONS_CONFIG_FROM_BACKUP = false;
   try{
-    const res = await fetchSeasonJson('_config', 'seasons.json');
+    const res = await fetchSeasonJson('_config', 'seasons.json', {keepCopy: true});
     if(res.__fromBackup) LAST_SEASONS_CONFIG_FROM_BACKUP = true;
     if(res.ok){
       const data = await res.json();
@@ -4777,7 +5066,7 @@ async function loadSiteData(){
     // sequential latency to the kitchen page's first paint; it can never
     // be the reason this Promise.all (or the catch below) fails.
     [menuRes, configRes] = await Promise.all([
-      fetchSeasonJson(menuGroupForSite(SITE_SLUG), activeSeason.file),
+      fetchSeasonJson(menuGroupForSite(SITE_SLUG), activeSeason.file, {keepCopy: true}),
       fetch('sites/'+encodeURIComponent(SITE_SLUG)+'/config.json'),
       loadIngredientDbForShop(),
     ]);
@@ -4785,7 +5074,7 @@ async function loadSiteData(){
        (Washwood Heath, when it was first split off) keeps the Main Menu it
        was on, rather than an error page in the kitchen. */
     if(!menuRes.ok && menuGroupForSite(SITE_SLUG) !== 'general'){
-      menuRes = await fetchSeasonJson('general', activeSeason.file);
+      menuRes = await fetchSeasonJson('general', activeSeason.file, {keepCopy: true});
     }
   }catch(e){
     showNoSiteMessage('Could not load this nursery\'s data');
@@ -4800,7 +5089,10 @@ async function loadSiteData(){
   await loadExtraMenusHere(extraConfigPromise);
   // The season LIST from the backup copy can also pick the wrong season
   // (one added since the last deploy is simply missing).
-  MENU_FROM_BACKUP = !!menuRes.__fromBackup || seasonsFromBackup;
+  // A menu from this iPad's own copy is a real menu even when the season
+  // list could not be read (it was saved under the same season).
+  MENU_FROM_BACKUP = !!menuRes.__fromBackup || (seasonsFromBackup && !menuRes.__fromDeviceCopy);
+  MENU_FROM_DEVICE_COPY = (!MENU_FROM_BACKUP && menuRes.__fromDeviceCopy) ? menuRes.__fromDeviceCopy : null;
   SITE_CONFIG = Object.assign({}, SITE_CONFIG, await configRes.json());
   applySiteBranding();
   applySeasonPreviewBanner(activeSeason);
@@ -4827,7 +5119,7 @@ async function applySiteAllergyAlertBanner(){
   if(!SITE_SLUG) return;
   let alert = null;
   try{
-    const res = await fetchSeasonJson('_config', 'siteAllergyAlerts.json');
+    const res = await fetchSeasonJson('_config', 'siteAllergyAlerts.json', {keepCopy: true});
     if(res.ok){
       const data = await res.json();
       if(data && data.alerts && data.alerts[SITE_SLUG] && data.alerts[SITE_SLUG].message){
@@ -4896,6 +5188,8 @@ function applySiteBranding(){
     };
     probe.src = candidate;
   }
+  const titleMeta = document.getElementById('appTitleMeta');
+  if(titleMeta && SITE_CONFIG.siteName) titleMeta.setAttribute('content', SITE_CONFIG.siteName);
   const phoneEl = document.querySelector('.fc-item i.ti-phone');
   if(phoneEl && phoneEl.parentElement) phoneEl.parentElement.lastChild.textContent = SITE_CONFIG.phone || '';
   const mailEl = document.querySelector('.fc-item i.ti-mail');

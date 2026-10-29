@@ -2393,3 +2393,38 @@ A published dish names its recipe id, so that copy is kept. An older published f
 - Other admins' devices read that list when Staff admin syncs, and drop the deleted copies. A device keeps a copy if it has an unpublished change to it, or if one of its own rotations uses it.
 
 **Tests:** `tidy.js`, 18 checks, in both storage modes.
+
+## iPad improvements, round 1 (October 2026)
+
+**Home-screen app.**
+- Each nursery's page has its own web-app manifest (`sites/<slug>/manifest.webmanifest`) and icon made from its logo (`sites/<slug>/assets/icon-180.png`, plus 192 and 512 sizes).
+- "Add to Home Screen" from a nursery's page gives an app named after the nursery with its logo. It opens straight to that nursery, full screen, with no Safari bar.
+- The login page (`index.html`) has a general "Kitchen" app (`manifest.webmanifest`, `icons/`) that starts at the login.
+- An app added to the home screen keeps its own login, separate from Safari's, so each iPad logs in once inside the app.
+
+**Keep the screen on.**
+- While a kitchen page is open, the screen stays on from 6am to 7pm (device time) and can sleep overnight.
+- To change the hours, edit `KEEP_AWAKE_FROM` and `KEEP_AWAKE_UNTIL`.
+- It's on by default. The sun button in the station's top bar (or "Keep screen on" in the list view) turns it off for that iPad.
+- It needs iPadOS 16.4 or later (18.4 inside a home-screen app). Where the iPad can't do it, the button isn't shown.
+
+**Wi-Fi drop-outs.**
+- **The kitchen's copy of its menu.** Every time the kitchen page loads its menu from the live site, it keeps a copy on the iPad: the menu, the season list, menu settings, extra menus and allergy alerts, stored in `localStorage` as `kitchenCopy:*`, one file per menu.
+- **When the site can't be reached,** that copy is shown, with a yellow banner saying when it was saved. It's the real menu with its allergens, not the older copy shipped with the website. A device that has never loaded the menu still falls back to the website copy, with the red warning, as before.
+- **Staff admin never uses these copies.** Only the kitchen's own reads ask for them (`fetchSeasonJson(..., {keepCopy: true})`).
+- **Coming back online:** while a copy or backup is showing, the page checks every minute (and as soon as the iPad reports it's online) and reloads when the site answers. It doesn't reload while a dialogue, Staff admin, the headcount sheet or a text box is in use.
+- **The page itself offline:** `sw.js` keeps a copy of the page, logos, icons and fonts, so an iPad that reloads while offline still opens. It always tries the network first and only uses the copy when the network fails or takes over 8 seconds, so a new deploy still shows straight away. It never touches `/.netlify/` (data and logins) or `db-setup.html`. To switch it off, replace `sw.js` with a file that only calls `self.registration.unregister()`, then deploy.
+- **The 5am reload** checks the site answers first. If it doesn't, it tries again every five minutes, so a working menu is never swapped for Safari's "not connected" page.
+
+**Touch targets.**
+- Tick boxes are 44px.
+- The week picker is 44px tall.
+- The footer's Staff admin and Log out links have 44px tap areas.
+- Allergen icons in ingredient rows are 36px.
+
+**Shopping list.**
+- A **Back to the daily prep** button stays at the top of the kitchen's Weekly shopping list while you scroll. It returns to the station or the list view, whichever was in use.
+- While the shopping list is showing, printing (from **Print list** or from Safari's own Print) prints only the formatted shopping list, the same sheet Staff admin prints.
+- Before this, an iPad printed the whole page: it fires its "after print" event before laying the page out, and the print-only switch was turned off at that moment. The switch now clears on the next tap instead, for Staff admin's Print list too.
+
+**Tests:** `ipadtest.js` (24 checks) and `shopback.js` (8 checks), in both storage modes.

@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
 <title>Family Adventures Group — Kitchen Prep Lists</title>
+<meta name="theme-color" content="#1F3C55">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Kitchen" id="appTitleMeta">
+<link rel="apple-touch-icon" href="icons/kitchen-180.png" id="appTouchIcon">
+<link rel="manifest" href="manifest.webmanifest" id="appManifest">
 <style>
 :root{
   --paper-dim:#E9E2D2;
@@ -145,6 +152,11 @@ SITES.forEach(site=>{
    straight to its page and stays logged in. Before that, or if the login
    service can't be reached, this page is the plain list of links above,
    exactly as before. */
+/* Keeps a copy of the page so an iPad that reloads with the Wi-Fi down
+   still opens (sw.js). Only on the real site or this machine. */
+if('serviceWorker' in navigator && (location.protocol === 'https:' || /^(localhost|127\.0\.0\.1)$/.test(location.hostname))){
+  window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
 const LOGIN_KEY = 'kitchenLogin.v1';
 const readLogin = () => { try { return JSON.parse(localStorage.getItem(LOGIN_KEY) || 'null'); } catch (e) { return null; } };
 const saveLogin = (v) => { try { localStorage.setItem(LOGIN_KEY, JSON.stringify(v)); } catch (e) {} };
