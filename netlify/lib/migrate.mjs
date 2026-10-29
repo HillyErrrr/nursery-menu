@@ -19,6 +19,7 @@ import {
 } from './store.mjs';
 import { docKind, reconstruct, sameData } from './projection.mjs';
 import { setUser, newPassword, sha256Hex } from './users.mjs';
+import { NURSERIES_KEY, upsertNurseryRow } from './nurseries.mjs';
 import { SITE_SLUGS, BUILT_IN_MENUS, BUILT_IN_SITE_MENUS, BUILT_IN_SEASONS, brandOfSlug } from './sites.mjs';
 
 const ORDER = ['seasons', 'siteMenus', 'ingredients', 'recipes', 'extraMenus', 'alerts', 'rotation'];
@@ -148,6 +149,17 @@ export async function migrateFromBlobs({ origin, adminCredential, siteCredential
         if (given) return;
         const site = one(db, 'SELECT name FROM sites WHERE slug = ?', [slug]);
         passwords.push({ username: slug, site: (site && site.name) || slug, password: pw });
+      });
+      // Nurseries added in Staff admin before the database existed.
+      const addedDoc = docs.find((d) => d.key === NURSERIES_KEY);
+      let added = {};
+      try { added = (JSON.parse(addedDoc ? addedDoc.data : '{}') || {}).sites || {}; } catch (e) { added = {}; }
+      Object.keys(added).forEach((slug) => {
+        if (SITE_SLUGS.includes(slug) || !/^[a-z0-9-]+$/.test(slug)) return;
+        upsertNurseryRow(db, slug, added[slug] || {});
+        const pw = newPassword();
+        setUser(db, { username: slug, role: 'site', siteSlug: slug, credential: sha256Hex(pw) });
+        passwords.push({ username: slug, site: (added[slug] && added[slug].siteName) || slug, password: pw });
       });
       db.run("INSERT INTO meta (key, value) VALUES ('migrated_at', ?), ('migrated_documents', ?), ('migrated_backups', ?)",
         [new Date().toISOString(), String(docs.length), String(backups.length)]);

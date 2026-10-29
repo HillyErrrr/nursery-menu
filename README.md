@@ -2501,3 +2501,63 @@ John chose **Days A** from the top-bar mock-ups (row 3 of the canvas).
 - The rest of the bar is the same on both: the nursery and its week picker, the page's name, and the Menu.
 - The allergy matrix's week picker shows another week's matrix.
 - Going to the shopping list from the Menu while the matrix is open closes the matrix.
+
+## Station bar polish (29 October 2026)
+
+**No list page while loading.**
+- The kitchen page shows a plain loading screen in the station's colours ("Opening the kitchen…") until it knows what to draw, so logging in or refreshing never flashes the old list page.
+- Tablets and computers always open the station, even if one was switched to the list view before. The list view is the phone layout only.
+- The loading screen goes as soon as the page is drawn, or when there is an error or no nursery to show, and never stays up longer than 20 seconds. Code: `body.booting`, `#bootSplash`, `endBoot()`.
+
+**The bar.**
+- The days and both arrows share one centre line.
+- The Menu button is bigger (64px high) in the same 112px band.
+- The nursery's name is bigger (24px) and sits right on top of the season line. The week picker is still 44px to tap but draws a slimmer pill.
+- The Nursery / Holiday Club switch is more three-dimensional: a sunken track with a raised, lit button.
+
+**The Menu.** "Print Thursday's prep sheets" is now **Print Thursday's recipe pages** (one page per course), with a double-printer icon. **Print this recipe** has a printer icon. The list view's button says "Print recipe pages".
+
+**Tests:** `docktest.js` D11–D16, 17 checks in all.
+
+## Adding a nursery (October 2026)
+
+**Staff admin → Nurseries** (beside Maintenance) lists every nursery: its brand, name, username, whether it has a kitchen login, and its logo. Each row has **New password**, **Kitchen page** and, for nurseries added here, **Change logo**.
+
+**Add a nursery.**
+- Fill in the brand (Little Adventures or Green Giraffe), the nursery's name, and its address, phone and email. Choose which nursery menu it is on, and optionally add a logo.
+- The username is made from the brand and the name, the same as the existing logins, e.g. `little-adventures-frome`. It shows as you type.
+- When you add it, the nursery gets its own kitchen page and kitchen login straight away. The page shows the **new password once**, with a **Copy login details** button. Only a salted hash is stored. If the password is lost, use **New password**.
+- On the iPad, open the login page, choose the nursery and type the password.
+- The logo is made square on white in the browser, at 320px, plus home-screen icons at 180, 192 and 512px. Until a logo is uploaded, the brand's own logo is used (`icons/brand-*.png`, without a nursery name on it).
+- Before the database is set up there are no logins, so the nursery is added without one. The database set-up gives it a login with the others.
+
+**How it works.**
+- An added nursery has no files in the site. Its details are kept in `_config/sites.json`, and its logo and icons are in the `site-assets` Blobs store.
+- The `site-asset` function answers `sites/*` itself, but only where no shipped file matches (`config = { path: '/sites/*', preferStatic: true }`). So the kitchen page, home-screen app and logo work at the same addresses as for every other nursery, and the original 15 are still served from their own files.
+- With the database, adding a nursery saves the document, the `sites` row and the login in one transaction (`netlify/lib/nurseries.mjs`; db-admin actions `add-nursery`, `list-nurseries` and `set-nursery-logo`).
+- Added nurseries join Staff admin's nursery list with their real names, so Menu settings, Site alerts, Preview and the extra menus all offer them.
+
+**Tests:** `nurseries.js`: 16 checks with the database, 15 without.
+
+## The day ribbon, ingredient allergens and ordering days (29 October 2026)
+
+**The days as a ribbon** (Days B from canvas round 5; this replaces the five-day dock).
+- The station's bar has two rows. The top row has the nursery (and the Nursery / Holiday Club switch), a line saying which day is showing ("Today is Thursday 29 October · menu week 4" or "Looking at …"), and Menu (56px).
+- Under it is a ribbon of seven school days with full day names. The day being looked at is in the middle and largest. The first day of each menu week carries a WEEK n tag, and a thin line separates the weeks.
+- Today is always coral. When today moves out of the ribbon, a coral **Back to today** button appears in the line above.
+- On narrower screens the ribbon shows five days, and on a phone three. The week picker under the nursery's name stays.
+- Code: `stationDockHtml`, `stationInfoHtml`, `.stTopB`.
+
+**Ingredient allergens** (option B from round 4). An ingredient's allergen icons follow its name on the same line, in the station and the list view (`.ing-namewrap`, `.ing-al`).
+
+**The shopping list starts with the days you are ordering for** (option A from round 6).
+- **Step 1** is a three-week Mon–Fri calendar, starting this week (or next week at the weekend). Days that have gone are crossed out and today is shut, so only days still to come can be chosen. Days with no menu (the next season, or outside a Holiday Club run) are shut too.
+- Tap days one by one, or use a quick pick: Rest of this week, Next week or Week after. A summary says what the order covers, e.g. "5 days · Mon 2 – Fri 6 Nov · menu week 1".
+- The Who's eating grid and the list then cover exactly those dates, even across menu weeks. Nothing is listed until a day is chosen.
+- The numbers are kept per date (`shopgrid2:`). The ticks and To order numbers belong to one choice of days (`shopchecked2:` and `shoporder2:`, keyed by the dates). Days that have gone drop out by themselves.
+- The Holiday Club (or the nursery, when viewing the club) is added in for the same dates from its own numbers.
+- An "as needed" item is now only listed for days that have someone eating.
+- Copy list, the printed sheet and the Menu's **Print shopping list** name the days. With no days chosen, Print list points at step 1 instead of printing.
+- The shopping page's bar no longer has a week picker; on a phone the week and day tabs are hidden on the shopping page.
+
+**Tests:** `docktest.js` (18, including D18 for the ingredient icons) and `shopdays.js` (13). `shopstation`, `shopback` and `menutest` were updated for choosing the days.

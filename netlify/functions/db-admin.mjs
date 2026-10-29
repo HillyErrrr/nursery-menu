@@ -8,9 +8,14 @@
 //   rollback -- switch back to the Blobs store only
 //   download -- the SQLite file itself
 //   reset-site-password -- a new password for one site login
+//   list-nurseries  -- every nursery, and whether it has a kitchen login
+//   add-nursery     -- a new nursery (and its kitchen login, once the
+//                      database is set up); the password is returned once
+//   set-nursery-logo -- a new logo for a nursery added here
 // Staff password only (the same x-rb-auth header Staff admin sends).
 import { loadDatabase, writeDatabase, dbBlobStore } from '../lib/store.mjs';
 import { staffAuth } from '../lib/auth.mjs';
+import { addNursery, setNurseryLogo, listNurseries } from '../lib/nurseries.mjs';
 import { migrateFromBlobs, verifyDatabase, databaseStatus, rollbackToBlobs, resetSitePassword } from '../lib/migrate.mjs';
 
 export default async (req) => {
@@ -47,6 +52,15 @@ export default async (req) => {
     if (action === 'reset-site-password') {
       const out = await resetSitePassword(writeDatabase, String(body.username || ''));
       return json(out, out.ok ? 200 : 404);
+    }
+    if (action === 'list-nurseries') return json(await listNurseries(), 200);
+    if (action === 'add-nursery') {
+      const out = await addNursery({ nursery: body.nursery, images: body.images || null });
+      return json(out, out.ok ? 200 : (out.status || 400));
+    }
+    if (action === 'set-nursery-logo') {
+      const out = await setNurseryLogo({ slug: String(body.slug || ''), images: body.images || null });
+      return json(out, out.ok ? 200 : (out.status || 400));
     }
     return json({ error: 'Unknown action' }, 400);
   } catch (e) {

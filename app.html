@@ -282,43 +282,129 @@ button{font-family:inherit;cursor:pointer;}
   #allergyView tr.avIng td .allergen-badge{width:22px;height:22px;}
 }
 body.allergyOpen{overflow:hidden;}
-/* ---- the days as a dock ---- */
-#prepStation .stSpacer{display:none;}
-#prepStation .stNav{flex:1 1 auto;justify-content:center;margin-left:0;gap:8px;}
-#prepStation .stTop:not(.hasSwitch) .stBrand{flex:0 0 240px;}
-#prepStation .stTop:not(.hasSwitch) .stSite{max-width:170px;}
-#prepStation .stTop:not(.hasSwitch) .stActions{flex:0 0 240px;justify-content:flex-end;}
-.stDock{display:flex;align-items:flex-end;gap:6px;}
-.stDockDay{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;border-radius:16px;border:1.5px solid rgba(255,255,255,0.24);background:rgba(255,255,255,0.06);color:#D5DCE2;padding:0;font-family:inherit;cursor:pointer;transition:width .18s ease,height .18s ease,background .18s ease;}
-.stDockDay.d0{width:112px;height:84px;border-radius:20px;}
-.stDockDay.d1{width:84px;height:66px;}
-.stDockDay.d2{width:72px;height:56px;}
-.stDockTag{font-size:10px;font-weight:800;letter-spacing:.08em;line-height:12px;min-height:12px;color:#FFD27A;}
+/* ---- loading screen: shown until the page knows what to draw ---- */
+#bootSplash{display:none;}
+body.booting > *:not(#bootSplash):not(script):not(noscript){visibility:hidden !important;}
+body.booting #bootSplash{display:flex;flex-direction:column;position:fixed;inset:0;z-index:10000;background:var(--paper);}
+#bootSplash .bootBand{height:166px;background:var(--ink);flex:none;}
+#bootSplash .bootMsg{margin:auto;display:flex;align-items:center;gap:12px;font-size:17px;font-weight:600;color:var(--ink-soft);padding-bottom:166px;}
+#bootSplash .bootDot{width:12px;height:12px;border-radius:6px;background:var(--butter);animation:bootPulse 1s ease-in-out infinite alternate;}
+@keyframes bootPulse{from{opacity:.25;transform:scale(.8);}to{opacity:1;transform:scale(1.1);}}
+@media (prefers-reduced-motion: reduce){ #bootSplash .bootDot{animation:none;} }
+/* ---- the days as a ribbon (Days B) ----
+   Row 1: the nursery (and the menu switch), which day is showing, Menu.
+   Row 2: seven school days, the one being looked at in the middle. */
+#prepStation .stTop.stTopB{flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:6px;padding:10px 18px 12px;}
+#prepStation .stRow1{display:flex;align-items:center;gap:14px;min-height:56px;}
+#prepStation .stRow1 .stBrand{flex:1 1 0;min-width:max-content;}
+#prepStation .stRow1 .stMenuSwitch{flex:none;}
+#prepStation .stRow1 .stActions{flex:1 1 0;display:flex;justify-content:flex-end;min-width:max-content;}
+#prepStation .stSite{max-width:220px;}
+.stInfo{flex:none;display:flex;align-items:center;gap:14px;font-size:15px;color:#C9D2DA;white-space:nowrap;min-width:0;}
+.stInfo b{color:#fff;}
+.stBtn.stToday{background:var(--butter);border-color:var(--butter);color:#fff;font-size:15px;font-weight:800;padding:0 18px 0 14px;box-shadow:0 4px 12px rgba(0,0,0,0.25);}
+#prepStation .stMenuBtn{height:56px;padding:0 24px 0 18px;border-radius:28px;font-size:18px;gap:10px;}
+#prepStation .stMenuBtn .stIco{width:24px;height:24px;}
+#prepStation .stNav{display:flex;justify-content:center;align-items:center;gap:10px;margin:0;}
+#prepStation .stArrow{height:54px;border-radius:14px;}
+.stDock{display:flex;align-items:center;gap:10px;}
+.stDockDiv{width:2px;height:54px;border-radius:1px;background:rgba(255,255,255,0.22);margin:0 2px;flex:none;}
+.stDockDay{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;flex:none;border-radius:16px;border:1.5px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.06);color:#D5DCE2;padding:0;font-family:inherit;cursor:pointer;transition:width .18s ease,height .18s ease,background .18s ease;}
+.stDockDay.d0{width:164px;height:80px;border-radius:22px;}
+.stDockDay.d1{width:132px;height:64px;}
+.stDockDay.d2{width:116px;height:58px;opacity:.9;}
+.stDockDay.d3{width:104px;height:54px;opacity:.75;}
+.stDockTag{font-size:10px;font-weight:800;letter-spacing:.08em;line-height:12px;color:#FFD27A;}
 .stDockName{font-weight:800;line-height:1.05;}
-.stDockDay.d0 .stDockName{font-size:22px;}
+.stDockDay.d0 .stDockName{font-size:21px;}
 .stDockDay.d1 .stDockName{font-size:17px;}
-.stDockDay.d2 .stDockName{font-size:15px;}
+.stDockDay.d2 .stDockName{font-size:15.5px;}
+.stDockDay.d3 .stDockName{font-size:14.5px;}
 .stDockDate{font-weight:700;opacity:.85;}
-.stDockDay.d0 .stDockDate{font-size:15px;}
+.stDockDay.d0 .stDockDate{font-size:14.5px;}
 .stDockDay.d1 .stDockDate{font-size:13px;}
-.stDockDay.d2 .stDockDate{font-size:12px;}
-.stDockDay.today{background:var(--butter);border-color:var(--butter);color:#fff;}
+.stDockDay.d2 .stDockDate{font-size:12.5px;}
+.stDockDay.d3 .stDockDate{font-size:12px;}
+.stDockDay.today{background:var(--butter);border-color:var(--butter);color:#fff;opacity:1;}
 .stDockDay.today .stDockTag{color:#fff;}
-.stDockDay.today.sel{box-shadow:0 8px 22px rgba(0,0,0,0.28);}
-.stDockDay.sel:not(.today){background:#fff;border-color:#fff;color:var(--ink);box-shadow:0 8px 22px rgba(0,0,0,0.22);}
-.stDockDay.sel:not(.today) .stDockTag{color:var(--butter-dark);}
-@media (max-width:1000px){
-  #prepStation .stTop:not(.hasSwitch) .stBrand,
-  #prepStation .stTop:not(.hasSwitch) .stActions{flex-basis:auto;}
-  #prepStation .stActions{margin-left:auto;}
+.stDockDay.today.sel{box-shadow:0 10px 26px rgba(0,0,0,0.30);}
+.stDockDay.sel:not(.today){background:#fff;border-color:#fff;color:var(--ink);box-shadow:0 10px 26px rgba(0,0,0,0.26);}
+.stDockDay.sel:not(.today) .stDockTag{color:#A8541F;}
+.stTagN1, .stTagN2{display:none;}
+@media (max-width:1100px){ .stTagN1{display:block;} }
+@media (max-width:700px){ .stTagN2{display:block;} .stTagN1{display:none;} }
+/* With the Holiday Club switch there is less room on the top row: the
+   info line keeps its Back to today button and drops its words. */
+@media (max-width:1400px){ #prepStation .stTop.hasSwitch .stInfoText{display:none;} }
+@media (max-width:1100px){
+  .stDockDay.d3, .stDockDay.d3 + .stDockDiv{display:none;}
+  .stDockDiv:has(+ .stDockDay.d3){display:none;}
+  .stDockDay.d0{width:140px;height:74px;}
+  .stDockDay.d1{width:112px;height:60px;}
+  .stDockDay.d2{width:100px;height:54px;}
+  #prepStation .stRow1 .stBrand, #prepStation .stRow1 .stActions{min-width:0;}
+  #prepStation .stTop:not(.hasSwitch) .stInfoText{white-space:normal;}
 }
+@media (max-width:860px){ #prepStation .stInfoText{display:none;} }
 @media (max-width:700px){
-  .stDockDay.d0{width:88px;height:70px;}
-  .stDockDay.d1{width:66px;height:58px;}
-  .stDockDay.d2{width:54px;height:50px;}
-  .stDockDay.d0 .stDockName{font-size:18px;}
+  .stDockDay.d2, .stDockDay.d2 + .stDockDiv, .stDockDiv:has(+ .stDockDay.d2){display:none;}
+  .stDockDay.d0{width:110px;height:66px;}
+  .stDockDay.d1{width:86px;height:56px;}
+  .stDockDay.d0 .stDockName{font-size:17px;}
+  .stDockDay.d1 .stDockName{font-size:14px;}
 }
 @media (prefers-reduced-motion: reduce){ .stDockDay{transition:none;} }
+/* ---- the shopping list's days (STEP 1) ---- */
+.shopDays{background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:14px 16px;margin:0 0 14px;display:grid;grid-template-columns:minmax(0,1fr) 210px;gap:18px;}
+.shopDays.sdNudge{animation:sdNudge .7s ease;}
+@keyframes sdNudge{0%,100%{box-shadow:none;}30%{box-shadow:0 0 0 6px rgba(196,105,76,0.35);}}
+.sdHead{display:flex;align-items:baseline;gap:10px;margin-bottom:8px;flex-wrap:wrap;}
+.sdHead h2{margin:0;font-family:'Roca','Space Grotesk',serif;font-size:19px;color:var(--ink);}
+.sdStepTag{display:inline-block;background:var(--ink);color:#fff;border-radius:999px;padding:2px 10px;font:800 11px/1.5 'Museo Sans','Inter',system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;vertical-align:middle;margin-right:8px;}
+/* On a phone the week and day tabs belong to the daily prep: the days to
+   order for are chosen on the shopping list itself. */
+html.viewShop #weekTabs, html.viewShop #dayTabs{display:none;}
+.shopGridHead h2 .sdStepTag{background:var(--paper-dim);color:var(--ink-soft);}
+.sdGrid{display:grid;grid-template-columns:128px repeat(5,minmax(0,1fr));gap:8px;align-items:center;}
+.sdDow{text-align:center;font-size:11.5px;font-weight:800;letter-spacing:.08em;color:var(--ink-soft);}
+.sdWk{display:flex;flex-direction:column;line-height:1.25;}
+.sdWk b{font-size:14px;color:var(--ink);}
+.sdWk span{font-size:12px;color:var(--ink-soft);}
+.sdDay{height:52px;border-radius:12px;font:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0;cursor:pointer;border:1.5px solid #C2B9A3;background:#fff;color:var(--ink);}
+.sdDay b{font-size:16px;font-weight:800;line-height:1.1;}
+.sdDay small{font-size:10.5px;font-weight:700;color:var(--ink-faint);}
+.sdDay.sel{background:var(--ink);border-color:var(--ink);color:#fff;box-shadow:0 3px 8px rgba(31,60,85,0.25);}
+.sdDay.sel small{color:#fff;opacity:.85;}
+.sdDay:disabled{cursor:default;}
+.sdDay.past{border-style:dashed;border-color:var(--line);background:transparent;color:#B5AC9B;}
+.sdDay.past b{text-decoration:line-through;}
+.sdDay.past small{color:#B5AC9B;}
+.sdDay.today{border-color:var(--butter);background:#FBEDE8;color:#A5503A;}
+.sdDay.today small{color:#A5503A;letter-spacing:.04em;font-weight:800;}
+.sdDay.none{border-style:dashed;border-color:var(--line);background:var(--paper);color:var(--ink-faint);}
+.sdDay:focus-visible,.sdQuick:focus-visible,.sdClear:focus-visible{outline:3px solid var(--butter);outline-offset:2px;}
+.sdSide{display:flex;flex-direction:column;gap:8px;border-left:1px solid var(--line);padding-left:16px;}
+.sdLabel{font-size:11.5px;font-weight:800;letter-spacing:.08em;color:var(--ink-soft);text-transform:uppercase;}
+.sdQuick{min-height:44px;padding:0 14px;border-radius:22px;border:1.5px solid #C2B9A3;background:#fff;color:var(--ink);font:inherit;font-size:14px;font-weight:800;text-align:left;cursor:pointer;}
+.sdQuick.on{border-color:var(--ink);background:#E6ECF1;}
+.sdClear{min-height:44px;padding:0 14px;border-radius:22px;border:0;background:transparent;color:var(--ink-soft);font:inherit;font-size:13.5px;font-weight:700;text-decoration:underline;text-align:left;cursor:pointer;}
+.sdNone{font-size:13px;color:var(--ink-soft);}
+.sdSummary{margin-top:auto;background:var(--sage-light);color:var(--sage-text);border-radius:10px;padding:9px 11px;font-size:13.5px;line-height:1.35;display:flex;flex-direction:column;}
+.sdSummary.empty{background:var(--paper);color:var(--ink-soft);}
+.shopGridScroll{overflow-x:auto;}
+/* The shopping page's bar has no week picker, but keeps the same height
+   so Back sits in exactly the same place as on the allergy matrix. */
+.shTop div.stSeason{min-height:32px;display:flex;align-items:center;}
+.shopGridScroll[hidden]{display:none;}
+.shopGridEmpty{padding:18px 16px;color:var(--ink-soft);font-size:14px;}
+@media (max-width:700px){
+  .shopDays{grid-template-columns:1fr;padding:12px;}
+  .sdGrid{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;}
+  .sdGrid > span:first-child{display:none;}
+  .sdWk{grid-column:1 / -1;flex-direction:row;gap:8px;align-items:baseline;margin-top:4px;}
+  .sdDay{height:48px;}
+  .sdSide{border-left:0;padding-left:0;border-top:1px solid var(--line);padding-top:10px;}
+}
 /* ---- a tablet's shopping list: the station's look ---- */
 #shopTop{display:none;}
 .shopGridHead{display:none;}
@@ -328,7 +414,8 @@ body.shopStation .ticket-head,
 body.shopStation .tear,
 body.shopStation .shopBackBar{display:none !important;}
 body.shopStation .wrap{max-width:none;padding:14px 16px 0;}
-body.shopStation #shopView{display:grid !important;grid-template-columns:minmax(370px,390px) minmax(0,1fr);grid-template-rows:auto auto 1fr;grid-template-areas:"grid actions" "grid list" "note list";column-gap:14px;align-items:start;}
+body.shopStation #shopView{display:grid !important;grid-template-columns:minmax(370px,390px) minmax(0,1fr);grid-template-rows:auto auto auto 1fr;grid-template-areas:"days days" "grid actions" "grid list" "note list";column-gap:14px;align-items:start;}
+body.shopStation .shopDays{grid-area:days;}
 .shTop .stBrand{flex:0 0 auto;}
 .shTitle{display:flex;flex-direction:column;gap:2px;margin-left:6px;}
 .shTitle span{font-size:12px;font-weight:800;letter-spacing:.08em;color:#C9D2DA;}
@@ -360,7 +447,8 @@ body.shopStation #shopOrderSummary{position:static;order:-1;display:flex;flex-wr
 body.shopStation #shopOrderSummary .shopOrderSummaryLabel{margin:0;font-weight:800;}
 body.shopStation #shopOrderSummary .shopOrderSummaryRow{gap:8px;font-size:15px;}
 @media (max-width:1000px){
-  body.shopStation #shopView{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-template-areas:"grid" "actions" "list" "note";row-gap:14px;}
+  body.shopStation #shopView{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-template-areas:"days" "grid" "actions" "list" "note";row-gap:14px;}
+  body.shopStation .shopDays{margin:0;}
   body.shopStation .shop-grid{position:static;}
   body.shopStation .shop-actions{margin-bottom:-14px;}
   .shTitle{display:none;}
@@ -600,7 +688,13 @@ body.shopStation #shopOrderSummary .shopOrderSummaryRow{gap:8px;font-size:15px;}
 .ing-body{flex:1;min-width:0;}
 .ing-name{font-size:15.5px;font-weight:500;}
 .ing-qty{font-size:15.5px;font-weight:600;color:var(--ink);white-space:nowrap;margin-left:8px;}
-.ing-toprow{display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
+.ing-toprow{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+/* The allergen icons follow the name on its line (wrapping under it only
+   when the name is long), not on a line of their own. */
+.ing-namewrap{display:inline-flex;align-items:center;flex-wrap:wrap;gap:4px 8px;min-width:0;}
+.ing-al{display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap;}
+.ing-row .ing-al .allergen-badge{width:26px;height:26px;margin:0;}
+.ing-row .ing-al .allergen-chip{margin:0;}
 .ing-prep{font-size:13px;font-style:italic;color:var(--ink-soft);margin-top:1px;}
 .ing-row.checked .ing-prep{color:var(--ink-faint);}
 /* The site "Weekly shopping list" table -- matches the Staff Admin
@@ -784,6 +878,34 @@ table.shopListTable tr.shopCatRow td{
   width:100%;padding:8px 10px;border:1px solid var(--line-strong);border-radius:8px;background:#fff;color:var(--ink);
 }
 #rbAdminRoot .field textarea{resize:vertical;min-height:120px;}
+/* ---- Nurseries ---- */
+#rbAdminRoot .nzGrid{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:18px;align-items:start;}
+@media (max-width:900px){ #rbAdminRoot .nzGrid{grid-template-columns:1fr;} }
+#rbAdminRoot .nzRow2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media (max-width:640px){ #rbAdminRoot .nzRow2{grid-template-columns:1fr;} }
+#rbAdminRoot .field input[type=email], #rbAdminRoot .field input[type=tel]{width:100%;padding:8px 10px;border:1px solid var(--line-strong);border-radius:8px;background:#fff;color:var(--ink);}
+#rbAdminRoot .nzUser{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:var(--ink-soft);}
+#rbAdminRoot .nzLogoBox{border:1.5px dashed var(--line-strong);border-radius:12px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;background:var(--paper);}
+#rbAdminRoot .nzLogoBox img{width:150px;height:150px;border-radius:14px;background:#fff;border:1px solid var(--line);object-fit:contain;display:block;}
+#rbAdminRoot .nzLogoBox .tinyNote{margin:0;}
+#rbAdminRoot .nzCred{border:2px solid var(--sage);background:var(--sage-light);border-radius:12px;padding:16px 18px;margin-top:14px;}
+#rbAdminRoot .nzCred h3{margin:0 0 8px;}
+#rbAdminRoot .nzCredGrid{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 16px;align-items:baseline;margin:10px 0 12px;}
+#rbAdminRoot .nzCredGrid dt{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--sage-text);}
+#rbAdminRoot .nzCredGrid dd{margin:0;font-size:15px;font-weight:600;color:var(--ink);word-break:break-all;}
+#rbAdminRoot .nzPw{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:22px !important;letter-spacing:.06em;background:#fff;border:1px solid var(--line);border-radius:8px;padding:4px 10px;display:inline-block;}
+#rbAdminRoot .nzTable{width:100%;border-collapse:collapse;font-size:13.5px;}
+#rbAdminRoot .nzTable th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);padding:6px 8px;border-bottom:1px solid var(--line);}
+#rbAdminRoot .nzTable td{padding:8px;border-bottom:1px solid var(--line);vertical-align:middle;}
+#rbAdminRoot .nzTable tr.nzBrand td{background:var(--paper);font-weight:800;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);}
+#rbAdminRoot .nzTable img{width:34px;height:34px;border-radius:7px;border:1px solid var(--line);background:#fff;object-fit:contain;display:block;}
+#rbAdminRoot .nzTable .nzActs{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;}
+#rbAdminRoot .nzChip{display:inline-flex;align-items:center;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap;}
+#rbAdminRoot .nzChip.yes{background:var(--sage-light);color:var(--sage-text);}
+#rbAdminRoot .nzChip.no{background:var(--paper-dim);color:var(--ink-faint);}
+#rbAdminRoot .nzChip.new{background:var(--butter-light);color:var(--butter-dark);}
+#rbAdminRoot .nzInline{margin-top:8px;}
+#rbAdminRoot a.btn{text-decoration:none;display:inline-flex;align-items:center;}
 #rbAdminRoot .notesBox{background:#EAF0FB;border:1px solid #C7D6EE;border-radius:var(--radius);padding:12px 16px;margin-bottom:16px;font-size:13px;}
 #rbAdminRoot .notesBox b{display:block;margin-bottom:4px;}
 #rbAdminRoot .weekGrid{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
@@ -1032,12 +1154,19 @@ body.stationMode #prepStation{
 .stBrand{display:flex;align-items:center;gap:12px;min-width:0;flex:0 1 auto;}
 .stLogo{width:46px;height:46px;border-radius:9px;background:var(--paper);flex:none;overflow:hidden;display:flex;}
 .stLogo img{width:100%;height:100%;object-fit:contain;padding:3px;box-sizing:border-box;display:block;}
-.stBrandText{min-width:0;display:flex;flex-direction:column;gap:3px;}
+.stBrandText{min-width:0;display:flex;flex-direction:column;gap:0;}
 .stSite{
-  font-family:'Roca','Space Grotesk',sans-serif;font-weight:700;font-size:18px;line-height:1.15;
+  font-family:'Roca','Space Grotesk',sans-serif;font-weight:700;font-size:24px;line-height:1.05;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px;
 }
-.stSeason{font-size:12.5px;color:#C9D2DA;display:flex;align-items:center;gap:6px;white-space:nowrap;}
+.stSeason{font-size:12.5px;color:#C9D2DA;display:flex;align-items:center;gap:6px;white-space:nowrap;margin-top:1px;}
+/* The picker is 44px tall to tap, but only its middle 32px is drawn (the
+   transparent top and bottom borders are part of the tap area), and it
+   overlaps the rows above and below by those 6px, so the season line sits
+   tight under the nursery's name. */
+.stSeason .stWeekSel{min-height:44px;height:44px;margin:-6px 0;padding:0 30px 0 12px;
+  border:6px solid transparent;border-left:0;border-right:0;border-radius:14px;background-clip:padding-box;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,0.32);}
 .stWeekSel{
   -webkit-appearance:none;appearance:none;font:inherit;font-weight:700;color:#fff;
   background:rgba(255,255,255,0.10) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M1.5 3.5l3.5 3.5 3.5-3.5' fill='none' stroke='%23fff' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 8px center;
@@ -1187,9 +1316,13 @@ body.hcSheetOpen .hcSheetFoot{display:flex;justify-content:flex-end;padding:0 16
 }
 
 /* extra menus (Holiday club) */
-.stMenuSwitch{display:flex;gap:2px;padding:3px;border-radius:23px;background:rgba(255,255,255,0.10);flex:none;}
-.stMenuSeg{height:40px;border-radius:20px;border:0;background:transparent;color:#D5DCE2;font-size:14px;font-weight:700;padding:0 15px;white-space:nowrap;}
-.stMenuSeg.on{background:#fff;color:var(--ink);}
+/* A sunken track with a raised, lit button sliding in it. */
+.stMenuSwitch{display:flex;gap:2px;padding:4px;border-radius:26px;flex:none;
+  background:linear-gradient(180deg,#132a3c 0%,#1a3348 100%);
+  box-shadow:inset 0 2px 6px rgba(0,0,0,0.55),inset 0 -1px 0 rgba(255,255,255,0.10),0 1px 0 rgba(255,255,255,0.12);}
+.stMenuSeg{height:44px;border-radius:22px;border:0;background:transparent;color:#C9D2DA;font-size:14.5px;font-weight:700;padding:0 17px;white-space:nowrap;text-shadow:0 1px 1px rgba(0,0,0,0.45);transition:background .15s, box-shadow .15s;}
+.stMenuSeg.on{background:linear-gradient(180deg,#ffffff 0%,#e4eaef 100%);color:var(--ink);text-shadow:none;
+  box-shadow:0 3px 8px rgba(0,0,0,0.45),0 1px 2px rgba(0,0,0,0.3),inset 0 1px 0 #ffffff,inset 0 -2px 0 rgba(31,60,85,0.14);}
 .stTop.hasSwitch .stShopLabel{display:none;}
 .stTop.hasSwitch .stBtn.shop{padding:0;width:44px;}
 .stTop.hasSwitch .stDay{min-width:50px;}
@@ -1241,7 +1374,8 @@ body.hcSheetOpen .hcSheetFoot{display:flex;justify-content:flex-end;padding:0 16
 
 </style>
 </head>
-<body>
+<body class="booting">
+<div id="bootSplash" aria-live="polite"><div class="bootBand"></div><div class="bootMsg"><span class="bootDot"></span>Opening the kitchen…</div></div>
 <noscript>
   <div style="position:fixed;inset:0;z-index:9999;background:#8C2F2F;color:#fff;font-family:sans-serif;padding:24px;box-sizing:border-box;">
     <strong>This page needs JavaScript to build the prep list and shopping list.</strong>
@@ -1263,7 +1397,7 @@ body.hcSheetOpen .hcSheetFoot{display:flex;justify-content:flex-end;padding:0 16
     <div class="ticket-head-top">
       <span class="kicker" id="dateLabel">Today</span>
       <button class="clear-btn" id="prepModeToggle"><i class="ti ti-layout-sidebar"></i>Station view</button>
-      <button class="clear-btn" id="prepPrintBtn" title="One prep sheet per course for this day, scaled to the headcount above"><i class="ti ti-printer"></i>Print prep sheets</button>
+      <button class="clear-btn" id="prepPrintBtn" title="One prep sheet per course for this day, scaled to the headcount above"><i class="ti ti-printer"></i>Print recipe pages</button>
       <button class="clear-btn" id="resetBtn"><i class="ti ti-eraser"></i>Clear ticks</button>
       <button class="clear-btn" id="wakeBtn" style="display:none" aria-pressed="true" title="Keeps the screen from locking while this page is open"><i class="ti ti-sun"></i><span>Keep screen on</span></button>
     </div>
@@ -1293,13 +1427,15 @@ body.hcSheetOpen .hcSheetFoot{display:flex;justify-content:flex-end;padding:0 16
 
   <div id="shopView" style="display:none;">
     <div class="shopBackBar"><button type="button" class="shopBackBtn" id="shopBackBtn"><i class="ti ti-arrow-left"></i><span>Back to the daily prep</span></button></div>
+    <section class="shopDays" id="shopDaysCard" aria-labelledby="shopDaysTitle"></section>
     <div class="shop-grid">
-      <div class="shopGridHead"><h2>Who’s eating this week</h2><span>The shopping list is worked out from these numbers</span></div>
-      <table>
+      <div class="shopGridHead"><h2><span class="sdStepTag">Step 2</span><span id="shopGridTitle">Who’s eating</span></h2><span id="shopGridSub">The shopping list is worked out from these numbers</span></div>
+      <div class="shopGridScroll"><table>
         <thead><tr id="shopGridHead"></tr></thead>
         <tbody id="shopGridBody"></tbody>
         <tfoot><tr id="shopGridFoot"></tr></tfoot>
-      </table>
+      </table></div>
+      <div class="shopGridEmpty" id="shopGridEmpty" hidden>Choose the days you are ordering for, above, and their numbers appear here.</div>
     </div>
     <div class="shop-actions">
       <button class="action-btn" id="copyListBtn"><i class="ti ti-copy"></i>Copy list</button>
@@ -1369,6 +1505,7 @@ body.hcSheetOpen .hcSheetFoot{display:flex;justify-content:flex-end;padding:0 16
         </div></div>
         <span class="navspacer"></span>
         <div class="navgroup"><div class="tabs">
+          <button data-view="nurseries" title="Add a nursery, kitchen logins and logos">🏠 Nurseries</button>
           <button data-view="maintenance" title="Season setup, clean-up and backups">⚙ Maintenance</button>
         </div></div>
       </div>
@@ -2384,6 +2521,7 @@ let state = {
      survives every re-render because renderCourses() reads it from here. */
   courseOpen: {},
   shopGrid: {},
+  shopDays: [],
   shopChecked: {},
   // Staff-entered "To Order" quantities on the Weekly shopping list, keyed
   // by the same id strings as shopChecked ("agg|<name>", "agg-staple|
@@ -2425,9 +2563,178 @@ function shopCycleKeyFor(d){
   const week = Math.ceil((((t - yearStart) / 86400000) + 1) / 7);
   return t.getUTCFullYear() + '-W' + String(week).padStart(2, '0');
 }
-function shopGridKey(){ return 'shopgrid:'+SITE_SLUG+':'+storeKey()+':'+shopCycleKey()+':'+state.week; }
-function shopCheckedKey(){ return 'shopchecked:'+SITE_SLUG+':'+storeKey()+':'+shopCycleKey()+':'+state.week; }
-function shopOrderKey(){ return 'shoporder:'+SITE_SLUG+':'+storeKey()+':'+shopCycleKey()+':'+state.week; }
+/* The numbers for the shopping list are kept per DATE (an order can run
+   from Friday of one menu week into the next); the ticks and To order
+   numbers belong to one choice of days. */
+function shopDaysKey(){ return 'shopdays:'+SITE_SLUG+':'+storeKey(); }
+function shopGridKey(){ return 'shopgrid2:'+SITE_SLUG+':'+storeKey(); }
+function shopSelSig(){ return (state.shopDays || []).join(',') || 'none'; }
+function shopCheckedKey(){ return 'shopchecked2:'+SITE_SLUG+':'+storeKey()+':'+shopSelSig(); }
+function shopOrderKey(){ return 'shoporder2:'+SITE_SLUG+':'+storeKey()+':'+shopSelSig(); }
+
+/* ---------- the days an order is for ----------
+   Always days still to come: never today or before. A day can be ordered
+   for when the menu being shown has a day for it -- the nursery menu in
+   this season (not the next one), or the Holiday Club while it runs. */
+function shopContextSlot(dateKey){
+  const d = localDateFromKey(dateKey);
+  if(!d || d.getDay() === 0 || d.getDay() === 6) return null;
+  let slot;
+  if(ACTIVE_EXTRA){
+    slot = extraMenuSlot(ACTIVE_EXTRA, d);
+  }else{
+    if(!SEASON_OVERRIDDEN){
+      const ss = pickSeasonForDate(SEASONS, dateKey);
+      if(ss && ss.key !== SEASON_KEY) return null;
+    }
+    slot = nurseryMenuSlot(MENU, d);
+  }
+  if(!slot || slot.weekend || slot.beforeStart || !MENU[slot.week] || !MENU[slot.week][slot.day]) return null;
+  return {week: Number(slot.week), day: slot.day};
+}
+function shopDayInfo(key){
+  const slot = shopContextSlot(key);
+  if(!slot) return null;
+  const d = localDateFromKey(key);
+  return {key, d, week: slot.week, day: slot.day,
+    short: d.toLocaleDateString('en-GB', {weekday: 'short'}) + ' ' + d.getDate(),
+    long: d.toLocaleDateString('en-GB', {weekday: 'long', day: 'numeric', month: 'long'}),
+    courses: MENU[slot.week][slot.day]};
+}
+/* The chosen days that can still be ordered for, in date order. */
+function shopDayList(){
+  const today = dateKeyOf(localToday());
+  return (state.shopDays || []).filter(k=> k > today).map(shopDayInfo).filter(Boolean);
+}
+/* Mon of this week (next week at the weekend), and the two weeks after. */
+function shopCalendarWeeks(){
+  const t = localToday();
+  const todayK = dateKeyOf(t);
+  const weekend = t.getDay() === 0 || t.getDay() === 6;
+  const first = mondayOf(weekend ? addDays(t, 2) : t);
+  const thisMon = mondayOf(t);
+  const names = ['This week', 'Next week', 'Week after', 'In three weeks'];
+  const rows = [];
+  for(let w = 0; w < 3; w++){
+    const mon = addDays(first, w * 7);
+    const days = [];
+    for(let i = 0; i < 5; i++){
+      const d = addDays(mon, i);
+      const key = dateKeyOf(d);
+      const info = key > todayK ? shopDayInfo(key) : null;
+      days.push({d, key, info, state: key < todayK ? 'past' : (key === todayK ? 'today' : (info ? 'open' : 'none'))});
+    }
+    const idx = Math.round((mon - thisMon) / 86400000 / 7);
+    const weeks = [...new Set(days.filter(x=> x.info).map(x=> x.info.week))];
+    rows.push({mon, label: names[idx] || 'Later', menuWeeks: weeks, days});
+  }
+  return rows;
+}
+function shopDayRange(list){
+  const mon = (d)=> d.toLocaleDateString('en-GB', {month: 'short'});
+  const fmt = (d, withMonth)=> d.toLocaleDateString('en-GB', {weekday: 'short'}) + ' ' + d.getDate() + (withMonth ? ' ' + mon(d) : '');
+  const runs = [];
+  list.forEach(x=>{
+    const last = runs[runs.length - 1];
+    if(last && dateKeyOf(addSchoolDaysFrom(last[last.length - 1].d, 1)) === x.key) last.push(x);
+    else runs.push([x]);
+  });
+  return runs.map(r=>{
+    const a = r[0].d, b = r[r.length - 1].d;
+    if(r.length === 1) return fmt(a, true);
+    return fmt(a, a.getMonth() !== b.getMonth()) + ' – ' + fmt(b, true);
+  }).join(', ');
+}
+function addSchoolDaysFrom(d, n){
+  let x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  while(n > 0){ x = addDays(x, 1); if(x.getDay() !== 0 && x.getDay() !== 6) n--; }
+  return x;
+}
+/* "5 days · Mon 2 – Fri 6 Nov · menu week 1" */
+function shopDaysSummary(list){
+  list = list || shopDayList();
+  if(!list.length) return '';
+  const weeks = [...new Set(list.map(x=> x.week))];
+  const wk = (ACTIVE_EXTRA ? 'week' : 'menu week') + (weeks.length > 1 ? 's ' + weeks.slice(0, -1).join(', ') + ' and ' + weeks[weeks.length - 1] : ' ' + weeks[0]);
+  return list.length + ' day' + (list.length === 1 ? '' : 's') + ' · ' + shopDayRange(list) + ' · ' + wk;
+}
+async function loadShopDays(){
+  let keys = [];
+  try{
+    const v = await window.storage.get(shopDaysKey());
+    if(v) keys = JSON.parse(v.value) || [];
+  }catch(e){ keys = []; }
+  const today = dateKeyOf(localToday());
+  state.shopDays = (Array.isArray(keys) ? keys : []).filter(k=> typeof k === 'string' && k > today && shopContextSlot(k)).sort();
+}
+async function saveShopDays(){
+  try{ await window.storage.set(shopDaysKey(), JSON.stringify(state.shopDays || [])); }catch(e){}
+}
+async function setShopDays(keys){
+  state.shopDays = [...new Set(keys)].filter(k=> shopContextSlot(k)).sort();
+  await saveShopDays();
+  shopDayList().forEach(x=>{ if(!state.shopGrid[x.key]) state.shopGrid[x.key] = emptyDayHC(); });
+  await loadShopChecked();
+  await loadShopOrder();
+  renderShopDays();
+  renderShopGrid();
+  renderShopList();
+  if(typeof refreshShopPrintSheetSoon === 'function') refreshShopPrintSheetSoon();
+}
+function renderShopDays(){
+  const card = document.getElementById('shopDaysCard');
+  if(!card) return;
+  const rows = shopCalendarWeeks();
+  const chosen = new Set(state.shopDays || []);
+  const list = shopDayList();
+  const open = (r)=> r.days.filter(x=> x.state === 'open').map(x=> x.key);
+  const sameSet = (keys)=> keys.length && keys.length === chosen.size && keys.every(k=> chosen.has(k));
+  const quick = [];
+  rows.forEach(r=>{
+    const keys = open(r);
+    if(keys.length) quick.push({label: r.label === 'This week' ? 'Rest of this week' : r.label, keys});
+  });
+  const cell = (x)=>{
+    const dn = x.d.toLocaleDateString('en-GB', {weekday: 'long', day: 'numeric', month: 'long'});
+    if(x.state === 'past') return `<button type="button" class="sdDay past" disabled aria-label="${escapeHtml(dn)}, already gone"><b>${x.d.getDate()}</b><small>gone</small></button>`;
+    if(x.state === 'today') return `<button type="button" class="sdDay today" disabled aria-label="Today, ${escapeHtml(dn)}: too late to order for"><b>${x.d.getDate()}</b><small>TODAY</small></button>`;
+    if(x.state === 'none') return `<button type="button" class="sdDay none" disabled aria-label="${escapeHtml(dn)}: no menu to order for"><b>${x.d.getDate()}</b><small>no menu</small></button>`;
+    const on = chosen.has(x.key);
+    return `<button type="button" class="sdDay open${on ? ' sel' : ''}" data-sd-day="${x.key}" aria-pressed="${on}" aria-label="${escapeHtml(dn)}${on ? ', in this order' : ''}"><b>${x.d.getDate()}</b><small>${on ? '✓ ordering' : 'tap to add'}</small></button>`;
+  };
+  card.innerHTML = `
+    <div class="sdMain">
+      <div class="sdHead"><span class="sdStepTag">Step 1</span><h2 id="shopDaysTitle">Which days are you ordering for?</h2></div>
+      <div class="sdGrid" role="group" aria-label="Days to order for">
+        <span></span>${['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].map(d=> `<span class="sdDow">${d.toUpperCase()}</span>`).join('')}
+        ${rows.map(r=> `<div class="sdWk"><b>${escapeHtml(r.label)}</b><span>${r.days[0].d.getDate()} ${escapeHtml(r.days[0].d.toLocaleDateString('en-GB', {month: 'short'}))}${r.menuWeeks.length ? ' · ' + (ACTIVE_EXTRA ? 'week ' : 'menu week ') + r.menuWeeks.join(' & ') : ''}</span></div>${r.days.map(cell).join('')}`).join('')}
+      </div>
+    </div>
+    <div class="sdSide">
+      <span class="sdLabel">Quick pick</span>
+      ${quick.map((q, i)=> `<button type="button" class="sdQuick${sameSet(q.keys) ? ' on' : ''}" data-sd-quick="${i}" aria-pressed="${sameSet(q.keys)}">${escapeHtml(q.label)}</button>`).join('') || '<span class="sdNone">No days left to order for in these weeks.</span>'}
+      ${chosen.size ? '<button type="button" class="sdClear" data-sd-clear="1">Clear the days</button>' : ''}
+      <div class="sdSummary${list.length ? '' : ' empty'}" aria-live="polite">${list.length
+        ? `<b>${list.length} day${list.length === 1 ? '' : 's'}</b><span>${escapeHtml(shopDayRange(list))}</span><span>${escapeHtml(shopDaysSummary(list).split(' · ').pop().replace(/^m/, 'M'))}</span>`
+        : '<b>No days chosen yet</b><span>Tap the days, or a quick pick.</span>'}</div>
+    </div>`;
+  card._quick = quick;
+}
+document.addEventListener('click', (e)=>{
+  const card = document.getElementById('shopDaysCard');
+  if(!card || !card.contains(e.target)) return;
+  const day = e.target.closest('[data-sd-day]');
+  if(day){
+    const k = day.dataset.sdDay;
+    const cur = new Set(state.shopDays || []);
+    if(cur.has(k)) cur.delete(k); else cur.add(k);
+    setShopDays([...cur]);
+    return;
+  }
+  const q = e.target.closest('[data-sd-quick]');
+  if(q && card._quick){ const pick = card._quick[Number(q.dataset.sdQuick)]; if(pick) setShopDays(pick.keys.slice()); return; }
+  if(e.target.closest('[data-sd-clear]')) setShopDays([]);
+});
 
 /* ---------- today's menu ----------
    The rotation runs in whole weeks from the season's start date: the
@@ -2594,31 +2901,43 @@ async function useKitchenMenu(key){
 }
 /* The other menus' shopping grids for this week, so the shopping list can
    add them in: each menu's own numbers, on the week that menu is on. */
+/* The other menus here (the Holiday Club from the nursery, the nursery
+   from the club), each with its own numbers per date. Which of them adds
+   to the list depends on the days chosen: see refreshOtherShop. */
+let OTHER_CTX = [];
 async function loadOtherShopContexts(){
   const ctxs = [];
-  if(ACTIVE_EXTRA) ctxs.push({label: 'Nursery', menu: NURSERY_MENU, groups: NURSERY_GROUPS, store: SEASON_KEY, slot: nurseryMenuSlot(NURSERY_MENU)});
+  if(ACTIVE_EXTRA) ctxs.push({label: 'Nursery', menu: NURSERY_MENU, groups: NURSERY_GROUPS, store: SEASON_KEY,
+    slotFor: (d)=>{ if(!SEASON_OVERRIDDEN){ const ss = pickSeasonForDate(SEASONS, dateKeyOf(d)); if(ss && ss.key !== SEASON_KEY) return null; } return nurseryMenuSlot(NURSERY_MENU, d); }});
   EXTRAS_HERE.forEach(x=>{
     if(x === ACTIVE_EXTRA || x.preview || !x.run) return;
-    ctxs.push({label: x.cfg.label || x.key, menu: x.menu, groups: extraMenuGroups(x.cfg), store: 'xm-' + x.key, slot: extraMenuSlot(x)});
+    ctxs.push({label: x.cfg.label || x.key, menu: x.menu, groups: extraMenuGroups(x.cfg), store: 'xm-' + x.key, slotFor: (d)=> extraMenuSlot(x, d)});
   });
   const out = [];
   for(const c of ctxs){
-    let week = c.slot ? c.slot.week : null;
-    if(week == null){
-      try{
-        const sel = await window.storage.get('lastSelection:' + SITE_SLUG + ':' + c.store);
-        if(sel){ const v = JSON.parse(sel.value); if(v.week) week = v.week; }
-      }catch(e){}
-    }
-    if(week == null || !c.menu[week]) continue;
     let grid = {};
     try{
-      const g = await window.storage.get('shopgrid:' + SITE_SLUG + ':' + c.store + ':' + shopCycleKey() + ':' + week);
+      const g = await window.storage.get('shopgrid2:' + SITE_SLUG + ':' + c.store);
       grid = g ? JSON.parse(g.value) : {};
     }catch(e){}
-    out.push({label: c.label, menu: c.menu, week, grid, groups: c.groups});
+    out.push(Object.assign({}, c, {grid: grid && typeof grid === 'object' ? grid : {}}));
   }
-  OTHER_SHOP = out;
+  OTHER_CTX = out;
+  refreshOtherShop();
+}
+/* For the days chosen here: each other menu that has a day on them. */
+function refreshOtherShop(){
+  const list = shopDayList();
+  OTHER_SHOP = OTHER_CTX.map(c=>{
+    const days = {}, grid = {};
+    list.forEach(x=>{
+      const s = c.slotFor(x.d);
+      if(!s || s.weekend || s.beforeStart || !c.menu[s.week] || !c.menu[s.week][s.day]) return;
+      days[x.key] = c.menu[s.week][s.day];
+      grid[x.key] = c.grid[x.key] || {};
+    });
+    return Object.keys(days).length ? {label: c.label, menu: {sel: days}, week: 'sel', grid, groups: c.groups} : null;
+  }).filter(Boolean);
 }
 function otherShopServings(o){
   return Object.keys(o.menu[o.week] || {}).reduce((sum, day)=>{
@@ -2717,7 +3036,9 @@ async function loadState(){
     const pm = await window.storage.get(prepModeKey());
     if(pm && (pm.value === 'list' || pm.value === 'station')) chosen = pm.value;
   }catch(e){}
-  state.prepMode = chosen || defaultPrepMode();
+  // The list view is the phone layout. A tablet or computer always opens
+  // the station, even if it was switched to the list once before.
+  state.prepMode = defaultPrepMode() === 'station' ? 'station' : (chosen || 'list');
 }
 
 async function loadChecked(){
@@ -2741,9 +3062,13 @@ async function loadShopGrid(){
   }catch(e){
     state.shopGrid = {};
   }
-  const days = MENU[state.week] ? Object.keys(MENU[state.week]) : [];
-  days.forEach(day=>{
-    if(!state.shopGrid[day]) state.shopGrid[day] = emptyDayHC();
+  if(!state.shopGrid || typeof state.shopGrid !== 'object' || Array.isArray(state.shopGrid)) state.shopGrid = {};
+  // Numbers for days long gone are not needed any more.
+  const old = dateKeyOf(addDays(localToday(), -14));
+  Object.keys(state.shopGrid).forEach(k=>{ if(!/^\d{4}-\d{2}-\d{2}$/.test(k) || k < old) delete state.shopGrid[k]; });
+  await loadShopDays();
+  shopDayList().forEach(x=>{
+    if(!state.shopGrid[x.key]) state.shopGrid[x.key] = emptyDayHC();
   });
 }
 
@@ -2971,11 +3296,10 @@ function ingRowInnerHtml(ing, id, qtyText){
           <div class="checkbox ${state.checked[id]?'checked':''}">${state.checked[id]?'<i class="ti ti-check"></i>':''}</div>
           <div class="ing-body">
             <div class="ing-toprow">
-              <span class="ing-name">${escapeHtml(ing.name)}</span>
+              <span class="ing-namewrap"><span class="ing-name">${escapeHtml(ing.name)}</span>${ing.allergens ? `<span class="ing-al">${allergensToBadges(ing.allergens)}</span>` : ''}</span>
               <span class="ing-qty">${qtyText}</span>
             </div>
             ${ing.prep ? `<div class="ing-prep">${escapeHtml(ing.prep)}</div>` : ''}
-            ${allergensToBadges(ing.allergens)}
           </div>
         `;
 }
@@ -3302,7 +3626,7 @@ function stationDockSlots(){
   if(!n) return [];
   let ci = seq.findIndex(x=> x.week === Number(state.week) && x.day === state.day);
   if(ci < 0) ci = 0;
-  const span = Math.min(2, Math.floor((n - 1) / 2));
+  const span = Math.min(3, Math.floor((n - 1) / 2));
   // Real dates for the nursery menu, counted in school days from today.
   const t = todaysMenuSlot();
   const ti = (!ACTIVE_EXTRA && t && !t.beforeStart) ? seq.findIndex(x=> x.week === Number(t.week) && x.day === t.day) : -1;
@@ -3333,22 +3657,40 @@ function stationDockShowsToday(){
 }
 function stationDockHtml(){
   const slots = stationDockSlots();
-  const centreWeek = Number(state.week);
-  let lastWeek = centreWeek;
+  const mon = (d)=> d.toLocaleDateString('en-GB', {month: 'short'});
   return `<div class="stDock">${slots.map((x, i)=>{
     const today = isTodaysSlot(x.week, x.day);
     const sel = x.off === 0;
-    let tag = '';
-    if(today) tag = 'TODAY';
-    else if(x.week !== centreWeek && (i === 0 ? true : slots[i - 1].week !== x.week)) tag = 'WEEK ' + x.week;
+    const newWeek = i > 0 && slots[i - 1].week !== x.week;
+    const tag = (i === 0 || newWeek) ? 'WEEK ' + x.week : '';
+    // On a narrower screen the outer days are hidden: the first day still
+    // showing then carries its week's tag instead.
+    const firstOfWeekShown = !tag && !newWeek && (i === 1 || i === 2) && slots.slice(0, i).every(y=> y.week === x.week);
+    const narrowTag = firstOfWeekShown ? `<span class="stDockTag stTagN${i}">WEEK ${x.week}</span>` : '';
     const long = x.date ? x.date.toLocaleDateString('en-GB', {weekday: 'long', day: 'numeric', month: 'long'}) : x.day;
     const label = long + (today ? ', today' : '') + ', menu week ' + x.week;
-    return `<button type="button" class="stDockDay d${x.dist}${today ? ' today' : ''}${sel ? ' sel' : ''}" data-act="slot" data-week="${x.week}" data-day="${escapeHtml(x.day)}" data-focus="slot:${x.week}|${escapeHtml(x.day)}" aria-pressed="${sel}"${today ? ' aria-current="date"' : ''} aria-label="${escapeHtml(label)}">
-      <span class="stDockTag">${tag || '&nbsp;'}</span>
-      <span class="stDockName">${escapeHtml(x.day.slice(0, 3))}</span>
-      ${x.date ? `<span class="stDockDate">${x.date.getDate()}</span>` : ''}
+    const second = today ? 'Today' : (x.date ? x.date.getDate() + ' ' + mon(x.date) : '');
+    return `${newWeek ? '<span class="stDockDiv" aria-hidden="true"></span>' : ''}<button type="button" class="stDockDay d${x.dist}${today ? ' today' : ''}${sel ? ' sel' : ''}" data-act="slot" data-week="${x.week}" data-day="${escapeHtml(x.day)}" data-focus="slot:${x.week}|${escapeHtml(x.day)}" aria-pressed="${sel}"${today ? ' aria-current="date"' : ''} aria-label="${escapeHtml(label)}">
+      ${tag ? `<span class="stDockTag">${tag}</span>` : narrowTag}
+      <span class="stDockName">${escapeHtml(x.day)}</span>
+      ${second ? `<span class="stDockDate">${escapeHtml(second)}</span>` : ''}
     </button>`;
   }).join('')}</div>`;
+}
+/* The line above the ribbon: which day is showing, and the way back to
+   today once today has scrolled out of the ribbon. */
+function stationInfoHtml(todaySlot){
+  const slot = stationDockSlots().find(x=> x.off === 0);
+  const isToday = isTodaysSlot(state.week, state.day);
+  const when = slot && slot.date
+    ? slot.date.toLocaleDateString('en-GB', {weekday: 'long', day: 'numeric', month: 'long'})
+    : state.day;
+  const text = (isToday ? 'Today is ' : 'Looking at ') + '<b>' + escapeHtml(when) + '</b> · ' + (ACTIVE_EXTRA ? 'week ' : 'menu week ') + escapeHtml(String(state.week));
+  const away = todaySlot && !stationDockShowsToday() && !(Number(todaySlot.week) === Number(state.week) && todaySlot.day === state.day);
+  const back = away
+    ? `<button type="button" class="stBtn stToday" data-act="today" data-focus="today" title="Go to ${todaySlot.weekend ? 'Monday’s' : 'today’s'} menu">${stIcon('back')}<span>${todaySlot.weekend ? 'Back to Monday' : 'Back to today'}</span></button>`
+    : '';
+  return `<div class="stInfo"><span class="stInfoText">${text}</span>${back}</div>`;
 }
 
 function stationDayItems(){
@@ -3408,10 +3750,12 @@ function stationRailAllergensHtml(recipe){
 /* Drawn inline rather than from the icon font, so the station's buttons
    are never blank if the font's CDN is slow or unreachable. */
 const ST_ICONS = {
+  back: '<path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
   prev: '<path d="M14.5 5.5l-7 6.5 7 6.5"/>',
   next: '<path d="M9.5 5.5l7 6.5-7 6.5"/>',
   list: '<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="18" r="1" fill="currentColor"/>',
   print: '<path d="M7 9V3.5h10V9"/><rect x="3.5" y="9" width="17" height="8" rx="2"/><path d="M7 14h10v6.5H7z"/>',
+  print2: '<path d="M11.5 6V2h8v4"/><path d="M9 6h11.5a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2.5"/><path d="M4.5 11V7.5h9V11"/><rect x="1.5" y="11" width="15" height="7" rx="2"/><path d="M4.5 15.5h9V22h-9z"/>',
   clear: '<path d="M19 20H8.5l-4.2-4.2a1.5 1.5 0 010-2.1L13.6 4.4a1.5 1.5 0 012.1 0l4.2 4.2a1.5 1.5 0 010 2.1L11 20"/><path d="M17.5 13.5l-6.5-6.5"/>',
   pencil: '<path d="M4 20h4L19 9a2.8 2.8 0 00-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/>',
   calendar: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
@@ -3477,7 +3821,7 @@ function renderPrepStation(){
     : '';
   const run = ACTIVE_EXTRA && ACTIVE_EXTRA.run;
   const strip = ACTIVE_EXTRA
-    ? `<div class="stExtraStrip">${stIcon('calendar')}<span><b>${escapeHtml(xcfg.label || ACTIVE_EXTRA.key)}${run && run.name ? ' — ' + escapeHtml(run.name) : ''}</b>${run ? ' · ' + escapeHtml(shortDate(run.from)) + ' to ' + escapeHtml(shortDate(run.to)) : ''} · Week ${escapeHtml(state.week)} of ${weeks.length}</span>${ACTIVE_EXTRA.preview ? '<span class="stExtraNote">Preview</span>' : (OTHER_SHOP.length ? '<span class="stExtraNote">Its own ticks and headcount</span>' : '')}</div>`
+    ? `<div class="stExtraStrip">${stIcon('calendar')}<span><b>${escapeHtml(xcfg.label || ACTIVE_EXTRA.key)}${run && run.name ? ' — ' + escapeHtml(run.name) : ''}</b>${run ? ' · ' + escapeHtml(shortDate(run.from)) + ' to ' + escapeHtml(shortDate(run.to)) : ''} · Week ${escapeHtml(state.week)} of ${weeks.length}</span>${ACTIVE_EXTRA.preview ? '<span class="stExtraNote">Preview</span>' : (OTHER_CTX.length ? '<span class="stExtraNote">Its own ticks and headcount</span>' : '')}</div>`
     : '';
   const allDay = xcfg && xcfg.allDay
     ? `<div class="stAllDay">${stIcon('bowl')}<span><span class="stAllDayLabel">Available all day</span><span class="stAllDayText">${escapeHtml(xcfg.allDay)}</span></span></div>`
@@ -3487,7 +3831,8 @@ function renderPrepStation(){
   const fa = s=> escapeHtml(String(s));
 
   const top = `
-    <div class="stTop${menuSwitch ? ' hasSwitch' : ''}">
+    <div class="stTop stTopB${menuSwitch ? ' hasSwitch' : ''}">
+      <div class="stRow1">
       <div class="stBrand">
         <span class="stLogo"><img alt=""></span>
         <div class="stBrandText">
@@ -3500,16 +3845,15 @@ function renderPrepStation(){
         </div>
       </div>
       ${menuSwitch}
-      <div class="stNav" role="group" aria-label="Day">
-        <button type="button" class="stBtn icon" data-act="prev" data-focus="prev" aria-label="Previous day" title="Previous day">${stIcon('prev')}</button>
-        ${stationDockHtml()}
-        <button type="button" class="stBtn icon" data-act="next" data-focus="next" aria-label="Next day" title="Next day">${stIcon('next')}</button>
-        ${todaySlot && !stationDockShowsToday() && !(Number(todaySlot.week) === Number(state.week) && todaySlot.day === state.day)
-          ? `<button type="button" class="stBtn stToday" data-act="today" data-focus="today" title="Go to ${todaySlot.weekend ? 'Monday’s' : 'today’s'} menu">${todaySlot.weekend ? 'Monday' : 'Today'}</button>` : ''}
-      </div>
-      <div class="stSpacer"></div>
+      ${stationInfoHtml(todaySlot)}
       <div class="stActions">
         <button type="button" class="stBtn stMenuBtn" id="stMenuBtn" data-kmenu-btn="1" data-act="kmenu" data-focus="kmenu" aria-haspopup="menu" aria-expanded="${document.getElementById('kitchenMenu') ? 'true' : 'false'}">${stIcon('menu')}<span>Menu</span></button>
+      </div>
+      </div>
+      <div class="stNav" role="group" aria-label="Day">
+        <button type="button" class="stBtn icon stArrow" data-act="prev" data-focus="prev" aria-label="Previous day" title="Previous day">${stIcon('prev')}</button>
+        ${stationDockHtml()}
+        <button type="button" class="stBtn icon stArrow" data-act="next" data-focus="next" aria-label="Next day" title="Next day">${stIcon('next')}</button>
       </div>
     </div>${strip}`;
 
@@ -3819,9 +4163,19 @@ function shopTotalsForDay(day){
 }
 
 function renderShopGrid(){
-  const days = MENU[state.week] ? Object.keys(MENU[state.week]) : [];
+  renderShopDays();
+  const list = shopDayList();
+  const days = list.map(x=> x.key);
+  const dayInfo = {};
+  list.forEach(x=>{ dayInfo[x.key] = x; });
+  const scroll = document.querySelector('#shopView .shopGridScroll');
+  const empty = document.getElementById('shopGridEmpty');
+  if(scroll) scroll.hidden = !days.length;
+  if(empty) empty.hidden = !!days.length;
+  const title = document.getElementById('shopGridTitle');
+  if(title) title.textContent = days.length ? 'Who’s eating, ' + shopDayRange(list) : 'Who’s eating';
   const head = document.getElementById('shopGridHead');
-  head.innerHTML = '<th>Group</th>' + days.map(d=>`<th>${d.slice(0,3)}</th>`).join('');
+  head.innerHTML = '<th>Group</th>' + list.map(x=>`<th>${escapeHtml(x.short)}</th>`).join('');
 
   const body = document.getElementById('shopGridBody');
   body.innerHTML = '';
@@ -3835,12 +4189,12 @@ function renderShopGrid(){
     body.appendChild(tr);
   });
 
-  const hasAnyVeg = days.some(day=> VEG_SWAP_PAIRS.some(p=> courseHasRealDish(MENU[state.week][day][p.veg])));
+  const hasAnyVeg = days.some(day=> VEG_SWAP_PAIRS.some(p=> courseHasRealDish(dayInfo[day].courses[p.veg])));
   if(hasAnyVeg){
     const tr = document.createElement('tr');
     let cells = `<td>Veg option<span class="mult-note">of the above</span></td>`;
     days.forEach(day=>{
-      const has = VEG_SWAP_PAIRS.some(p=> courseHasRealDish(MENU[state.week][day][p.veg]));
+      const has = VEG_SWAP_PAIRS.some(p=> courseHasRealDish(dayInfo[day].courses[p.veg]));
       if(has){
         cells += `<td><input type="number" min="0" class="hc-input" data-day="${day}" data-key="veg" value="${(state.shopGrid[day]&&state.shopGrid[day].veg)||0}"></td>`;
       }else{
@@ -3868,7 +4222,7 @@ function renderShopGrid(){
 }
 
 function renderShopFoot(){
-  const days = MENU[state.week] ? Object.keys(MENU[state.week]) : [];
+  const days = shopDayList().map(x=> x.key);
   const foot = document.getElementById('shopGridFoot');
   foot.innerHTML = '<td>Total servings</td>' + days.map(day=>`<td>${roundQty(shopTotalsForDay(day))}</td>`).join('');
 }
@@ -4103,11 +4457,11 @@ function updateShopOrderSummary(){
    should be told rather than left to notice a missing ingredient. */
 function daysWithNoBaseServings(){
   const out = [];
-  const days = MENU[state.week] ? Object.keys(MENU[state.week]) : [];
-  days.forEach(day=>{
-    const dayCourses = MENU[state.week][day] || {};
-    const dayHC = state.shopGrid[day] || emptyDayHC();
-    const totalServ = shopTotalsForDay(day);
+  shopDayList().forEach(x=>{
+    const day = x.long;
+    const dayCourses = x.courses || {};
+    const dayHC = state.shopGrid[x.key] || emptyDayHC();
+    const totalServ = shopTotalsForDay(x.key);
     if(totalServ <= 0) return;
     const veg = Number(dayHC.veg) || 0;
     VEG_SWAP_PAIRS.forEach(pair=>{
@@ -4322,6 +4676,9 @@ function aggregateShoppingFor(menu, week, grid, groups){
           // record's own current productName.
           const dbRec = findIngredientDbRecord(ing.name);
           if(typeof ing.qty === 'string'){
+            // Only for a day (and course) someone is eating: choosing a day
+            // with no numbers must not add its "as needed" items.
+            if(servingsForCourse <= 0) return;
             const key = canon;
             if(!asNeeded[key]) asNeeded[key] = {name: canon, allergens: new Set(), dbRec: null};
             mergeDbRecInto(asNeeded[key], dbRec);
@@ -4380,7 +4737,11 @@ function aggregateShoppingFor(menu, week, grid, groups){
 /* This menu's list, plus any other menu running at this site this week
    (Holiday club alongside the nursery), each from its own grid. */
 function aggregateShoppingList(){
-  const parts = [aggregateShoppingFor(MENU, state.week, state.shopGrid, GROUPS)];
+  refreshOtherShop();
+  // The chosen dates, as one "week" of days keyed by date.
+  const days = {};
+  shopDayList().forEach(x=>{ days[x.key] = x.courses; });
+  const parts = [aggregateShoppingFor({sel: days}, 'sel', state.shopGrid, GROUPS)];
   OTHER_SHOP.forEach(o=>{
     if(otherShopServings(o) > 0) parts.push(aggregateShoppingFor(o.menu, o.week, o.grid, o.groups));
   });
@@ -4546,10 +4907,10 @@ function renderShopList(){
     const note = document.createElement('div');
     note.className = 'shopOtherNote';
     note.textContent = (inc.length
-        ? 'Includes ' + inc.map(o=> o.label + ' (Week ' + o.week + ')').join(' and ') + ', from its own numbers. '
+        ? 'Includes ' + inc.map(o=> o.label).join(' and ') + ' for the same days, from its own numbers. '
         : '') +
       (skip.length
-        ? skip.map(o=> o.label).join(' and ') + ' ' + (skip.length === 1 ? 'is' : 'are') + ' running this week but ' + (skip.length === 1 ? 'has' : 'have') + ' no numbers in ' + (skip.length === 1 ? 'its' : 'their') + ' grid yet, so ' + (skip.length === 1 ? 'it is' : 'they are') + ' not included. '
+        ? skip.map(o=> o.label).join(' and ') + ' ' + (skip.length === 1 ? 'is' : 'are') + ' running on some of these days but ' + (skip.length === 1 ? 'has' : 'have') + ' no numbers in ' + (skip.length === 1 ? 'its' : 'their') + ' grid yet, so ' + (skip.length === 1 ? 'it is' : 'they are') + ' not included. '
         : '') +
       'Switch menus at the top to change ' + (OTHER_SHOP.length === 1 ? 'its' : 'their') + ' numbers.';
     card.appendChild(note);
@@ -4560,13 +4921,20 @@ function renderShopList(){
      items bypass the servings guard in the aggregation -- so an untouched
      grid used to present a two-line list as though it were the week's
      shop, and a cook could shop from it. */
-  const anyServings = (MENU[state.week] ? Object.keys(MENU[state.week]) : [])
-    .some(day=> shopTotalsForDay(day) > 0) || OTHER_SHOP.some(o=> otherShopServings(o) > 0);
+  if(!shopDayList().length){
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.innerHTML = '<div style="font-weight:700;margin-bottom:4px;">Choose the days first</div>' +
+      'Tick the days you are ordering for at the top (days still to come), then fill in who is eating, and the list builds itself.';
+    card.appendChild(empty);
+    return;
+  }
+  const anyServings = shopDayList().some(x=> shopTotalsForDay(x.key) > 0) || OTHER_SHOP.some(o=> otherShopServings(o) > 0);
   if(!anyServings){
     const empty = document.createElement('div');
     empty.className = 'empty';
     empty.innerHTML = '<div style="font-weight:700;margin-bottom:4px;">Nothing to buy yet</div>' +
-      'Fill in how many children and staff are eating each day, in the grid above, and the week\'s shopping list builds itself.';
+      'Fill in how many children and staff are eating on each of those days, in the grid, and the shopping list builds itself.';
     card.appendChild(empty);
     return;
   }
@@ -4736,7 +5104,7 @@ function buildShopListText(){
     .sort((a,b)=> a.name.localeCompare(b.name));
   const asNeededItems = Object.values(asNeeded).sort((a,b)=>a.name.localeCompare(b.name));
   const stapleItems = Object.values(staples).sort((a,b)=>a.name.localeCompare(b.name));
-  let lines = [`Shopping list — Week ${state.week} (${SITE_CONFIG.brand}${SITE_CONFIG.siteName ? ' — ' + SITE_CONFIG.siteName : ''})`, ''];
+  let lines = [`Shopping list — ${shopDaysSummary()} (${SITE_CONFIG.brand}${SITE_CONFIG.siteName ? ' — ' + SITE_CONFIG.siteName : ''})`, ''];
   const grouped = {};
   items.forEach(item=>{
     const cat = categorize(item.name);
@@ -4890,6 +5258,12 @@ document.getElementById('viewTabs').addEventListener('click', (e)=>{
   setView(btn.dataset.view);
 });
 
+function shopNeedsDays(){
+  if(shopDayList().length) return false;
+  const card = document.getElementById('shopDaysCard');
+  if(card){ card.classList.remove('sdNudge'); void card.offsetWidth; card.classList.add('sdNudge'); card.scrollIntoView({block: 'nearest', behavior: 'smooth'}); }
+  return true;
+}
 document.getElementById('clearShopBtn').addEventListener('click', async ()=>{
   state.shopChecked = {};
   await saveShopChecked();
@@ -4936,7 +5310,7 @@ function buildShopPrintHtml(){
       <div>
         <div class="spKicker">${escapeHtml(site)}</div>
         <div class="spTitle">Weekly shopping list</div>
-        <div class="spSub">Week ${escapeHtml(String(state.week))}${menuName ? ' · ' + escapeHtml(menuName) : ''}</div>
+        <div class="spSub">${escapeHtml(shopDaysSummary() || 'No days chosen')}${menuName ? ' · ' + escapeHtml(menuName) : ''}</div>
       </div>
       <div class="spPrinted">Printed ${escapeHtml(printed)}</div>
     </div>
@@ -4949,6 +5323,7 @@ function buildShopPrintHtml(){
     <div class="spTotals"><span>To order: ${escapeHtml(items || '0')} item${items === '1' ? '' : 's'}</span><span>${escapeHtml(value || '£0.00')}</span></div>`;
 }
 function printShopList(){
+  if(shopNeedsDays()) return;
   const html = buildShopPrintHtml();
   if(!html){
     alert('There is nothing to print yet. Fill in how many are eating each day, and the shopping list builds itself.');
@@ -4988,13 +5363,13 @@ function openKitchenMenu(anchor){
   wrap.id = 'kitchenMenu';
   wrap.innerHTML = `<div class="kmPanel" role="menu" aria-label="Kitchen menu">
     <div class="kmHead">TODAY’S PREP</div>
-    ${kmItem('recipe', 'recipe', 'Print this recipe', recipeSub, {disabled: !it})}
-    ${kmItem('prep', 'sheets', 'Print ' + day + '’s prep sheets', 'One sheet per course')}
+    ${kmItem('recipe', 'print', 'Print this recipe', recipeSub, {disabled: !it})}
+    ${kmItem('prep', 'print2', 'Print ' + day + '’s recipe pages', 'One page per course')}
     ${kmItem('clear', 'clear', 'Clear today’s ticks', 'Untick every ingredient for ' + day)}
     <div class="kmRule"></div>
     <div class="kmHead">SHOPPING</div>
     ${kmItem('shopopen', 'cart', 'Weekly shopping list', state.view === 'shop' ? 'Open now' : 'Numbers for each day, and what to order', {disabled: state.view === 'shop'})}
-    ${kmItem('shop', 'print', 'Print shopping list', 'Week ' + state.week + ', with the To order numbers')}
+    ${kmItem('shop', 'print', 'Print shopping list', shopDayList().length ? shopDayRange(shopDayList()) + ', with the To order numbers' : 'Choose the days on the shopping list first', {disabled: !shopDayList().length})}
     <div class="kmRule"></div>
     <div class="kmHead">ALLERGIES</div>
     ${kmItem('allergy', 'matrix', 'Allergy matrix', document.getElementById('allergyView') ? 'Open now' : 'Every dish this week, down to each ingredient', {disabled: !!document.getElementById('allergyView')})}
@@ -5065,14 +5440,14 @@ function pageTopBarHtml(o){
       ${logo ? `<span class="stLogo"><img src="${escapeHtml(logo.src)}" alt=""></span>` : ''}
       <div class="stBrandText">
         <div class="stSite">${escapeHtml(site)}</div>
-        <label class="stSeason">${season ? escapeHtml(season) + ' ·' : ''}
+        ${o.weekId ? `<label class="stSeason">${season ? escapeHtml(season) + ' ·' : ''}
           <select class="stWeekSel" id="${o.weekId}" aria-label="Menu week">
             ${weeks.map(wk=> `<option value="${escapeHtml(String(wk))}"${Number(wk) === Number(state.week) ? ' selected' : ''}>Week ${escapeHtml(String(wk))}</option>`).join('')}
           </select>
-        </label>
+        </label>` : `<div class="stSeason">${escapeHtml(season)}</div>`}
       </div>
     </div>
-    <div class="shTitle"><span>THIS WEEK</span><b>${escapeHtml(o.title)}</b></div>
+    <div class="shTitle"><span>${escapeHtml(o.eyebrow || 'THIS WEEK')}</span><b>${escapeHtml(o.title)}</b></div>
     ${o.extra || ''}
     <div class="stSpacer"></div>
     <div class="stActions">
@@ -5093,7 +5468,7 @@ function renderShopTop(){
         return `<button type="button" class="stMenuSeg${on ? ' on' : ''}" data-sh="switch" data-menu="${escapeHtml(String(m.key))}" aria-pressed="${on}">${escapeHtml(m.label)}</button>`;
       }).join('')}</div>`
     : '';
-  el.innerHTML = pageTopBarHtml({title: 'Weekly shopping list', backAttr: 'data-sh="back"', weekId: 'shopWeekSel', menuId: 'shopMenuBtn', menuAttr: 'data-sh="menu"', extra: sw});
+  el.innerHTML = pageTopBarHtml({title: 'Shopping list', eyebrow: 'ORDERING', backAttr: 'data-sh="back"', weekId: null, menuId: 'shopMenuBtn', menuAttr: 'data-sh="menu"', extra: sw});
 }
 (function(){
   const el = document.getElementById('shopTop');
@@ -5469,6 +5844,7 @@ function printShopSheet(html){
 document.getElementById('printShopBtn').addEventListener('click', printShopList);
 
 document.getElementById('copyListBtn').addEventListener('click', async ()=>{
+  if(shopNeedsDays()) return;
   const text = buildShopListText();
   const btn = document.getElementById('copyListBtn');
   try{
@@ -5537,6 +5913,7 @@ document.addEventListener('keydown', function(e){
 });
 
 function showFatalErrorBanner(message){
+  try{ if(typeof endBoot === 'function') endBoot(); }catch(e){}
   try{
     let banner = document.getElementById('fatalErrorBanner');
     if(!banner){
@@ -5561,6 +5938,7 @@ function showNoSiteMessage(text){
     + 'Check the web address ends with something like <code>?site=little-adventures-cheddar</code>, or open the '
     + '<a href="index.html">nursery picker page</a> and choose your setting from there.</p>';
   document.body.innerHTML = '';
+  document.body.classList.remove('booting');
   document.body.appendChild(el);
 }
 
@@ -5966,6 +6344,15 @@ document.getElementById('kitchenLogoutBtn').addEventListener('click', ()=>{
   location.replace(admin ? 'admin.html' : 'index.html' + (SITE_SLUG ? '?site=' + encodeURIComponent(SITE_SLUG) : ''));
 });
 
+/* The loading screen goes once the page is drawn, or something has to be
+   said (an error, no nursery); a redirect to a login page keeps it up so
+   nothing flashes in between. Never left up for more than 20 seconds. */
+function endBoot(){
+  document.body.classList.remove('booting');
+  const sp = document.getElementById('bootSplash');
+  if(sp) sp.remove();
+}
+setTimeout(endBoot, 20000);
 (async function init(){
   try{
     await kitchenAuthGate();
@@ -5976,8 +6363,10 @@ document.getElementById('kitchenLogoutBtn').addEventListener('click', ()=>{
     setView(state.view);
     // Staff admin (opened from admin.html) waits for the page to finish loading.
     resolveKitchenAuth(KITCHEN_SESSION);
+    endBoot();
   }catch(e){
     if(!e || e.message !== '__handled__'){
+      endBoot();
       showFatalErrorBanner((e && e.message) ? e.message : String(e));
     }
   }
@@ -11344,6 +11733,8 @@ async function ensureSiteAlertsLoaded(){
    MENU_GROUP_FRIENDLY_NAMES does for menu groups, and a title-cased version
    of the slug is clear enough for this admin-only screen. */
 function siteSlugLabel(slug){
+  const a = ADDED_NURSERIES[slug];
+  if(a && a.siteName) return (a.brand ? a.brand + ' ' : '') + a.siteName;
   return slug.split('-').map(w=> w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
 }
 
@@ -12355,6 +12746,8 @@ async function setView(view, params){
     // a redraw of the page that is already open (render()) keeps it.
     delete RECIPE_ROW_STATE[params.recipeId];
   }
+  // The new nursery's password is shown once: leaving the page clears it.
+  if(view !== 'nurseries' || VIEW !== 'nurseries'){ NZ_LAST_RESULT = null; NZ_LIST = null; }
   VIEW = view; VIEW_PARAMS = params || {};
   /* Every admin view reads the recipe bank, so there is no subset to gate
      this on. First visit blocks behind a placeholder; after that the cached
@@ -12884,6 +13277,315 @@ function renderCleanupView(){
   return root;
 }
 
+/* ================= Nurseries =================
+   Every nursery that uses the kitchen pages, and adding a new one. A new
+   nursery is saved by the db-admin function (add-nursery), which also
+   makes its kitchen login and hands the password back ONCE: only a hash
+   is kept, so if it is lost the answer is New password, never "look it
+   up". The logo is optional; the brand's logo stands in until there is
+   one. */
+let ADDED_NURSERIES = {};
+let ADDED_NURSERIES_LOADED = false;
+async function loadAddedNurseries(){
+  try{
+    const res = await fetch('/.netlify/functions/get-season?group=_config&file=sites.json', {cache: 'no-store'});
+    if(!res.ok) return;
+    const doc = await res.json();
+    noteAddedNurseries(doc && doc.sites);
+    ADDED_NURSERIES_LOADED = true;
+  }catch(e){ /* the built-in list stands */ }
+}
+function noteAddedNurseries(sites){
+  if(!sites || typeof sites !== 'object') return;
+  let changed = false;
+  Object.keys(sites).forEach(slug=>{
+    if(!/^[a-z0-9-]+$/.test(slug)) return;
+    const was = JSON.stringify(ADDED_NURSERIES[slug] || null);
+    ADDED_NURSERIES[slug] = sites[slug] || {};
+    if(SITE_SLUGS.indexOf(slug) === -1){ SITE_SLUGS.push(slug); changed = true; }
+    if(was !== JSON.stringify(ADDED_NURSERIES[slug])) changed = true;
+  });
+  if(changed && document.getElementById('rbAppShell') && document.getElementById('rbAppShell').style.display === 'block'
+     && ['menuSettings', 'siteAlerts', 'nurseries'].indexOf(VIEW) !== -1) render();
+}
+async function nurseryAdminCall(action, body){
+  const res = await fetch('/.netlify/functions/db-admin', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'x-rb-auth': RB_PASSWORD_HASH},
+    body: JSON.stringify(Object.assign({action}, body || {})),
+  });
+  let out = null;
+  try{ out = await res.json(); }catch(e){}
+  if(!res.ok || !out || out.error){
+    if(res.status === 404 && !out) throw new Error("Can't reach the admin service — this site may not have its Netlify Functions set up yet.");
+    throw new Error((out && out.error) || ('The server said ' + res.status));
+  }
+  return out;
+}
+const NZ_BRANDS = {'Little Adventures': 'little-adventures-', 'Green Giraffe': 'green-giraffe-'};
+function nurserySlugPart(name){
+  return String(name || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '')
+    .replace(/&/g, ' and ').replace(/['’]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60).replace(/-+$/, '');
+}
+/* A picture, made into the four files a nursery has: the logo (320px) and
+   the home-screen icons (180, 192, 512), each square on white. */
+function nurseryImagesFrom(file){
+  return new Promise((resolve, reject)=>{
+    if(!file || !/^image\//.test(file.type || '')) return reject(new Error('Choose a picture (PNG, JPG or similar).'));
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = ()=>{
+      const draw = (size, pad)=>{
+        const c = document.createElement('canvas');
+        c.width = c.height = size;
+        const g = c.getContext('2d');
+        g.fillStyle = '#ffffff'; g.fillRect(0, 0, size, size);
+        const room = size * (1 - 2 * pad);
+        const k = Math.min(room / img.naturalWidth, room / img.naturalHeight);
+        const w = img.naturalWidth * k, h = img.naturalHeight * k;
+        g.imageSmoothingQuality = 'high';
+        g.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+        return c.toDataURL('image/png');
+      };
+      try{
+        const out = {'logo.png': draw(320, 0.04), 'icon-180.png': draw(180, 0.1), 'icon-192.png': draw(192, 0.1), 'icon-512.png': draw(512, 0.1)};
+        URL.revokeObjectURL(url);
+        resolve(out);
+      }catch(e){ URL.revokeObjectURL(url); reject(new Error('That picture could not be read.')); }
+    };
+    img.onerror = ()=>{ URL.revokeObjectURL(url); reject(new Error('That picture could not be read.')); };
+    img.src = url;
+  });
+}
+function nurseryLoginText(n, login){
+  return `${n.siteName} kitchen login\nLogin page: ${location.origin}/index.html?site=${n.slug}\nNursery: ${n.siteName}\nUsername: ${login.username}\nPassword: ${login.password}`;
+}
+function nurseryCredHtml(n, login, intro){
+  return `<div class="nzCred" role="status">
+    <h3>${escapeHtml(intro)}</h3>
+    <div class="tinyNote" style="margin:0;">Note the password down or copy it now. <b>It is only shown this once</b> &mdash; if it is lost, use <b>New password</b> in the list below.</div>
+    <dl class="nzCredGrid">
+      <dt>Nursery</dt><dd>${escapeHtml(n.siteName)}</dd>
+      <dt>Username</dt><dd class="nzUserOut">${escapeHtml(login.username)}</dd>
+      <dt>Password</dt><dd><span class="nzPw">${escapeHtml(login.password)}</span></dd>
+      <dt>Login page</dt><dd><a href="index.html?site=${encodeURIComponent(n.slug)}" target="_blank" rel="noopener">${escapeHtml(location.origin)}/index.html?site=${escapeHtml(n.slug)}</a></dd>
+    </dl>
+    <div class="actions"><button type="button" class="btn primary" data-nz="copy">Copy login details</button>
+      <a class="btn" href="app.html?site=${encodeURIComponent(n.slug)}" target="_blank" rel="noopener">Open ${escapeHtml(n.siteName)}'s kitchen page ↗</a></div>
+    <div class="tinyNote" style="margin:8px 0 0;">On the kitchen iPad: open the login page, choose <b>${escapeHtml(n.siteName)}</b> and type the password. It stays logged in until someone logs out.</div>
+  </div>`;
+}
+function wireCopy(box, text){
+  const b = box.querySelector('[data-nz=copy]');
+  if(!b) return;
+  b.onclick = async ()=>{
+    try{ await navigator.clipboard.writeText(text); b.textContent = 'Copied'; }
+    catch(e){ b.textContent = 'Select the details and copy them'; }
+    setTimeout(()=>{ b.textContent = 'Copy login details'; }, 2500);
+  };
+}
+
+let NZ_LIST = null;        // {logins, nurseries} from list-nurseries
+let NZ_LIST_ERROR = null;
+let NZ_LAST_RESULT = null; // the card shown after adding, until the page is left
+function renderNurseriesView(){
+  const root = document.createElement('div');
+  const head = document.createElement('div');
+  head.className = 'pageHead';
+  head.innerHTML = `<div>
+      <div class="crumb">Admin</div>
+      <h1>Nurseries</h1>
+      <div class="sub">Every nursery that uses the kitchen pages. A nursery added here gets its own kitchen page, login and password straight away.</div>
+    </div>`;
+  root.appendChild(head);
+
+  /* ---------- Add a nursery ---------- */
+  const add = document.createElement('div');
+  add.className = 'card';
+  add.style.marginBottom = '16px';
+  const menus = Object.keys(NURSERY_MENUS || {general: {label: 'Main Menu'}});
+  add.innerHTML = `
+    <h3 style="margin-top:0;">Add a nursery</h3>
+    <form class="nzGrid" id="nzForm" novalidate>
+      <div>
+        <div class="field"><label>Brand</label>
+          <div class="segControl" role="group" aria-label="Brand">
+            <button type="button" data-brand="Little Adventures" aria-pressed="true">Little Adventures</button>
+            <button type="button" data-brand="Green Giraffe" aria-pressed="false">Green Giraffe</button>
+          </div></div>
+        <div class="field"><label for="nzName">Nursery name <span class="hint">as the kitchen sees it, e.g. Frome</span></label>
+          <input type="text" id="nzName" maxlength="60" autocomplete="off" required>
+          <div class="tinyNote" id="nzUserPreview" style="margin:6px 0 0;">Username: <span class="nzUser">—</span></div></div>
+        <div class="field"><label for="nzAddr">Address <span class="hint">shown at the foot of the kitchen page</span></label>
+          <input type="text" id="nzAddr" maxlength="200" placeholder="Town, County, Postcode"></div>
+        <div class="nzRow2">
+          <div class="field"><label for="nzPhone">Phone</label><input type="tel" id="nzPhone" maxlength="40" value="01934 713 527"></div>
+          <div class="field"><label for="nzEmail">Email</label><input type="email" id="nzEmail" maxlength="120" value="hello@familyadventuresgroup.co.uk"></div>
+        </div>
+        <div class="field"><label for="nzMenu">Nursery menu</label>
+          <select id="nzMenu">${menus.map(k=> `<option value="${escapeHtml(k)}"${k === 'general' ? ' selected' : ''}>${escapeHtml(menuGroupLabel(k))}</option>`).join('')}</select></div>
+        <div id="nzErr" class="warnNote" hidden></div>
+        <div class="actions" style="margin-top:4px;"><button type="submit" class="btn primary" id="nzAddBtn">Add nursery and make its login</button></div>
+      </div>
+      <div class="nzLogoBox">
+        <img id="nzLogoPreview" alt="Logo preview" src="icons/brand-little-adventures.png">
+        <div class="tinyNote" id="nzLogoNote">No logo chosen: the brand's logo is used until there is one.</div>
+        <label class="btn small" style="cursor:pointer;">Choose logo…<input type="file" id="nzLogo" accept="image/*" hidden></label>
+        <button type="button" class="btn small" id="nzLogoClear" hidden>Use the brand logo</button>
+        <div class="tinyNote">A square picture works best. It is also the icon when the page is added to the iPad's home screen.</div>
+      </div>
+    </form>
+    <div id="nzResult"></div>`;
+  root.appendChild(add);
+
+  let brand = 'Little Adventures';
+  let images = null;
+  const $ = (sel)=> add.querySelector(sel);
+  const preview = ()=>{
+    const part = nurserySlugPart($('#nzName').value);
+    $('#nzUserPreview .nzUser').textContent = part ? NZ_BRANDS[brand] + part : '—';
+    if(!images) $('#nzLogoPreview').src = 'icons/brand-' + NZ_BRANDS[brand].slice(0, -1) + '.png';
+  };
+  add.querySelectorAll('[data-brand]').forEach(b=> b.onclick = ()=>{
+    brand = b.dataset.brand;
+    add.querySelectorAll('[data-brand]').forEach(x=> x.setAttribute('aria-pressed', String(x === b)));
+    preview();
+  });
+  $('#nzName').addEventListener('input', preview);
+  $('#nzLogo').onchange = async (e)=>{
+    const f = e.target.files && e.target.files[0];
+    if(!f) return;
+    try{
+      images = await nurseryImagesFrom(f);
+      $('#nzLogoPreview').src = images['logo.png'];
+      $('#nzLogoNote').textContent = f.name;
+      $('#nzLogoClear').hidden = false;
+    }catch(err){ images = null; $('#nzLogoNote').textContent = err.message; }
+    e.target.value = '';
+  };
+  $('#nzLogoClear').onclick = ()=>{ images = null; $('#nzLogoClear').hidden = true; $('#nzLogoNote').textContent = 'No logo chosen: the brand’s logo is used until there is one.'; preview(); };
+  preview();
+
+  const showResult = ()=>{
+    const box = $('#nzResult');
+    if(!NZ_LAST_RESULT){ box.innerHTML = ''; return; }
+    const r = NZ_LAST_RESULT;
+    if(r.login){
+      box.innerHTML = nurseryCredHtml(r, r.login, r.siteName + ' is set up' + (r.menuNote ? '' : ''));
+      wireCopy(box, nurseryLoginText(r, r.login));
+    }else{
+      box.innerHTML = `<div class="nzCred" role="status"><h3>${escapeHtml(r.siteName)} is set up</h3>
+        <div class="tinyNote" style="margin:0;">Logins are not switched on yet (the database has not been set up), so there is no password to give. ${escapeHtml(r.siteName)}'s kitchen page works now, and it gets a login when the database is set up.</div>
+        <div class="actions" style="margin-top:10px;"><a class="btn" href="app.html?site=${encodeURIComponent(r.slug)}" target="_blank" rel="noopener">Open ${escapeHtml(r.siteName)}'s kitchen page ↗</a></div></div>`;
+    }
+    if(r.menuNote) box.insertAdjacentHTML('beforeend', `<div class="warnNote" style="margin-top:10px;">${escapeHtml(r.menuNote)}</div>`);
+  };
+  showResult();
+
+  $('#nzForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const err = $('#nzErr'); err.hidden = true;
+    const name = $('#nzName').value.trim();
+    if(!nurserySlugPart(name)){ err.textContent = 'Give the nursery a name, e.g. "Frome".'; err.hidden = false; $('#nzName').focus(); return; }
+    const btn = $('#nzAddBtn');
+    btn.disabled = true; btn.textContent = 'Adding…';
+    try{
+      const r = await nurseryAdminCall('add-nursery', {
+        nursery: {brand, siteName: name, address: $('#nzAddr').value, phone: $('#nzPhone').value, email: $('#nzEmail').value},
+        images,
+      });
+      const menu = $('#nzMenu').value;
+      NZ_LAST_RESULT = Object.assign({}, r);
+      ADDED_NURSERIES[r.slug] = {brand: r.brand, siteName: r.siteName, logo: !!images};
+      if(SITE_SLUGS.indexOf(r.slug) === -1) SITE_SLUGS.push(r.slug);
+      if(menu && menu !== 'general'){
+        try{ await saveSiteMenus(cfg=>{ cfg.sites[r.slug] = menu; return cfg; }); }
+        catch(e2){ NZ_LAST_RESULT.menuNote = r.siteName + ' was added on the Main Menu: moving it to ' + menuGroupLabel(menu) + ' did not save (' + e2.message + '). Move it in Menu settings.'; }
+      }
+      images = null;
+      NZ_LIST = null;
+      render();
+      const res = document.getElementById('nzResult');
+      if(res && res.scrollIntoView) res.scrollIntoView({block: 'center'});
+    }catch(ex){
+      err.textContent = ex.message; err.hidden = false;
+      btn.disabled = false; btn.textContent = 'Add nursery and make its login';
+    }
+  });
+
+  /* ---------- the list ---------- */
+  const list = document.createElement('div');
+  list.className = 'card';
+  root.appendChild(list);
+  const drawList = ()=>{
+    if(NZ_LIST_ERROR && !NZ_LIST){ list.innerHTML = `<h3 style="margin-top:0;">All nurseries</h3><div class="warnNote">Could not load the list: ${escapeHtml(NZ_LIST_ERROR)}</div>`; return; }
+    if(!NZ_LIST){ list.innerHTML = `<h3 style="margin-top:0;">All nurseries</h3><div class="tinyNote">Loading…</div>`; return; }
+    const rows = NZ_LIST.nurseries.map(n=> Object.assign({}, n, {
+      label: n.name || (ADDED_NURSERIES[n.slug] && ADDED_NURSERIES[n.slug].siteName) || shortSiteLabel(n.slug),
+      brandName: n.brand || (/^green-giraffe-/.test(n.slug) ? 'Green Giraffe' : (/^little-adventures-/.test(n.slug) ? 'Little Adventures' : 'Other')),
+    }));
+    const brands = [...new Set(rows.map(r=> r.brandName))].sort((a, b)=> a === 'Other' ? 1 : b === 'Other' ? -1 : b.localeCompare(a));
+    const v = (n)=> (ADDED_NURSERIES[n.slug] && ADDED_NURSERIES[n.slug].logoVersion) ? '?v=' + ADDED_NURSERIES[n.slug].logoVersion : '';
+    list.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;"><h3 style="margin:0;">All nurseries</h3><span class="tinyNote" style="margin:0;">${rows.length} nurseries${NZ_LIST.logins ? '' : ' · logins are not switched on yet'}</span></div>
+      <div style="overflow-x:auto;margin-top:10px;"><table class="nzTable">
+        <thead><tr><th></th><th>Nursery</th><th>Username</th><th>Kitchen login</th><th></th></tr></thead>
+        <tbody>${brands.map(b=> `<tr class="nzBrand"><td colspan="5">${escapeHtml(b)}</td></tr>` +
+          rows.filter(r=> r.brandName === b).sort((x, y)=> x.label.localeCompare(y.label)).map(n=> `<tr data-slug="${escapeHtml(n.slug)}">
+            <td><img src="sites/${encodeURIComponent(n.slug)}/assets/logo.png${v(n)}" alt=""></td>
+            <td><b>${escapeHtml(n.label)}</b>${n.added ? ' <span class="nzChip new">Added here</span>' : ''}${n.address ? `<div class="tinyNote" style="margin:2px 0 0;">${escapeHtml(n.address)}</div>` : ''}</td>
+            <td class="nzUser">${escapeHtml(n.slug)}</td>
+            <td>${n.hasLogin ? '<span class="nzChip yes">Has a login</span>' : '<span class="nzChip no">No login yet</span>'}</td>
+            <td><div class="nzActs">
+              ${NZ_LIST.logins ? `<button type="button" class="btn small" data-nz="pw">${n.hasLogin ? 'New password' : 'Make a login'}</button>` : ''}
+              ${n.added ? `<label class="btn small" style="cursor:pointer;">Change logo<input type="file" accept="image/*" data-nz="logo" hidden></label>` : ''}
+              <a class="btn small" href="app.html?site=${encodeURIComponent(n.slug)}" target="_blank" rel="noopener">Kitchen page ↗</a>
+            </div><div class="nzInline"></div></td>
+          </tr>`).join('')).join('')}</tbody></table></div>
+      <div class="tinyNote" style="margin:10px 0 0;">The 15 original nurseries' logos and details are part of the site's own files; send any changes to those with the next update.</div>`;
+    list.querySelectorAll('tr[data-slug]').forEach(tr=>{
+      const slug = tr.dataset.slug;
+      const n = rows.find(r=> r.slug === slug);
+      const out = tr.querySelector('.nzInline');
+      const pw = tr.querySelector('[data-nz=pw]');
+      if(pw) pw.onclick = async ()=>{
+        if(n.hasLogin && !confirm('Make a new password for ' + n.label + '? The old one stops working straight away, so the kitchen iPad will need the new one.')) return;
+        pw.disabled = true;
+        try{
+          const r = await nurseryAdminCall('reset-site-password', {username: slug});
+          out.innerHTML = nurseryCredHtml({slug, siteName: n.label}, r, 'New password for ' + n.label);
+          wireCopy(out, nurseryLoginText({slug, siteName: n.label}, r));
+        }catch(ex){
+          out.innerHTML = `<div class="warnNote">${escapeHtml(n.hasLogin ? ex.message : (/No site login/.test(ex.message) ? n.label + ' has no login to change. Ask for help setting one up.' : ex.message))}</div>`;
+        }
+        pw.disabled = false;
+      };
+      const logo = tr.querySelector('[data-nz=logo]');
+      if(logo) logo.onchange = async (e)=>{
+        const f = e.target.files && e.target.files[0];
+        if(!f) return;
+        try{
+          const imgs = await nurseryImagesFrom(f);
+          await nurseryAdminCall('set-nursery-logo', {slug, images: imgs});
+          ADDED_NURSERIES[slug] = Object.assign({}, ADDED_NURSERIES[slug], {logo: true, logoVersion: Date.now()});
+          tr.querySelector('img').src = imgs['logo.png'];
+          out.innerHTML = `<div class="okNote">New logo saved. The kitchen page shows it next time it opens.</div>`;
+        }catch(ex){ out.innerHTML = `<div class="warnNote">${escapeHtml(ex.message)}</div>`; }
+      };
+    });
+  };
+  drawList();
+  if(!NZ_LIST){
+    nurseryAdminCall('list-nurseries').then(r=>{
+      NZ_LIST = r; NZ_LIST_ERROR = null;
+      const added = {};
+      (r.nurseries || []).forEach(n=>{ if(n.added) added[n.slug] = Object.assign({}, ADDED_NURSERIES[n.slug] || {}, {siteName: n.name || (ADDED_NURSERIES[n.slug] || {}).siteName, brand: n.brand || (ADDED_NURSERIES[n.slug] || {}).brand}); });
+      noteAddedNurseries(added);
+      if(VIEW === 'nurseries' && list.isConnected) drawList();
+    }).catch(ex=>{ NZ_LIST_ERROR = ex.message; if(list.isConnected) drawList(); });
+  }
+  return root;
+}
+
 /* ================= Render root ================= */
 function render(){
   renderTopbar();
@@ -12918,6 +13620,8 @@ function render(){
     app.appendChild(INGREDIENTS_LOADED ? renderRecipeCardsPickerView() : loadingCard('Loading ingredient database…'));
   } else if(VIEW === 'cleanup'){
     app.appendChild(INGREDIENTS_LOADED ? renderCleanupView() : loadingCard('Loading ingredient database…'));
+  } else if(VIEW === 'nurseries'){
+    app.appendChild(renderNurseriesView());
   } else if(VIEW === 'maintenance'){
     app.appendChild(renderMaintenanceView());
   } else if(VIEW === 'menuSettings'){
@@ -20110,6 +20814,7 @@ async function rbSha256Hex(text){
 }
 
 async function rbShowAppShell(){
+  loadAddedNurseries();
   document.getElementById('rbLockScreen').style.display = 'none';
   document.getElementById('rbAppShell').style.display = 'block';
   /* Decide which menu this session edits BEFORE anything renders or
