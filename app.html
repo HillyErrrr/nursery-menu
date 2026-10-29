@@ -218,6 +218,7 @@ button{font-family:inherit;cursor:pointer;}
 #kitchenMenu{position:fixed;inset:0;z-index:200;background:rgba(31,60,85,0.38);}
 #kitchenMenu .kmPanel{position:absolute;right:18px;width:392px;max-width:calc(100vw - 24px);max-height:calc(100vh - 100px);overflow:auto;background:#fff;border-radius:16px;box-shadow:0 18px 50px rgba(20,35,50,0.35);padding:6px 8px 8px;display:flex;flex-direction:column;-webkit-overflow-scrolling:touch;}
 #kitchenMenu .kmHead{font-size:12px;font-weight:800;letter-spacing:0.08em;color:var(--ink-soft);padding:10px 12px 2px;}
+#kitchenMenu .kmSeason{font-size:13px;font-weight:700;color:var(--ink);background:var(--paper);border-radius:10px;padding:8px 12px;margin:4px 4px 2px;}
 #kitchenMenu .kmItem{display:flex;align-items:center;gap:14px;min-height:58px;padding:7px 12px;border:none;border-radius:12px;background:transparent;color:var(--ink);font:inherit;text-align:left;cursor:pointer;width:100%;}
 #kitchenMenu .kmItem:active,#kitchenMenu .kmItem:hover{background:var(--paper);}
 #kitchenMenu .kmItem:disabled{opacity:0.45;cursor:default;background:transparent;}
@@ -286,8 +287,8 @@ body.allergyOpen{overflow:hidden;}
 #bootSplash{display:none;}
 body.booting > *:not(#bootSplash):not(script):not(noscript){visibility:hidden !important;}
 body.booting #bootSplash{display:flex;flex-direction:column;position:fixed;inset:0;z-index:10000;background:var(--paper);}
-#bootSplash .bootBand{height:166px;background:var(--ink);flex:none;}
-#bootSplash .bootMsg{margin:auto;display:flex;align-items:center;gap:12px;font-size:17px;font-weight:600;color:var(--ink-soft);padding-bottom:166px;}
+#bootSplash .bootBand{height:96px;background:var(--ink);flex:none;}
+#bootSplash .bootMsg{margin:auto;display:flex;align-items:center;gap:12px;font-size:17px;font-weight:600;color:var(--ink-soft);padding-bottom:96px;}
 #bootSplash .bootDot{width:12px;height:12px;border-radius:6px;background:var(--butter);animation:bootPulse 1s ease-in-out infinite alternate;}
 @keyframes bootPulse{from{opacity:.25;transform:scale(.8);}to{opacity:1;transform:scale(1.1);}}
 @media (prefers-reduced-motion: reduce){ #bootSplash .bootDot{animation:none;} }
@@ -387,6 +388,53 @@ body.booting #bootSplash{display:flex;flex-direction:column;position:fixed;inset
   .stDockDay.d1 .stDockName{font-size:14px;}
 }
 @media (prefers-reduced-motion: reduce){ .stDockDay{transition:none;} }
+/* ---- one line (canvas round 11, B) ---- */
+#prepStation .stTop.stTopB{padding:10px 18px 12px;min-height:96px;justify-content:center;}
+#prepStation .stTop.stTopB .stRow1{gap:14px;min-height:72px;}
+#prepStation .stTop.stTopB .stRow1 .stBrand{flex:0 0 auto;min-width:0;}
+#prepStation .stTop.stTopB .stRow1 .stNav{flex:1 1 auto;justify-content:center;min-width:0;gap:8px;}
+#prepStation .stTop.stTopB .stRow1 .stActions{flex:0 0 auto;min-width:0;}
+#prepStation .stTop.hasSwitch .stRow1 .stBrand{flex:0 0 auto;}
+#prepStation .stTop.stTopB .stSite{font-size:22px;line-height:1.05;max-width:200px;}
+/* "Today is …" is said by the ribbon; kept for screen readers only. */
+#prepStation .stTop.stTopB .stInfo{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+/* the small slider under the nursery's name */
+#prepStation .stBrandText .stMenuSwitch{margin-top:5px;padding:3px;border-radius:17px;gap:1px;align-self:flex-start;}
+#prepStation .stBrandText .stMenuSeg{height:28px;border-radius:14px;padding:0 11px;font-size:12.5px;}
+#prepStation .stBrandText .stMenuThumb{top:3px;bottom:3px;border-radius:14px;box-shadow:inset 0 1px 0 #fff,0 2px 0 #9FB0BF,0 3px 6px rgba(0,0,0,0.3);}
+/* smaller days, so they fit beside the nursery and Menu */
+#prepStation .stMenuBtn{height:52px;padding:0 20px 0 16px;border-radius:26px;font-size:17px;gap:9px;}
+#prepStation .stArrow{height:48px;width:44px;min-width:44px;border-radius:12px;padding:0;}
+#prepStation .stToday{height:52px;width:84px;border-radius:14px;font-size:12px;}
+#prepStation .stToday b{font-size:14px;}
+.stDockDiv{height:46px;}
+.stDockDay.d0{width:132px;height:72px;border-radius:18px;}
+.stDockDay.d1{width:104px;height:58px;border-radius:14px;}
+.stDockDay.d2{width:92px;height:52px;border-radius:14px;}
+.stDockDay.d3{width:84px;height:48px;border-radius:13px;}
+.stDockTag{font-size:9.5px;line-height:11px;}
+.stDockDay.d0 .stDockName{font-size:19px;}
+.stDockDay.d1 .stDockName{font-size:15.5px;}
+.stDockDay.d2 .stDockName{font-size:14px;}
+.stDockDay.d3 .stDockName{font-size:13.5px;}
+.stDockDay.d0 .stDockDate{font-size:13px;}
+.stDockDay.d1 .stDockDate{font-size:12px;}
+.stDockDay.d2 .stDockDate, .stDockDay.d3 .stDockDate{font-size:11.5px;}
+/* an iPad: five days; a wide screen: seven */
+@media (max-width:1500px){
+  .stDockDay.d3, .stDockDay.d3 + .stDockDiv{display:none;}
+  .stDockDiv:has(+ .stDockDay.d3){display:none;}
+}
+/* portrait: the nursery and Menu, then the days */
+@media (max-width:1000px){
+  #prepStation .stTop.stTopB .stRow1{flex-wrap:wrap;row-gap:8px;}
+  #prepStation .stTop.stTopB .stRow1 .stBrand{order:1;}
+  #prepStation .stTop.stTopB .stRow1 .stActions{order:2;margin-left:auto;}
+  #prepStation .stTop.stTopB .stRow1 .stNav{order:3;flex:1 1 100%;}
+}
+@media (max-width:700px){
+  .stDockDay.d2, .stDockDay.d2 + .stDockDiv, .stDockDiv:has(+ .stDockDay.d2){display:none;}
+}
 /* ---- the number pad (no iPad keyboard) ---- */
 #numPad{position:fixed;z-index:9600;width:300px;background:#F5F7F9;border-radius:18px;box-shadow:0 18px 50px rgba(20,40,60,0.35),0 2px 6px rgba(20,40,60,0.2);padding:14px;display:flex;flex-direction:column;gap:10px;font-family:inherit;color:var(--ink);box-sizing:border-box;}
 #numPad[hidden]{display:none;}
@@ -971,6 +1019,18 @@ table.shopListTable tr.shopCatRow td{
   width:100%;padding:8px 10px;border:1px solid var(--line-strong);border-radius:8px;background:#fff;color:var(--ink);
 }
 #rbAdminRoot .field textarea{resize:vertical;min-height:120px;}
+/* The rotation card's state and buttons. */
+#rbAdminRoot .rotStateLine{display:flex;align-items:center;gap:4px 10px;flex-wrap:wrap;}
+#rbAdminRoot .rotState{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:12px;font-size:12px;font-weight:800;white-space:nowrap;}
+#rbAdminRoot .rotState::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor;}
+#rbAdminRoot .rotState.ok{background:var(--sage-light);color:var(--sage-text);}
+#rbAdminRoot .rotState.warn{background:#F6E3DC;color:#8A3F28;}
+#rbAdminRoot .btn.rotBtn{height:40px;padding:0 18px;border-radius:20px;font-size:14px;font-weight:800;}
+#rbAdminRoot .btn.rotPublish{background:linear-gradient(180deg,#2E5372 0%,var(--ink) 100%);border-color:var(--ink);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,0.2),0 3px 0 #0F2435,0 5px 10px rgba(0,0,0,0.18);}
+#rbAdminRoot .btn.rotPublish:active{transform:translateY(2px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.2),0 1px 0 #0F2435,0 2px 4px rgba(0,0,0,0.18);}
+#rbAdminRoot .btn.rotPublished{background:var(--sage-light);border-color:#C9D2BC;color:var(--sage-text);opacity:1;cursor:default;}
+#rbAdminRoot .btn.rotDiscard{background:linear-gradient(180deg,#FFFFFF 0%,#FBF0EC 100%);border-color:#D9A796;color:#8A3F28;box-shadow:inset 0 1px 0 #fff,0 2px 0 #D9A796,0 4px 8px rgba(0,0,0,0.08);}
+#rbAdminRoot .btn.rotDiscard:active{transform:translateY(2px);box-shadow:inset 0 1px 0 #fff,0 0 0 #D9A796;}
 /* ---- Nurseries ---- */
 #rbAdminRoot .nzGrid{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:18px;align-items:start;}
 @media (max-width:900px){ #rbAdminRoot .nzGrid{grid-template-columns:1fr;} }
@@ -3870,6 +3930,8 @@ const ST_ICONS = {
   cart: '<circle cx="9" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/><path d="M3 4h2.5l2.2 11h10.6l2-8H6.4"/>',
   menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
   matrix: '<rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M3.5 9h17M3.5 14.5h17M9 3.5v17M14.5 3.5v17"/>',
+  pack: '<rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M2.5 9.5h19M8 9.5V19"/>',
+  packs: '<rect x="5.5" y="8" width="16" height="12" rx="2"/><path d="M5.5 12h16M10 12v8"/><path d="M2.5 15V6a2 2 0 0 1 2-2h13"/>',
   recipe: '<path d="M6 3.5h8.5l4 4v13H6z"/><path d="M14.5 3.5v4h4M9 12h6.5M9 15.5h6.5"/>',
   sheets: '<path d="M8 6.5V3.5h11v14h-3"/><path d="M5 6.5h11v14H5z"/><path d="M8 11h5M8 14.5h5"/>',
   logout: '<path d="M14 4h4.5A1.5 1.5 0 0120 5.5v13a1.5 1.5 0 01-1.5 1.5H14"/><path d="M10 16l-4-4 4-4M6 12h10"/>',
@@ -3923,7 +3985,8 @@ function renderPrepStation(){
   const menuSwitch = EXTRAS_HERE.length
     ? `<div class="stMenuSwitch" role="group" aria-label="Menu">${[{key: 'nursery', label: 'Nursery'}].concat(EXTRAS_HERE.map(x=> ({key: x.key, label: x.cfg.label || x.key}))).map(m=>{
         const on = (ACTIVE_EXTRA ? ACTIVE_EXTRA.key : 'nursery') === m.key;
-        return `<button type="button" class="stMenuSeg${on ? ' on' : ''}" data-act="menu" data-menu="${escapeHtml(String(m.key))}" data-focus="menu:${escapeHtml(String(m.key))}" aria-pressed="${on}">${escapeHtml(m.label)}</button>`;
+        const short = String(m.label).split(/\s+[-–—]\s+/)[0] || m.label;
+        return `<button type="button" class="stMenuSeg${on ? ' on' : ''}" data-act="menu" data-menu="${escapeHtml(String(m.key))}" data-focus="menu:${escapeHtml(String(m.key))}" aria-pressed="${on}" title="${escapeHtml(m.label)}">${escapeHtml(short)}</button>`;
       }).join('')}</div>`
     : '';
   const run = ACTIVE_EXTRA && ACTIVE_EXTRA.run;
@@ -3944,20 +4007,19 @@ function renderPrepStation(){
         <span class="stLogo"><img alt=""></span>
         <div class="stBrandText">
           <div class="stSite">${escapeHtml(site)}</div>
-          <div class="stSeason">${escapeHtml(season)}</div>
+          ${menuSwitch || `<div class="stSeason">${escapeHtml(season)}</div>`}
         </div>
       </div>
-      ${menuSwitch}
       ${stationInfoHtml(todaySlot)}
-      <div class="stActions">
-        <button type="button" class="stBtn stMenuBtn" id="stMenuBtn" data-kmenu-btn="1" data-act="kmenu" data-focus="kmenu" aria-haspopup="menu" aria-expanded="${document.getElementById('kitchenMenu') ? 'true' : 'false'}">${stIcon('menu')}<span>Menu</span></button>
-      </div>
-      </div>
       <div class="stNav" role="group" aria-label="Day">
         ${stationBackTodayHtml(todaySlot)}
         <button type="button" class="stBtn icon stArrow" data-act="prev" data-focus="prev" aria-label="Previous day" title="Previous day">${stIcon('prev')}</button>
         ${stationDockHtml()}
         <button type="button" class="stBtn icon stArrow" data-act="next" data-focus="next" aria-label="Next day" title="Next day">${stIcon('next')}</button>
+      </div>
+      <div class="stActions">
+        <button type="button" class="stBtn stMenuBtn" id="stMenuBtn" data-kmenu-btn="1" data-act="kmenu" data-focus="kmenu" aria-haspopup="menu" aria-expanded="${document.getElementById('kitchenMenu') ? 'true' : 'false'}">${stIcon('menu')}<span>Menu</span></button>
+      </div>
       </div>
     </div>${strip}`;
 
@@ -5724,7 +5786,9 @@ function openKitchenMenu(anchor){
   if(session.enforced) out.push(kmItem('logout', 'logout', session.admin ? 'Log out of admin' : 'Log out of ' + site, session.admin && session.site ? 'This iPad goes back to its nursery login' : '', {cls: 'out'}));
   const wrap = document.createElement('div');
   wrap.id = 'kitchenMenu';
+  const kmSeason = ACTIVE_EXTRA ? (ACTIVE_EXTRA.cfg.label || ACTIVE_EXTRA.key) : ((SEASONS.find(x=> x.key === SEASON_KEY) || {}).label || '');
   wrap.innerHTML = `<div class="kmPanel" role="menu" aria-label="Kitchen menu">
+    <div class="kmSeason">${escapeHtml(kmSeason)}${kmSeason ? ' · ' : ''}${ACTIVE_EXTRA ? 'week ' : 'menu week '}${escapeHtml(String(state.week))}</div>
     <div class="kmHead">TODAY’S PREP</div>
     ${kmItem('recipe', 'print', 'Print this recipe', recipeSub, {disabled: !it})}
     ${kmItem('prep', 'print2', 'Print ' + day + '’s recipe pages', 'One page per course')}
@@ -5737,6 +5801,10 @@ function openKitchenMenu(anchor){
     <div class="kmHead">ALLERGIES</div>
     ${kmItem('allergy', 'matrix', 'Allergy matrix', document.getElementById('allergyView') ? 'Open now' : 'Every dish this week, down to each ingredient', {disabled: !!document.getElementById('allergyView')})}
     ${kmItem('allergyprint', 'print', 'Print allergy matrix', 'Week ' + state.week + ', the same layout as Staff admin')}
+    <div class="kmRule"></div>
+    <div class="kmHead">MENU PACK</div>
+    ${kmItem('packweek', 'pack', 'Week ' + state.week + '’s menu pack', 'This week’s menu and its allergen matrix', {disabled: !MENU[state.week]})}
+    ${kmItem('packall', 'packs', 'Full menu pack', 'All ' + Object.keys(MENU).length + ' week' + (Object.keys(MENU).length === 1 ? '' : 's') + (ACTIVE_EXTRA ? '' : ', the weaning stages page') + ' and the allergen matrices', {disabled: !Object.keys(MENU).length})}
     ${(wake || out.length) ? '<div class="kmRule"></div><div class="kmHead">THIS IPAD</div>' + wake + out.join('') : ''}
   </div>`;
   document.body.appendChild(wrap);
@@ -5777,6 +5845,8 @@ async function kitchenMenuAction(act, b){
   else if(act === 'shop') printShoppingListNow();
   else if(act === 'shopopen'){ closeAllergyView(); setView('shop'); window.scrollTo(0, 0); }
   else if(act === 'allergyprint') printAllergyMatrixWeek();
+  else if(act === 'packweek') openKitchenMenuPack(state.week);
+  else if(act === 'packall') openKitchenMenuPack(null);
   else if(act === 'clear'){
     if(!confirm('Clear every tick for ' + state.day + '?')) return;
     state.checked = {};
@@ -6137,6 +6207,49 @@ function printAllergyMatrixWeek(){
   const url = URL.createObjectURL(new Blob([html], {type: 'text/html'}));
   const w = window.open(url, '_blank');
   if(!w){ URL.revokeObjectURL(url); alert('Please allow pop-ups to open the allergen matrix.'); return; }
+  const release = setInterval(()=>{ if(w.closed){ URL.revokeObjectURL(url); clearInterval(release); } }, 2000);
+}
+
+/* The menu pack: Staff admin's own (RB_CARD_KIT.menuPack), so there is one
+   design of it, filled from this kitchen's published menu -- the menu on
+   screen, Nursery or Holiday Club. A course with more than one dish takes
+   the first; "Same as above" is kept, as the pack prints it. */
+function kitchenMenuPackWeeks(){
+  const out = {};
+  Object.keys(MENU).sort((a, b)=> a - b).forEach(wk=>{
+    const days = {};
+    Object.keys(MENU[wk] || {}).forEach(day=>{
+      const courses = {};
+      Object.keys(MENU[wk][day] || {}).forEach(course=>{
+        const dishes = MENU[wk][day][course] || {};
+        const name = realDishNames(dishes)[0] || Object.keys(dishes)[0];
+        if(!name) return;
+        const dish = dishes[name] || {};
+        courses[course] = {name, description: dish.description || '',
+          ingredients: (dish.ingredients || []).map(row=> ({name: row.name || '', allergens: normAllergens(row.allergens)}))};
+      });
+      days[day] = courses;
+    });
+    out[wk] = days;
+  });
+  return out;
+}
+function openKitchenMenuPack(onlyWeek){
+  if(!RB_CARD_KIT || !RB_CARD_KIT.menuPack){ alert('The menu pack is still loading. Try again in a moment.'); return; }
+  const weeks = kitchenMenuPackWeeks();
+  if(!Object.keys(weeks).length){ alert('There is no published menu for this kitchen yet.'); return; }
+  if(onlyWeek != null && !weeks[String(onlyWeek)]){ alert('There is no published menu for week ' + onlyWeek + '.'); return; }
+  const label = ACTIVE_EXTRA ? (ACTIVE_EXTRA.cfg.label || ACTIVE_EXTRA.key) : ((SEASONS.find(x=> x.key === SEASON_KEY) || {}).label || 'Menu');
+  const site = SITE_CONFIG.siteName || '';
+  const which = onlyWeek != null ? 'week ' + onlyWeek : 'all ' + Object.keys(weeks).length + ' weeks';
+  const html = RB_CARD_KIT.menuPack({
+    key: ACTIVE_EXTRA ? ACTIVE_EXTRA.key : SEASON_KEY, label, weeks,
+    only: onlyWeek != null ? [String(onlyWeek)] : null,
+    note: label + ', ' + which + (site ? ', ' + site : '') + '. From this kitchen’s published menu.',
+  });
+  const url = URL.createObjectURL(new Blob([html], {type: 'text/html'}));
+  const w = window.open(url, '_blank');
+  if(!w){ URL.revokeObjectURL(url); alert('Please allow pop-ups to open the menu pack.'); return; }
   const release = setInterval(()=>{ if(w.closed){ URL.revokeObjectURL(url); clearInterval(release); } }, 2000);
 }
 
@@ -6794,6 +6907,10 @@ const SITE_SLUGS = [
 // case rather than silently offering a different site instead). Falls
 // back to the first site alphabetically only if this admin panel was
 // somehow opened with no site at all.
+// The nurseries added in Staff admin (see loadAddedNurseries): declared up
+// here because siteSlugLabel, just below, reads them.
+let ADDED_NURSERIES = {};
+let ADDED_NURSERIES_LOADED = false;
 let PREVIEW_SITE_SLUG = SITE_SLUG || [...SITE_SLUGS].sort((a,b)=> siteSlugLabel(a).localeCompare(siteSlugLabel(b)))[0];
 
 /* ================= Menu groups (master document) =================
@@ -7843,6 +7960,24 @@ function seasonMatchesRecordedBase(seasonKey, group, season){
 function recordSeasonPublishedSnapshot(seasonKey, group, exportJson){
   DATA.seasonPublishedSnapshot = DATA.seasonPublishedSnapshot || {};
   DATA.seasonPublishedSnapshot[seasonBaseKey(seasonKey, group)] = exportJson;
+}
+
+/* Is this device's copy of a rotation in step with what it last saw
+   published? 'synced', 'changed' (with how many slots differ from the
+   published version, when it is known), or 'unpublished' (this device has
+   never seen it published). */
+function rotationPublishState(group, seasonKey, season){
+  try{
+    if(seasonMatchesRecordedBase(seasonKey, group, season)) return {state: 'synced', count: 0};
+    const snap = DATA.seasonPublishedSnapshot && DATA.seasonPublishedSnapshot[seasonBaseKey(seasonKey, group)];
+    if(!snap) return {state: (DATA.seasonBase && DATA.seasonBase[seasonBaseKey(seasonKey, group)]) ? 'changed' : 'unpublished', count: 0};
+    const mine = flattenSeasonSlotNames(buildSeasonExportJson(seasonKey));
+    const theirs = flattenSeasonSlotNames(snap);
+    const keys = new Set(Object.keys(mine).concat(Object.keys(theirs)));
+    let n = 0;
+    keys.forEach(k=>{ if(mine[k] !== theirs[k]) n++; });
+    return {state: 'changed', count: n};
+  }catch(e){ return {state: 'unpublished', count: 0}; }
 }
 
 /* ================= Rotation presence: who else is editing this ================
@@ -13353,6 +13488,27 @@ function cleanupAnalyse(seasonKey){
    they should not sit one button away from "Shopping list". Clean up used to
    be in the main row, next to everyday screens, and it deletes recipes for
    every admin. */
+/* Everything saved on the site, as one file: every document the site
+   keeps (menus, recipes, ingredients, settings), for every admin. */
+async function downloadSiteBackup(){
+  const btn = document.getElementById('siteBackupBtn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Making the backup…'; }
+  try{
+    const res = await fetch('/.netlify/functions/db-admin', {method: 'POST', headers: {'Content-Type': 'application/json', 'x-rb-auth': RB_PASSWORD_HASH}, body: JSON.stringify({action: 'backup'})});
+    if(!res.ok){ let m = ''; try{ m = (await res.json()).error || ''; }catch(e){} throw new Error(m || ('The server said ' + res.status)); }
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'kitchen-prep-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=> URL.revokeObjectURL(a.href), 2000);
+    toast('Backup downloaded');
+  }catch(e){
+    toast('The backup could not be made: ' + e.message);
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = '⬇ Download a backup'; }
+  }
+}
 function renderMaintenanceView(){
   const root = document.createElement('div');
   const head = document.createElement('div');
@@ -13378,43 +13534,34 @@ function renderMaintenanceView(){
   addBtn.textContent = '+ Add season';
   addBtn.onclick = openAddSeasonModal;
   seasonRow.appendChild(addBtn);
-  /* One season, one export -- it was on all four week cards and exported
-     the whole season from each of them. */
-  const exportBtn = document.createElement('button');
-  exportBtn.className = 'btn';
-  exportBtn.textContent = '⬇ Export this menu as JSON';
-  exportBtn.onclick = ()=> exportSeasonJson(DATA.currentSeason);
-  seasonRow.appendChild(exportBtn);
   seasons.appendChild(seasonRow);
   root.appendChild(seasons);
 
-  const backup = document.createElement('div');
-  backup.className = 'card';
-  backup.style.marginTop = '12px';
-  backup.innerHTML = `
-    <h3 style="margin-top:0;">Backup</h3>
-    <div class="tinyNote">Downloads everything this device holds &mdash; both menus, every recipe, the ingredient database &mdash; as one JSON file. Worth taking before anything on this page.</div>`;
+  /* Backups: the published versions (the way back from a publish), and a
+     download of everything saved on the site -- every menu, recipe and
+     ingredient, for every admin -- not just what this device holds. */
+  const backups = document.createElement('div');
+  backups.className = 'card';
+  backups.style.marginTop = '12px';
+  backups.innerHTML = `
+    <h3 style="margin-top:0;">Backups</h3>
+    <div class="tinyNote">Every publish keeps a copy of the menu it replaced: <b>Browse published versions</b> puts one back if a publish went wrong. <b>Download a backup</b> saves everything saved on the site &mdash; every menu, recipe and ingredient, for every admin &mdash; as one file, worth taking before anything on this page.</div>`;
+  const backupRow = document.createElement('div');
+  backupRow.style.cssText = 'margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;';
+  const backupsBtn = document.createElement('button');
+  backupsBtn.className = 'btn';
+  backupsBtn.textContent = '↩ Browse published versions';
+  backupsBtn.onclick = openMenuBackupsModal;
+  backupRow.appendChild(backupsBtn);
   const backupBtn = document.createElement('button');
   backupBtn.className = 'btn';
-  backupBtn.style.marginTop = '12px';
+  backupBtn.id = 'siteBackupBtn';
   backupBtn.textContent = '⬇ Download a backup';
-  backupBtn.onclick = ()=>{
-    const blob = new Blob([JSON.stringify(DATA, null, 1)], {type:'application/json'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'recipe-bank-backup-' + new Date().toISOString().slice(0,10) + '.json';
-    a.click();
-    setTimeout(()=> URL.revokeObjectURL(a.href), 2000);
-    toast('Backup downloaded');
-  };
-  backup.appendChild(backupBtn);
-  const restoreBtn = document.createElement('button');
-  restoreBtn.className = 'btn';
-  restoreBtn.style.cssText = 'margin-top:12px;margin-left:8px;';
-  restoreBtn.textContent = '↩ Restore descriptions from a backup';
-  restoreBtn.title = 'Fill in any blank "Description for parents" from a backup or exported season file';
-  restoreBtn.onclick = openRestoreDescriptionsModal;
-  backup.appendChild(restoreBtn);
+  backupBtn.onclick = downloadSiteBackup;
+  backupRow.appendChild(backupBtn);
+  backups.appendChild(backupRow);
+  root.appendChild(backups);
+
   /* Only when there is something to offer. This is the deliberate
      counterpart to not marking on open -- see linkAllRecipeIngredients. */
   const linkedIds = unpublishedLinkedRecipeIds();
@@ -13438,39 +13585,7 @@ function renderMaintenanceView(){
     root.appendChild(linkCard);
   }
 
-  const prepBtn = document.createElement('button');
-  prepBtn.className = 'btn';
-  prepBtn.style.cssText = 'margin-top:12px;margin-left:8px;';
-  prepBtn.textContent = '↩ Restore ingredient preparation notes';
-  prepBtn.title = 'Put back "(grated)", "(diced)" and the rest, from the menus this app was installed with';
-  prepBtn.onclick = openRestorePrepNotesModal;
-  backup.appendChild(prepBtn);
-  const prepNote = document.createElement('div');
-  prepNote.className = 'tinyNote';
-  prepNote.style.marginTop = '10px';
-  prepNote.innerHTML = 'Recipes were written as <b>Carrots (grated)</b> or <b>Carrots (diced)</b> &mdash; the same carrot, prepared differently in different dishes. Linking a row to the Ingredient Database swapped that for the product\'s own name and dropped the bracket, which took the instruction off every prep sheet. New links now keep it in the row\'s <b>Preparation</b> field; the button above puts back the ones already lost.';
-  backup.appendChild(prepNote);
 
-  const restoreNote = document.createElement('div');
-  restoreNote.className = 'tinyNote';
-  restoreNote.style.marginTop = '10px';
-  restoreNote.innerHTML = 'Descriptions for parents were lost on some devices by pressing <b>Get the published version</b> against a season that had been published with empty ones. That can no longer happen &mdash; an empty published description is now ignored rather than copied over a real one &mdash; but anything already lost needs putting back from a backup taken before it happened.';
-  backup.appendChild(restoreNote);
-  root.appendChild(backup);
-
-  const menuBackups = document.createElement('div');
-  menuBackups.className = 'card';
-  menuBackups.style.marginTop = '12px';
-  menuBackups.innerHTML = `
-    <h3 style="margin-top:0;">Published menu backups</h3>
-    <div class="tinyNote">Every publish keeps a copy of the menu it replaced. This is the way back from a publish that went wrong &mdash; the wrong menu, an empty rotation, or simply a change you want to undo. Before this existed, nothing could undo a publish at all.</div>`;
-  const backupsBtn = document.createElement('button');
-  backupsBtn.className = 'btn';
-  backupsBtn.style.marginTop = '12px';
-  backupsBtn.textContent = '↩ Browse published versions';
-  backupsBtn.onclick = openMenuBackupsModal;
-  menuBackups.appendChild(backupsBtn);
-  root.appendChild(menuBackups);
 
   const cleanupCard = document.createElement('div');
   cleanupCard.className = 'card';
@@ -13647,8 +13762,6 @@ function renderCleanupView(){
    is kept, so if it is lost the answer is New password, never "look it
    up". The logo is optional; the brand's logo stands in until there is
    one. */
-let ADDED_NURSERIES = {};
-let ADDED_NURSERIES_LOADED = false;
 async function loadAddedNurseries(){
   try{
     const res = await fetch('/.netlify/functions/get-season?group=_config&file=sites.json', {cache: 'no-store'});
@@ -15166,22 +15279,33 @@ function renderRotationView(){
   const menuBar = document.createElement('div');
   menuBar.className = 'card';
   menuBar.style.cssText = 'margin-bottom:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;';
-  // Copy only between nursery menus: an extra menu's rotation is a different length and shape.
-  const others = isExtraMenu(EDITING_GROUP) ? [] : allMenuGroups().filter(g=> g !== EDITING_GROUP);
   const up = (DATA.uploads || {})[DATA.currentSeason];
   /* Counted across the whole season rather than per week, because the fix
      is usually one recipe setting that stranded several slots at once --
      seeing "3 slots" in one place is what tells you that, and a per-week
      count would not. */
   const stranded = slotsWithUnavailableRecipe(EDITING_GROUP, DATA.currentSeason);
+  /* Where this rotation stands: in step with what is published, or with
+     edits only this device has. */
+  const pubState = rotationPublishState(EDITING_GROUP, DATA.currentSeason, season);
+  const when = up ? ' Published ' + escapeHtml(new Date(up.at).toLocaleString('en-GB', {weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'})) + '.' : '';
+  const stateChip = pubState.state === 'synced'
+    ? '<span class="rotState ok">Up to date with the published version</span>'
+    : pubState.state === 'changed'
+      ? '<span class="rotState warn">' + (pubState.count ? pubState.count + ' change' + (pubState.count === 1 ? '' : 's') : 'Changes') + ' not published yet</span>'
+      : '<span class="rotState warn">Not published yet</span>';
+  const stateText = pubState.state === 'synced'
+    ? when + ' Edits stay on this device until you publish them.'
+    : pubState.state === 'changed'
+      ? ' Only this device has ' + (pubState.count === 1 ? 'it' : 'them') + '. Publish to send ' + (pubState.count === 1 ? 'it' : 'them') + ' to the kitchens on this menu.'
+      : ' Publish to send this rotation to the kitchens on this menu.';
   menuBar.innerHTML =
     '<div style="flex:1 1 300px;"><b>' + escapeHtml(menuGroupLabel(EDITING_GROUP)) + ' &middot; ' +
       escapeHtml(season.label || DATA.currentSeason) + '</b>' +
-    '<div class="tinyNote" style="margin-top:2px;">' +
-      (up ? 'Last published <b>' + escapeHtml(new Date(up.at).toLocaleString()) + '</b>. ' : 'Not published from this device yet. ') +
+    '<div class="tinyNote rotStateLine" style="margin-top:4px;">' + stateChip + '<span>' + stateText +
       (isExtraMenu(EDITING_GROUP)
-        ? 'A ' + seasonWeekKeys(season).length + '-week rotation for ' + escapeHtml(extraMenuSitesText(EDITING_GROUP)) + '. ' + escapeHtml(extraMenuNextRunText(EDITING_GROUP)) + ' Dates, sites and course names are in <b>Menu settings</b>.</div></div>'
-        : 'This rotation is separate from the other menus &mdash; editing it here changes nothing anywhere else until you publish.</div></div>');
+        ? ' A ' + seasonWeekKeys(season).length + '-week rotation for ' + escapeHtml(extraMenuSitesText(EDITING_GROUP)) + '. ' + escapeHtml(extraMenuNextRunText(EDITING_GROUP)) + ' Dates, sites and course names are in <b>Menu settings</b>.'
+        : '') + '</span></div></div>';
 
 
   /* Both halves of the sync, together, on the thing they act on.
@@ -15193,40 +15317,28 @@ function renderRotationView(){
      will be lost") permanently on screen on every page in the app. It is
      also renamed: "refresh" sounds like reloading a page, which is the one
      thing it is not. */
-  const getBtn = document.createElement('button');
-  getBtn.className = 'btn small';
-  getBtn.textContent = '⟳ Get the published version';
-  getBtn.title = "Replace this device's copy of this rotation with whatever is currently published for " + menuGroupLabel(EDITING_GROUP);
-  getBtn.onclick = ()=> openRefreshSeasonModal(DATA.currentSeason);
-  menuBar.appendChild(getBtn);
-
+  // The way back from this device's own unpublished edits: only when there are some.
+  if(pubState.state === 'changed'){
+    const discardBtn = document.createElement('button');
+    discardBtn.className = 'btn rotBtn rotDiscard';
+    discardBtn.textContent = 'Discard my changes';
+    discardBtn.title = "Throw away this device's unpublished edits and go back to what is published for " + menuGroupLabel(EDITING_GROUP);
+    discardBtn.onclick = ()=> openRefreshSeasonModal(DATA.currentSeason);
+    menuBar.appendChild(discardBtn);
+  }
   const pubBtn = document.createElement('button');
-  pubBtn.className = 'btn small primary';
-  pubBtn.textContent = '⬆ Publish changes';
-  pubBtn.title = 'Publish this rotation to ' + menuGroupLabelWithCount(EDITING_GROUP);
-  pubBtn.onclick = ()=> openUploadModal(DATA.currentSeason);
+  if(pubState.state === 'synced'){
+    pubBtn.className = 'btn rotBtn rotPublished';
+    pubBtn.textContent = '✓ Published';
+    pubBtn.disabled = true;
+    pubBtn.title = 'Nothing to publish: this is what the kitchens on ' + menuGroupLabel(EDITING_GROUP) + ' have';
+  }else{
+    pubBtn.className = 'btn rotBtn rotPublish';
+    pubBtn.textContent = '⬆ Publish changes';
+    pubBtn.title = 'Publish this rotation to ' + menuGroupLabelWithCount(EDITING_GROUP);
+    pubBtn.onclick = ()=> openUploadModal(DATA.currentSeason);
+  }
   menuBar.appendChild(pubBtn);
-
-  others.forEach(g=>{
-    const btn = document.createElement('button');
-    btn.className = 'btn small';
-    btn.textContent = '⧉ Copy to ' + menuGroupLabel(g);
-    btn.onclick = ()=>{
-      const label = (DATA.seasons[DATA.currentSeason] || {}).label || DATA.currentSeason;
-      const target = menuFor(g)[DATA.currentSeason];
-      const already = target && Object.values(target.weeks || {}).some(days=>
-        Object.values(days || {}).some(c=> Object.keys(c || {}).length));
-      if(!window.confirm(
-        'Copy the ' + label + ' rotation into ' + menuGroupLabel(g) + '?' +
-        (already ? '\n\nThat menu already has a rotation for this season on this device, and it will be REPLACED.' : '') +
-        '\n\nThe copy is independent from this moment on — editing one never changes the other. Nothing is published until you upload.')) return;
-      if(copyRotationToGroup(g)){
-        toast('Copied into ' + menuGroupLabel(g) + ' — switch to it to start editing');
-        render();
-      }
-    };
-    menuBar.appendChild(btn);
-  });
   extraMenusForGroup(EDITING_GROUP).forEach(k=>{
     const btn = document.createElement('button');
     btn.className = 'btn small';
@@ -19907,31 +20019,43 @@ function extraPackPagesHtml(key, season){
   return pages;
 }
 
+/* opts (all optional): season -- a season-shaped menu to build from instead
+   of this device's (the kitchen's published menu, see RB_CARD_KIT.menuPack);
+   weeks -- just these weeks (no weaning-stages page); note -- the toolbar's
+   line. */
 function buildMenuPackHtml(seasonKey, opts){
-  const season = ensureSeason(seasonKey);
+  opts = opts || {};
+  const season = opts.season || ensureSeason(seasonKey);
   const seasonLabel = season.label;
-  // The weaning-stages page is about the nursery menu, not an extra one.
-  // An extra menu: its own layout, one week to a page, and no
-  // weaning-stages page.
-  const pages = isExtraMenu(seasonKey) ? extraPackPagesHtml(seasonKey, season) : [menuPackIntroPageHtml(seasonLabel)];
-  if(!isExtraMenu(seasonKey)) seasonWeekKeys(season).forEach(wk=> pages.push(menuPackWeekPageHtml(season, wk, seasonLabel, seasonKey)));
-  // Phase 32: the Allergen Matrix is appended after the 4 week menu pages,
+  const extra = isExtraMenu(seasonKey);
+  const allWeeks = seasonWeekKeys(season);
+  const weeks = (opts.weeks && opts.weeks.length) ? opts.weeks.map(String).filter(wk=> allWeeks.includes(wk)) : allWeeks;
+  const whole = weeks.length === allWeeks.length;
+  // The weaning-stages page is about the nursery menu, not an extra one,
+  // and comes with the whole pack only. An extra menu: its own layout,
+  // one week to a page, and no weaning-stages page.
+  const pages = extra
+    ? weeks.map(wk=> extraPackPageHtml(seasonKey, season, [wk], allWeeks))
+    : (whole ? [menuPackIntroPageHtml(seasonLabel)] : []).concat(weeks.map(wk=> menuPackWeekPageHtml(season, wk, seasonLabel, seasonKey)));
+  // Phase 32: the Allergen Matrix is appended after the week menu pages,
   // in this same download, per John's choice -- one .mpAllergenSource
   // staging block per week (see that function's own comment), which
   // MENU_PACK_ALLERGEN_PAGINATE_SCRIPT expands into 1+ real pages once the
   // pack has loaded and real row heights can be measured.
-  const allergenSources = seasonWeekKeys(season).map(wk=>{
+  const allergenSources = weeks.map(wk=>{
     const recipes = recipeIdsInWeek(season, wk).map(id=> DATA.recipeBank[id]).filter(Boolean)
       .filter(r=> !isRotationPlaceholderRecipe(r))
       .sort((a,b)=> (a.name||'').localeCompare(b.name||''));
     return menuPackAllergenSourceHtml(recipes, wk, seasonLabel);
   }).join('');
-  const css = MENU_PACK_CSS + MENU_PACK_TIGHT1_CSS + MENU_PACK_TIGHT2_CSS + MENU_PACK_ALLERGEN_CSS + (isExtraMenu(seasonKey) ? HC_PACK_CSS : '');
+  const css = MENU_PACK_CSS + MENU_PACK_TIGHT1_CSS + MENU_PACK_TIGHT2_CSS + MENU_PACK_ALLERGEN_CSS + (extra ? HC_PACK_CSS : '');
+  const title = 'Menu Pack — ' + seasonLabel + (whole ? '' : (weeks.length === 1 ? ', Week ' : ', Weeks ') + weeks.join(', '));
+  const note = opts.note || ('Generated live from the Recipe Bank — ' + seasonLabel + '.');
   return `<!DOCTYPE html><html><head><meta charset="utf-8">
-<title>Menu Pack — ${escapeHtml(seasonLabel)}</title>
+<title>${escapeHtml(title)}</title>
 <style>${css}</style>
 </head><body>
-<div class="mpToolbar"><button id="mpDownloadBtn" class="mpDownloadBtn" onclick="downloadMenuPackPdf()">⬇ Download PDF</button><div>Generated live from the Recipe Bank — ${escapeHtml(seasonLabel)}.</div></div>
+<div class="mpToolbar"><button id="mpDownloadBtn" class="mpDownloadBtn" onclick="downloadMenuPackPdf()">⬇ Download PDF</button><div>${escapeHtml(note)}</div></div>
 <div class="mpPortraitWarning"><div class="big">Use Download PDF instead</div><p>This pack is built for A4 landscape, and printing it from this dialog needs three settings changed by hand. Cancel this print and use the green <b>⬇ Download PDF</b> button at the top of the page &mdash; it produces the finished A4 landscape file with nothing to set.</p></div>
 <div class="mpDoc">${pages.join('')}${allergenSources}</div>
 <script>${MENU_PACK_ALLERGEN_PAGINATE_SCRIPT}<\/script>
@@ -20948,6 +21072,32 @@ RB_CARD_KIT = {css: RECIPE_CARD_CSS, pdf: RECIPE_CARD_PDF_SCRIPT,
   matrixSource(recipes, wk, seasonLabel){ return menuPackAllergenSourceHtml(recipes, wk, seasonLabel); },
   matrixPaginate: MENU_PACK_ALLERGEN_PAGINATE_SCRIPT,
   matrixPdf: MENU_PACK_PDF_SCRIPT,
+  /* The kitchen's menu pack. weeks: {week: {day: {course: dish}}}, each
+     dish {name, description, ingredients:[{name, allergens}]}. The dishes
+     stand in for the recipe bank while the pack is built, then it is put
+     back; a dish on several days is one recipe, so the allergen matrix
+     lists it once. */
+  menuPack({key, label, weeks, only, note}){
+    const bank = {};
+    const ids = {};
+    const season = {label, weekCount: Object.keys(weeks).length, weeks: {}};
+    Object.keys(weeks).forEach(wk=>{
+      const days = season.weeks[wk] = {};
+      Object.keys(weeks[wk] || {}).forEach(day=>{
+        const slots = days[day] = {};
+        Object.keys(weeks[wk][day] || {}).forEach(course=>{
+          const dish = weeks[wk][day][course];
+          if(!dish || !dish.name) return;
+          const k = String(dish.name).trim().toLowerCase();
+          if(!ids[k]){ ids[k] = 'kitchen-' + (Object.keys(ids).length + 1); bank[ids[k]] = dish; }
+          slots[course] = ids[k];
+        });
+      });
+    });
+    const saved = DATA.recipeBank;
+    try{ DATA.recipeBank = bank; return buildMenuPackHtml(key, {season, weeks: only, note}); }
+    finally{ DATA.recipeBank = saved; }
+  },
 };
 
 function buildRecipeCardsHtml(entries){

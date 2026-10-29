@@ -12,8 +12,10 @@
 //   add-nursery     -- a new nursery (and its kitchen login, once the
 //                      database is set up); the password is returned once
 //   set-nursery-logo -- a new logo for a nursery added here
+//   backup   -- everything saved on the site (every menu, recipe, ingredient
+//               and setting) as one JSON file; no logins or passwords
 // Staff password only (the same x-rb-auth header Staff admin sends).
-import { loadDatabase, writeDatabase, dbBlobStore } from '../lib/store.mjs';
+import { loadDatabase, writeDatabase, dbBlobStore, legacyStore, staysInBlobs, all } from '../lib/store.mjs';
 import { staffAuth } from '../lib/auth.mjs';
 import { addNursery, setNurseryLogo, listNurseries } from '../lib/nurseries.mjs';
 import { migrateFromBlobs, verifyDatabase, databaseStatus, rollbackToBlobs, resetSitePassword } from '../lib/migrate.mjs';
@@ -52,6 +54,33 @@ export default async (req) => {
     if (action === 'reset-site-password') {
       const out = await resetSitePassword(writeDatabase, String(body.username || ''));
       return json(out, out.ok ? 200 : 404);
+    }
+    if (action === 'backup') {
+      // The documents only: never the users table or the session secret.
+      const documents = {};
+      const st = await loadDatabase();
+      if (st) {
+        all(st.db, 'SELECT doc_group, file, body FROM documents ORDER BY doc_group, file').forEach((d) => {
+          let v = d.body; try { v = JSON.parse(d.body); } catch (e) { /* kept as text */ }
+          documents[d.doc_group + '/' + d.file] = v;
+        });
+      } else {
+        const store = legacyStore();
+        const listed = await store.list();
+        const keys = (listed && listed.blobs ? listed.blobs : []).map((b) => b.key)
+          .filter((k) => !k.startsWith('__probe/') && !k.includes('/__backups/') && k !== '_config/presence.json');
+        for (const k of keys) {
+          const t = await store.get(k, { type: 'text' });
+          if (t == null) continue;
+          let v = t; try { v = JSON.parse(t); } catch (e) { /* kept as text */ }
+          documents[k] = v;
+        }
+      }
+      const body = JSON.stringify({ exportedAt: new Date().toISOString(), storage: st ? 'database' : 'blobs', documents });
+      return new Response(body, { status: 200, headers: {
+        'Content-Type': 'application/json', 'Cache-Control': 'no-store',
+        'Content-Disposition': 'attachment; filename="kitchen-prep-backup-' + new Date().toISOString().slice(0, 10) + '.json"',
+      } });
     }
     if (action === 'list-nurseries') return json(await listNurseries(), 200);
     if (action === 'add-nursery') {
