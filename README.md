@@ -2583,3 +2583,7 @@ John chose **Days A** from the top-bar mock-ups (row 3 of the canvas).
 **No recipe description in the kitchen.** The Holiday Club dish no longer shows its description under its name. The description is the blurb for parents; Staff admin and the Menu Pack still show it.
 
 **Tests:** `numpad.js` (11) and `shopdays.js` SD14–SD15. `shopback` and `shopstation` now type through the pad (`t/pad.js`).
+
+**Steadier, more tactile bar.**
+- Changing between the Nursery and the Holiday Club moves nothing. The nursery block has a fixed width, the line about the day takes the room that's left, and the lines between menu weeks no longer add width to the ribbon.
+- Menu, the days, the arrows and Back to today are raised buttons: lit from above, with a shadow and a solid edge underneath, and they press down when tapped. Tests: `shopdays.js` SD16.

@@ -299,6 +299,16 @@ body.booting #bootSplash{display:flex;flex-direction:column;position:fixed;inset
 #prepStation .stRow1 .stBrand{flex:1 1 0;min-width:max-content;}
 #prepStation .stRow1 .stMenuSwitch{flex:none;}
 #prepStation .stRow1 .stActions{flex:1 1 0;display:flex;justify-content:flex-end;min-width:max-content;}
+/* With the menu switch: fixed places, so changing menu moves nothing. */
+#prepStation .stTop.hasSwitch .stRow1 .stBrand{flex:0 0 280px;min-width:0;}
+#prepStation .stTop.hasSwitch .stRow1 .stInfo{flex:1 1 0;min-width:0;justify-content:center;}
+#prepStation .stTop.hasSwitch .stRow1 .stInfoText{overflow:hidden;text-overflow:ellipsis;}
+#prepStation .stTop.hasSwitch .stRow1 .stActions{flex:0 0 auto;min-width:0;}
+#prepStation .stBrandText{min-width:0;}
+#prepStation div.stSeason{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.shTop .stBrand{flex:0 0 250px !important;min-width:0;}
+.shTop .stBrandText{min-width:0;}
+.shTop div.stSeason{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block !important;line-height:32px;}
 #prepStation .stSite{max-width:220px;}
 #prepStation div.stSeason{margin-top:2px;}
 .stInfo{flex:none;display:flex;align-items:center;gap:14px;font-size:15px;color:#C9D2DA;white-space:nowrap;min-width:0;}
@@ -308,12 +318,29 @@ body.booting #bootSplash{display:flex;flex-direction:column;position:fixed;inset
 .stBtn.stToday b{display:block;font-size:15px;font-weight:800;}
 .stBtn.stToday .stIco{width:18px;height:18px;}
 #prepStation .stMenuBtn{height:56px;padding:0 24px 0 18px;border-radius:28px;font-size:18px;gap:10px;}
+/* Menu, the arrows (and Back to today): raised buttons that press down. */
+#prepStation .stMenuBtn, #prepStation .stArrow, #shopTop .stMenuBtn, #allergyView .stMenuBtn{
+  background:linear-gradient(180deg,#3A5E80 0%,#294A66 100%);border:1px solid rgba(255,255,255,0.28);color:#fff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.25),0 4px 0 #0F2435,0 8px 16px rgba(0,0,0,0.30);
+  transition:transform .08s ease,box-shadow .08s ease,background .15s;}
+#prepStation .stMenuBtn:active, #prepStation .stArrow:active, #shopTop .stMenuBtn:active, #allergyView .stMenuBtn:active,
+#prepStation .stMenuBtn[aria-expanded="true"], #shopTop .stMenuBtn[aria-expanded="true"], #allergyView .stMenuBtn[aria-expanded="true"]{
+  transform:translateY(3px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.18),0 1px 0 #0F2435,0 3px 6px rgba(0,0,0,0.28);
+  background:linear-gradient(180deg,#33577A 0%,#24425C 100%);}
+#prepStation .stToday{box-shadow:inset 0 1px 0 rgba(255,255,255,0.35),0 4px 0 #8A3F28,0 8px 16px rgba(0,0,0,0.30);transition:transform .08s ease,box-shadow .08s ease;
+  background:linear-gradient(180deg,#D67D60 0%,#BC5F42 100%);}
+#prepStation .stToday:active{transform:translateY(3px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.3),0 1px 0 #8A3F28,0 3px 6px rgba(0,0,0,0.28);}
+@media (prefers-reduced-motion: reduce){ .stDockDay:active, #prepStation .stMenuBtn:active, #prepStation .stArrow:active, #prepStation .stToday:active{transform:none;} }
 #prepStation .stMenuBtn .stIco{width:24px;height:24px;}
 #prepStation .stNav{display:flex;justify-content:center;align-items:center;gap:10px;margin:0;}
 #prepStation .stArrow{height:54px;border-radius:14px;}
 .stDock{display:flex;align-items:center;gap:8px;}
-.stDockDiv{width:2px;height:54px;border-radius:1px;background:rgba(255,255,255,0.22);margin:0 2px;flex:none;}
-.stDockDay{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;flex:none;border-radius:16px;border:1.5px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.06);color:#D5DCE2;padding:0;font-family:inherit;cursor:pointer;transition:width .18s ease,height .18s ease,background .18s ease;}
+.stDockDiv{width:2px;height:54px;border-radius:1px;background:rgba(255,255,255,0.22);margin:0 -5px;flex:none;}
+.stDockDay{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;flex:none;border-radius:16px;border:1px solid rgba(255,255,255,0.20);color:#E3E9EE;padding:0;font-family:inherit;cursor:pointer;
+  background:linear-gradient(180deg,#36597A 0%,#284763 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.22),0 3px 0 #10273A,0 6px 12px rgba(0,0,0,0.28);
+  transition:width .18s ease,height .18s ease,background .18s ease,transform .08s ease,box-shadow .08s ease;}
+.stDockDay:active{transform:translateY(2px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.18),0 1px 0 #10273A,0 2px 5px rgba(0,0,0,0.25);}
 .stDockDay.d0{width:164px;height:80px;border-radius:22px;}
 .stDockDay.d1{width:132px;height:64px;}
 .stDockDay.d2{width:116px;height:58px;opacity:.9;}
@@ -329,10 +356,12 @@ body.booting #bootSplash{display:flex;flex-direction:column;position:fixed;inset
 .stDockDay.d1 .stDockDate{font-size:13px;}
 .stDockDay.d2 .stDockDate{font-size:12.5px;}
 .stDockDay.d3 .stDockDate{font-size:12px;}
-.stDockDay.today{background:var(--butter);border-color:var(--butter);color:#fff;opacity:1;}
+.stDockDay.today{background:linear-gradient(180deg,#D67D60 0%,#BC5F42 100%);border-color:#C96A4C;color:#fff;opacity:1;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.35),0 3px 0 #8A3F28,0 6px 12px rgba(0,0,0,0.28);}
 .stDockDay.today .stDockTag{color:#fff;}
-.stDockDay.today.sel{box-shadow:0 10px 26px rgba(0,0,0,0.30);}
-.stDockDay.sel:not(.today){background:#fff;border-color:#fff;color:var(--ink);box-shadow:0 10px 26px rgba(0,0,0,0.26);}
+.stDockDay.today.sel{box-shadow:inset 0 1px 0 rgba(255,255,255,0.35),0 4px 0 #8A3F28,0 12px 24px rgba(0,0,0,0.32);}
+.stDockDay.sel:not(.today){background:linear-gradient(180deg,#FFFFFF 0%,#E4EAEF 100%);border-color:#fff;color:var(--ink);box-shadow:inset 0 1px 0 #fff,0 4px 0 #9FB0BF,0 12px 24px rgba(0,0,0,0.30);}
+.stDockDay.sel:active{transform:translateY(2px);}
 .stDockDay.sel:not(.today) .stDockTag{color:#A8541F;}
 
 /* With the Holiday Club switch there is less room on the top row: the
