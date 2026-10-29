@@ -407,6 +407,7 @@ body.booting #bootSplash{display:flex;flex-direction:column;position:fixed;inset
 #prepStation .stArrow{height:48px;width:44px;min-width:44px;border-radius:12px;padding:0;}
 #prepStation .stToday{height:52px;width:84px;border-radius:14px;font-size:12px;}
 #prepStation .stToday b{font-size:14px;}
+#prepStation .stToday.stTodayHold{visibility:hidden;pointer-events:none;flex:none;}
 .stDockDiv{height:46px;}
 /* every day the same size, so nothing resizes as you move between days:
    wide enough for "Wednesday" (John, 29 Oct) */
@@ -418,6 +419,17 @@ body.booting #bootSplash{display:flex;flex-direction:column;position:fixed;inset
 @media (max-width:1500px){
   .stDockDay.d3, .stDockDay.d3 + .stDockDiv{display:none;}
   .stDockDiv:has(+ .stDockDay.d3){display:none;}
+}
+/* smaller iPads (and portrait): every day still the same size, a little narrower */
+@media (max-width:1120px){
+  #prepStation .stTop.stTopB{padding-left:12px;padding-right:12px;}
+  #prepStation .stTop.stTopB .stRow1{gap:10px;}
+  .stDockDay.d0, .stDockDay.d1, .stDockDay.d2, .stDockDay.d3{width:96px;}
+  .stDockDay.d0 .stDockName, .stDockDay.d1 .stDockName, .stDockDay.d2 .stDockName, .stDockDay.d3 .stDockName{font-size:15px;}
+  #prepStation .stToday{width:68px;}
+  #prepStation .stToday span{font-size:0;}
+  #prepStation .stToday span b{font-size:14px;}
+  #prepStation .stMenuBtn{padding:0 16px 0 12px;}
 }
 /* portrait: the nursery and Menu, then the days */
 @media (max-width:1000px){
@@ -3849,7 +3861,8 @@ function stationInfoHtml(todaySlot){
    is not today (at the weekend, Monday). */
 function stationBackTodayHtml(todaySlot){
   const away = todaySlot && !(Number(todaySlot.week) === Number(state.week) && todaySlot.day === state.day);
-  if(!away) return '';
+  // On today: the button's place, kept empty, so the days never move when it appears.
+  if(!away) return '<span class="stBtn stToday stTodayHold" aria-hidden="true"></span>';
   const word = todaySlot.weekend ? 'Monday' : 'today';
   return `<button type="button" class="stBtn stToday" data-act="today" data-focus="today" title="Go to ${todaySlot.weekend ? 'Monday’s' : 'today’s'} menu">${stIcon('back')}<span>Back to <b>${word}</b></span></button>`;
 }

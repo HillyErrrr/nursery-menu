@@ -2623,6 +2623,8 @@ The bar is now about **96px instead of 166px** on an iPad in landscape and on a 
 - **Every day tile is the same size:** 108×62px, wide enough for "Wednesday", so nothing resizes as you move between days. The chosen day stands out by its colour (white; today is coral) and its raised shadow. An iPad shows five days and a wide screen shows seven. In portrait the days wrap to a second row under the name and Menu.
 - **"Today is …" is no longer shown,** because the ribbon already says it; screen readers still get it. The season and menu week are now at the top of **Menu**.
 - The arrows are 44px wide, so they meet the iPad's touch-target minimum.
+- **Back to today never moves anything:** its place, to the left of the arrows, is kept empty while you are on today (`.stTodayHold`). When it appears, the arrows and days stay exactly where they were.
+- **Smaller iPads (up to 1120px wide, and portrait):** the days are all 96px ("Wednesday" at 15px), Back to today shows its arrow and "today", and the gaps are a little tighter, so everything fits from 1024px wide with at least 10px to spare.
 
 ## The menu pack from the kitchen's Menu (29 October 2026)
 
@@ -2636,4 +2638,4 @@ Both use Staff admin's own Menu Pack design (`RB_CARD_KIT.menuPack` → `buildMe
 
 **Also fixed:** opening Staff admin with no `?site=` threw "Cannot access 'ADDED_NURSERIES' before initialization". It is now declared before `siteSlugLabel` reads it.
 
-**Tests:** `menupack.js` (6 in SQLite mode, 5 in legacy). `docktest` (one line: Menu 52px, band ≤ 100px, hidden tiles ignored; D3: every day the same size) and `menutest` M2 (the MENU PACK section) were updated.
+**Tests:** `menupack.js` (6 in SQLite mode, 5 in legacy). `docktest` (one line: Menu 52px, band ≤ 100px, hidden tiles ignored; D3: every day the same size; D8b: Back to today moves nothing) and `menutest` M2 (the MENU PACK section) were updated.
