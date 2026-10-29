@@ -281,6 +281,43 @@ button{font-family:inherit;cursor:pointer;}
   #allergyView tr.avIng td .allergen-badge{width:22px;height:22px;}
 }
 body.allergyOpen{overflow:hidden;}
+/* ---- the days as a dock ---- */
+#prepStation .stSpacer{display:none;}
+#prepStation .stNav{flex:1 1 auto;justify-content:center;margin-left:0;gap:8px;}
+#prepStation .stTop:not(.hasSwitch) .stBrand{flex:0 0 240px;}
+#prepStation .stTop:not(.hasSwitch) .stSite{max-width:170px;}
+#prepStation .stTop:not(.hasSwitch) .stActions{flex:0 0 240px;justify-content:flex-end;}
+.stDock{display:flex;align-items:flex-end;gap:6px;}
+.stDockDay{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;border-radius:16px;border:1.5px solid rgba(255,255,255,0.24);background:rgba(255,255,255,0.06);color:#D5DCE2;padding:0;font-family:inherit;cursor:pointer;transition:width .18s ease,height .18s ease,background .18s ease;}
+.stDockDay.d0{width:112px;height:84px;border-radius:20px;}
+.stDockDay.d1{width:84px;height:66px;}
+.stDockDay.d2{width:72px;height:56px;}
+.stDockTag{font-size:10px;font-weight:800;letter-spacing:.08em;line-height:12px;min-height:12px;color:#FFD27A;}
+.stDockName{font-weight:800;line-height:1.05;}
+.stDockDay.d0 .stDockName{font-size:22px;}
+.stDockDay.d1 .stDockName{font-size:17px;}
+.stDockDay.d2 .stDockName{font-size:15px;}
+.stDockDate{font-weight:700;opacity:.85;}
+.stDockDay.d0 .stDockDate{font-size:15px;}
+.stDockDay.d1 .stDockDate{font-size:13px;}
+.stDockDay.d2 .stDockDate{font-size:12px;}
+.stDockDay.today{background:var(--butter);border-color:var(--butter);color:#fff;}
+.stDockDay.today .stDockTag{color:#fff;}
+.stDockDay.today.sel{box-shadow:0 8px 22px rgba(0,0,0,0.28);}
+.stDockDay.sel:not(.today){background:#fff;border-color:#fff;color:var(--ink);box-shadow:0 8px 22px rgba(0,0,0,0.22);}
+.stDockDay.sel:not(.today) .stDockTag{color:var(--butter-dark);}
+@media (max-width:1000px){
+  #prepStation .stTop:not(.hasSwitch) .stBrand,
+  #prepStation .stTop:not(.hasSwitch) .stActions{flex-basis:auto;}
+  #prepStation .stActions{margin-left:auto;}
+}
+@media (max-width:700px){
+  .stDockDay.d0{width:88px;height:70px;}
+  .stDockDay.d1{width:66px;height:58px;}
+  .stDockDay.d2{width:54px;height:50px;}
+  .stDockDay.d0 .stDockName{font-size:18px;}
+}
+@media (prefers-reduced-motion: reduce){ .stDockDay{transition:none;} }
 /* ---- a tablet's shopping list: the station's look ---- */
 #shopTop{display:none;}
 .shopGridHead{display:none;}
@@ -1052,8 +1089,12 @@ body.stationMode #prepStation{
 .stPill.done{background:var(--sage);color:#fff;}
 .stRailItem.on .stPill:not(.done){background:rgba(255,255,255,0.16);color:#fff;}
 .stRailDish{font-family:'Roca','Space Grotesk',sans-serif;font-weight:700;font-size:16.5px;line-height:1.2;}
-.stRailAl{display:flex;gap:5px;align-items:center;flex-wrap:wrap;min-height:22px;}
-.stRailAl img{width:22px;height:22px;border-radius:50%;background:#fff;display:block;}
+.stRailAl{display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-left:auto;justify-content:flex-end;}
+.stRailAl img{width:20px;height:20px;border-radius:50%;background:#fff;display:block;}
+.stRailTop .stRailNone{font-size:11.5px;white-space:nowrap;}
+.stRailTop .stRailCourse{flex:1 1 auto;min-width:0;}
+.stRailTop .stRailAl{flex:0 1 auto;}
+.stRailTop .stPill{flex:none;}
 .stRailAl img.maybe{opacity:.6;}
 .stRailChip{font-size:11px;font-weight:600;color:var(--rust-text);background:var(--rust-light);border-radius:999px;padding:1px 7px;}
 .stRailNone{font-size:12px;color:var(--ink-soft);}
@@ -3236,6 +3277,79 @@ function stationStepDay(dir){
   onDayOrWeekChange();
 }
 
+/* ---------- the days as a dock ----------
+   Every school day of the menu in order, week after week (wrapping, as
+   the arrows do). The window is five days with the day being viewed in
+   the middle; opening the page puts today there. Today keeps its colour
+   wherever it sits; the middle day is the largest. */
+function stationDaySequence(){
+  const weeks = Object.keys(MENU).sort((a, b)=> a - b);
+  const seq = [];
+  weeks.forEach(w=> Object.keys(MENU[w] || {}).forEach(d=> seq.push({week: Number(w), day: d})));
+  return seq;
+}
+function addSchoolDays(d, n){
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const step = n < 0 ? -1 : 1;
+  let left = Math.abs(n);
+  while(left > 0){ x.setDate(x.getDate() + step); if(x.getDay() !== 0 && x.getDay() !== 6) left--; }
+  return x;
+}
+function stationDockSlots(){
+  const seq = stationDaySequence();
+  const n = seq.length;
+  if(!n) return [];
+  let ci = seq.findIndex(x=> x.week === Number(state.week) && x.day === state.day);
+  if(ci < 0) ci = 0;
+  const span = Math.min(2, Math.floor((n - 1) / 2));
+  // Real dates for the nursery menu, counted in school days from today.
+  const t = todaysMenuSlot();
+  const ti = (!ACTIVE_EXTRA && t && !t.beforeStart) ? seq.findIndex(x=> x.week === Number(t.week) && x.day === t.day) : -1;
+  let base = null;
+  if(ti >= 0){
+    base = localToday();
+    if(base.getDay() === 6) base.setDate(base.getDate() + 2);
+    if(base.getDay() === 0) base.setDate(base.getDate() + 1);
+  }
+  const out = [];
+  for(let k = -span; k <= span; k++){
+    const u = ci + k;
+    const slot = seq[((u % n) + n) % n];
+    let date = null;
+    if(base){
+      let delta = u - ti;
+      // the shorter way round the rotation
+      while(delta > n / 2) delta -= n;
+      while(delta <= -n / 2) delta += n;
+      date = addSchoolDays(base, delta);
+    }
+    out.push(Object.assign({dist: Math.abs(k), off: k, date}, slot));
+  }
+  return out;
+}
+function stationDockShowsToday(){
+  return stationDockSlots().some(x=> isTodaysSlot(x.week, x.day));
+}
+function stationDockHtml(){
+  const slots = stationDockSlots();
+  const centreWeek = Number(state.week);
+  let lastWeek = centreWeek;
+  return `<div class="stDock">${slots.map((x, i)=>{
+    const today = isTodaysSlot(x.week, x.day);
+    const sel = x.off === 0;
+    let tag = '';
+    if(today) tag = 'TODAY';
+    else if(x.week !== centreWeek && (i === 0 ? true : slots[i - 1].week !== x.week)) tag = 'WEEK ' + x.week;
+    const long = x.date ? x.date.toLocaleDateString('en-GB', {weekday: 'long', day: 'numeric', month: 'long'}) : x.day;
+    const label = long + (today ? ', today' : '') + ', menu week ' + x.week;
+    return `<button type="button" class="stDockDay d${x.dist}${today ? ' today' : ''}${sel ? ' sel' : ''}" data-act="slot" data-week="${x.week}" data-day="${escapeHtml(x.day)}" data-focus="slot:${x.week}|${escapeHtml(x.day)}" aria-pressed="${sel}"${today ? ' aria-current="date"' : ''} aria-label="${escapeHtml(label)}">
+      <span class="stDockTag">${tag || '&nbsp;'}</span>
+      <span class="stDockName">${escapeHtml(x.day.slice(0, 3))}</span>
+      ${x.date ? `<span class="stDockDate">${x.date.getDate()}</span>` : ''}
+    </button>`;
+  }).join('')}</div>`;
+}
+
 function stationDayItems(){
   const dayCourses = (MENU[state.week] && MENU[state.week][state.day]) || {};
   const totalServ = totalServings();
@@ -3279,7 +3393,7 @@ function stationAllergensHtml(recipe){
 function stationRailAllergensHtml(recipe){
   const tags = collectRecipeAllergens(recipe);
   if(!tags.length){
-    return `<span class="stRailNone">${MENU_FROM_BACKUP ? 'Allergens: check the recipe card' : 'No allergens recorded'}</span>`;
+    return `<span class="stRailNone">${MENU_FROM_BACKUP ? 'Check the card' : 'No allergens'}</span>`;
   }
   return tags.map(tag=>{
     const t = (tag.mayContainOnly ? 'May contain ' : '') + tag.label;
@@ -3387,9 +3501,9 @@ function renderPrepStation(){
       ${menuSwitch}
       <div class="stNav" role="group" aria-label="Day">
         <button type="button" class="stBtn icon" data-act="prev" data-focus="prev" aria-label="Previous day" title="Previous day">${stIcon('prev')}</button>
-        ${days.map(d=> `<button type="button" class="stDay${d === state.day ? ' on' : ''}${isTodaysSlot(state.week, d) ? ' today' : ''}" data-act="day" data-day="${fa(d)}" data-focus="day:${fa(d)}" aria-pressed="${d === state.day}" aria-label="${fa(d)}${isTodaysSlot(state.week, d) ? ' (today)' : ''}">${escapeHtml(d.slice(0, 3))}</button>`).join('')}
+        ${stationDockHtml()}
         <button type="button" class="stBtn icon" data-act="next" data-focus="next" aria-label="Next day" title="Next day">${stIcon('next')}</button>
-        ${todaySlot && !(Number(todaySlot.week) === Number(state.week) && todaySlot.day === state.day)
+        ${todaySlot && !stationDockShowsToday() && !(Number(todaySlot.week) === Number(state.week) && todaySlot.day === state.day)
           ? `<button type="button" class="stBtn stToday" data-act="today" data-focus="today" title="Go to ${todaySlot.weekend ? 'Monday’s' : 'today’s'} menu">${todaySlot.weekend ? 'Monday' : 'Today'}</button>` : ''}
       </div>
       <div class="stSpacer"></div>
@@ -3406,9 +3520,8 @@ function renderPrepStation(){
           const on = sel && it.key === sel.key;
           const pill = it.ids.length ? (it.allDone ? 'Prepped' : it.done + '/' + it.ids.length) : '—';
           return `<button type="button" class="stRailItem${on ? ' on' : ''}" data-act="dish" data-key="${fa(it.key)}" data-focus="rail:${fa(it.key)}"${on ? ' aria-current="true"' : ''}>
-            <span class="stRailTop"><span class="stRailCourse">${escapeHtml(courseLabel(it.courseName))}</span><span class="stPill${it.allDone ? ' done' : ''}">${pill}</span></span>
+            <span class="stRailTop"><span class="stRailCourse">${escapeHtml(courseLabel(it.courseName))}</span><span class="stRailAl">${stationRailAllergensHtml(it.recipe)}</span><span class="stPill${it.allDone ? ' done' : ''}">${pill}</span></span>
             <span class="stRailDish">${escapeHtml(it.recipeName)}</span>
-            <span class="stRailAl">${stationRailAllergensHtml(it.recipe)}</span>
           </button>`;
         }).join('')}
       </div>
@@ -4708,6 +4821,11 @@ document.getElementById('prepStation').addEventListener('click', async (e)=>{
   if(!b || !e.currentTarget.contains(b)) return;
   switch(b.dataset.act){
     case 'prev': stationStepDay(-1); break;
+    case 'slot':
+      if(Number(b.dataset.week) !== Number(state.week) || b.dataset.day !== state.day){
+        state.week = Number(b.dataset.week); state.day = b.dataset.day; onDayOrWeekChange();
+      }
+      break;
     case 'menu': useKitchenMenu(b.dataset.menu); break;
     case 'today': goToTodaysMenu(); break;
     case 'next': stationStepDay(1); break;

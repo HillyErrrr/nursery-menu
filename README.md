@@ -2478,3 +2478,20 @@ Phones (the list view) keep their shopping page as before.
 **Login fix.** A device that had been logged in on the admin page stayed logged in as admin after a nursery logged in on the kitchen login page, so the kitchen saw Staff admin. Logging in as a nursery now ends any admin login on that device. An admin who logs in on a kitchen's iPad later still can, and "Log out of admin" returns it to the nursery's login.
 
 **Tests:** `shopstation.js`, 13 checks; `logins.js` L12.
+
+## The days as a dock (October 2026)
+
+John chose **Days A** from the top-bar mock-ups (row 3 of the canvas).
+
+**The dock.**
+- The station's days are a dock of five school days, with the day being viewed in the middle and largest. The days shrink either side, like the Dock on a Mac.
+- On opening, today is in the middle. Today always keeps its own colour and a TODAY tag, wherever it sits; another day being viewed is white.
+- The dock rolls on into the previous and next menu week, and a day from another week is tagged **WEEK n**.
+- Dates come from today's date, counted in school days. Extra menus show day names only.
+- The arrows still step a day at a time. The **Today** button appears only when today has moved out of the dock.
+- The dock sits centred between the nursery's name and Menu. In portrait it has its own row.
+- Code: `stationDockSlots`, `stationDockHtml`, `data-act="slot"`.
+
+**The course list.** Each course's allergen icons now sit beside its name, next to the progress count, instead of on a line of their own. A dish with none says "No allergens".
+
+**Tests:** `docktest.js`, 11 checks, in both storage modes.
