@@ -222,6 +222,9 @@ const goToSite = (slug) => location.replace('app.html?site=' + encodeURIComponen
       const r = await auth({ action: 'login', username: sel.value, credential: await sha256(pw.value) });
       if (r.ok && r.role === 'site' && r.site) {
         saveLogin({ token: r.token, site: r.site, siteName: r.siteName || null });
+        // This device is now a nursery's: an admin login left on it from
+        // earlier would otherwise outrank this one and open Staff admin.
+        try { localStorage.removeItem('kitchenAdminLogin.v1'); } catch (e) {}
         return goToSite(r.site);
       }
       err.textContent = r.ok ? 'That is an admin login: use the Admin login page instead.' : ((!r.error || /username or password/.test(r.error)) ? 'That password is not right for this nursery.' : r.error);

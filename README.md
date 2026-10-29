@@ -2458,3 +2458,23 @@ A published dish names its recipe id, so that copy is kept. An older published f
 - **Show every ingredient** opens them all, and **Hide the ingredients** folds them away. Open dishes stay open when you switch between Whole week and one day, and close when you leave the matrix.
 
 **Tests:** `menutest.js`, 25 checks, in both storage modes.
+
+## Top bar round 2, and a login fix (October 2026)
+
+**The Menu.**
+- The station bar now has just the days and **Menu**; Shopping list has moved into the Menu.
+- The Menu is grouped by job:
+  - **Today's prep:** print this recipe, print the day's prep sheets, clear today's ticks.
+  - **Shopping:** the Weekly shopping list, and Print shopping list.
+  - **Allergies:** the Allergy matrix, and Print allergy matrix.
+  - **This iPad:** keep screen on, Staff admin (for the admin) and log out.
+
+**The Weekly shopping list on a tablet** has the station's look (`body.shopStation`; see `renderShopTop`):
+- a slim navy bar with the nursery, its week picker, the page's name, the Nursery / Holiday Club switch, **Daily prep** to go back, and the Menu;
+- **Who's eating this week** and the list side by side, with the list's buttons and To order total at the top of its card. In portrait the two stack.
+
+Phones (the list view) keep their shopping page as before.
+
+**Login fix.** A device that had been logged in on the admin page stayed logged in as admin after a nursery logged in on the kitchen login page, so the kitchen saw Staff admin. Logging in as a nursery now ends any admin login on that device. An admin who logs in on a kitchen's iPad later still can, and "Log out of admin" returns it to the nursery's login.
+
+**Tests:** `shopstation.js`, 13 checks; `logins.js` L12.

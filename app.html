@@ -281,6 +281,52 @@ button{font-family:inherit;cursor:pointer;}
   #allergyView tr.avIng td .allergen-badge{width:22px;height:22px;}
 }
 body.allergyOpen{overflow:hidden;}
+/* ---- a tablet's shopping list: the station's look ---- */
+#shopTop{display:none;}
+.shopGridHead{display:none;}
+body.shopStation{background:var(--paper);}
+body.shopStation #shopTop{display:block;position:sticky;top:0;z-index:40;}
+body.shopStation .ticket-head,
+body.shopStation .tear,
+body.shopStation .shopBackBar{display:none !important;}
+body.shopStation .wrap{max-width:none;padding:14px 16px 0;}
+body.shopStation #shopView{display:grid !important;grid-template-columns:minmax(370px,390px) minmax(0,1fr);grid-template-rows:auto auto 1fr;grid-template-areas:"grid actions" "grid list" "note list";column-gap:14px;align-items:start;}
+.shTop .stBrand{flex:0 0 auto;}
+.shTitle{display:flex;flex-direction:column;gap:2px;margin-left:6px;}
+.shTitle span{font-size:12px;font-weight:800;letter-spacing:.08em;color:#C9D2DA;}
+.shTitle b{font-family:'Roca','Space Grotesk',serif;font-size:20px;line-height:1.15;}
+.stBtn.shBack{padding:0 18px 0 12px;font-size:15px;font-weight:800;}
+body.shopStation .shop-grid{grid-area:grid;margin:0;position:sticky;top:90px;overflow:hidden;border-radius:12px;}
+body.shopStation .shopGridHead{display:flex;flex-direction:column;gap:2px;padding:14px 16px 10px;border-bottom:1px solid var(--line);text-align:left;}
+body.shopStation .shopGridHead h2{margin:0;font-family:'Roca','Space Grotesk',serif;font-size:18px;}
+body.shopStation .shopGridHead span{font-size:13.5px;color:var(--ink-soft);}
+body.shopStation .shop-grid table{min-width:0;}
+body.shopStation .shop-grid th,body.shopStation .shop-grid td{padding:7px 3px;}
+body.shopStation .shop-grid td:first-child,body.shopStation .shop-grid th:first-child{padding-left:14px;white-space:normal;font-size:14px;}
+body.shopStation .shop-grid input.hc-input{width:100%;min-width:44px;max-width:50px;height:44px;}
+body.shopStation .shop-actions{grid-area:actions;margin:0;background:var(--card);border:1px solid var(--line);border-bottom:none;border-radius:12px 12px 0 0;padding:12px 14px;justify-content:flex-end;}
+body.shopStation .shop-actions .action-btn{min-height:44px;padding:0 18px;font-size:14px;border-radius:22px;}
+body.shopStation #shopView > p{grid-area:note;margin:10px 2px 16px !important;}
+body.shopStation .shop-list{grid-area:list;margin:0 0 16px;border-radius:0 0 12px 12px;}
+body.shopStation table.shopListTable thead th{padding:10px 6px;white-space:normal;}
+body.shopStation table.shopListTable thead th:nth-child(2),body.shopStation table.shopListTable tbody td:nth-child(2){padding-left:4px;}
+body.shopStation table.shopListTable tbody td{padding:8px 6px;white-space:normal;}
+body.shopStation table.shopListTable td.checkCol{padding-left:12px;}
+body.shopStation table.shopListTable td.toOrderCell{width:70px;}
+body.shopStation table.shopListTable td.toOrderCell input{height:40px;text-align:center;font-size:15px;font-weight:700;}
+body.shopStation #printShopBtn{background:var(--ink);color:#fff;border:none;order:3;}
+body.shopStation #copyListBtn{background:var(--card);color:var(--ink);border:1px solid var(--line-strong);order:1;}
+body.shopStation #clearShopBtn{order:2;}
+body.shopStation #shopListCard{display:flex;flex-direction:column;}
+body.shopStation #shopOrderSummary{position:static;order:-1;display:flex;flex-wrap:wrap;align-items:center;gap:6px 22px;border:none;border-bottom:1px solid var(--line);border-radius:0;box-shadow:none;background:var(--paper);padding:10px 16px;min-width:0;z-index:auto;}
+body.shopStation #shopOrderSummary .shopOrderSummaryLabel{margin:0;font-weight:800;}
+body.shopStation #shopOrderSummary .shopOrderSummaryRow{gap:8px;font-size:15px;}
+@media (max-width:1000px){
+  body.shopStation #shopView{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-template-areas:"grid" "actions" "list" "note";row-gap:14px;}
+  body.shopStation .shop-grid{position:static;}
+  body.shopStation .shop-actions{margin-bottom:-14px;}
+  .shTitle{display:none;}
+}
 @media (max-width:1000px){
   #allergyView table{min-width:0;}
   #allergyView thead th.avDishHead{width:190px;}
@@ -1188,6 +1234,7 @@ body.hcSheetOpen .hcSheetFoot{display:flex;justify-content:flex-end;padding:0 16
 </div>
 <div class="tear"></div>
 <div id="prepStation"></div>
+<div id="shopTop"></div>
 <div id="hcSheetBackdrop"></div>
 
 <div class="wrap">
@@ -1205,6 +1252,7 @@ body.hcSheetOpen .hcSheetFoot{display:flex;justify-content:flex-end;padding:0 16
   <div id="shopView" style="display:none;">
     <div class="shopBackBar"><button type="button" class="shopBackBtn" id="shopBackBtn"><i class="ti ti-arrow-left"></i><span>Back to the daily prep</span></button></div>
     <div class="shop-grid">
+      <div class="shopGridHead"><h2>Who’s eating this week</h2><span>The shopping list is worked out from these numbers</span></div>
       <table>
         <thead><tr id="shopGridHead"></tr></thead>
         <tbody id="shopGridBody"></tbody>
@@ -3111,6 +3159,10 @@ function applyPrepVisibility(){
   if(!station) state.hcSheetOpen = false;
   const sheet = station && !!state.hcSheetOpen;
   document.body.classList.toggle('stationMode', station);
+  // A tablet's shopping list: the station's look (see renderShopTop).
+  const shopStation = isShop && state.prepMode === 'station';
+  document.body.classList.toggle('shopStation', shopStation);
+  if(shopStation) renderShopTop();
   document.body.classList.toggle('hcSheetOpen', sheet);
 
   const coursesEl = document.getElementById('courses');
@@ -3342,8 +3394,7 @@ function renderPrepStation(){
       </div>
       <div class="stSpacer"></div>
       <div class="stActions">
-        <button type="button" class="stBtn shop" data-act="shop" data-focus="shop" aria-label="Shopping list" title="Weekly shopping list"><span class="stShopIcon"></span><span class="stShopLabel">Shopping list</span></button>
-        <button type="button" class="stBtn stMenuBtn" id="stMenuBtn" data-act="kmenu" data-focus="kmenu" aria-haspopup="menu" aria-expanded="${document.getElementById('kitchenMenu') ? 'true' : 'false'}">${stIcon('menu')}<span>Menu</span></button>
+        <button type="button" class="stBtn stMenuBtn" id="stMenuBtn" data-kmenu-btn="1" data-act="kmenu" data-focus="kmenu" aria-haspopup="menu" aria-expanded="${document.getElementById('kitchenMenu') ? 'true' : 'false'}">${stIcon('menu')}<span>Menu</span></button>
       </div>
     </div>${strip}`;
 
@@ -4672,7 +4723,7 @@ document.getElementById('prepStation').addEventListener('click', async (e)=>{
     case 'list': setPrepMode('list', true); break;
     case 'print': openPrepSheets(); break;
     case 'wake': setKeepAwake(!keepAwakeWanted()); break;
-    case 'kmenu': openKitchenMenu(); break;
+    case 'kmenu': openKitchenMenu(b); break;
     case 'clear':
       // One tap on a counter-top tablet should not wipe a morning's work.
       if(!confirm("Clear every tick for today?")) return;
@@ -4801,40 +4852,43 @@ function kmItem(act, icon, title, sub, extra){
     <span class="kmText"><span class="kmTitle">${escapeHtml(title)}</span>${sub ? `<span class="kmSub">${escapeHtml(sub)}</span>` : ''}</span>${extra && extra.switchOn != null ? '<span class="kmSwitch" aria-hidden="true"></span>' : ''}
   </button>`;
 }
-function openKitchenMenu(){
+function openKitchenMenu(anchor){
   if(document.getElementById('kitchenMenu')){ closeKitchenMenu(); return; }
   const it = currentStationItem();
   const day = state.day;
   const need = it ? roundQty(it.servings) : 0;
   const recipeSub = !it ? 'Choose a dish first'
-    : (it.servings > 0 ? it.recipeName + ', for ' + need + ' today' : it.recipeName + ' (no numbers entered yet)');
+    : (it.servings > 0 ? it.recipeName + '’s recipe card, for ' + need + ' today' : it.recipeName + '’s recipe card (no numbers entered yet)');
   const wake = WAKE_SUPPORTED ? kmItem('wake', 'sun', 'Keep screen on', KEEP_AWAKE_FROM + 'am to ' + (KEEP_AWAKE_UNTIL - 12) + 'pm while this page is open', {cls: 'wake', role: 'menuitemcheckbox', checked: keepAwakeWanted(), switchOn: true}) : '';
   const session = (typeof KITCHEN_SESSION === 'object' && KITCHEN_SESSION) || {};
   const site = SITE_CONFIG.siteName || 'this kitchen';
   const out = [];
   if(session.admin) out.push(kmItem('admin', 'admin', 'Staff admin', 'Recipes, menus and settings'));
-  if(session.enforced) out.push(kmItem('logout', 'logout', session.admin ? 'Log out of admin' : 'Log out of ' + site, '', {cls: 'out'}));
+  if(session.enforced) out.push(kmItem('logout', 'logout', session.admin ? 'Log out of admin' : 'Log out of ' + site, session.admin && session.site ? 'This iPad goes back to its nursery login' : '', {cls: 'out'}));
   const wrap = document.createElement('div');
   wrap.id = 'kitchenMenu';
   wrap.innerHTML = `<div class="kmPanel" role="menu" aria-label="Kitchen menu">
-    <div class="kmHead">VIEW</div>
-    ${kmItem('allergy', 'matrix', 'Allergy matrix', 'This week’s dishes and their allergens')}
-    <div class="kmRule"></div>
-    <div class="kmHead">PRINT</div>
-    ${kmItem('recipe', 'recipe', 'This recipe', recipeSub, {disabled: !it})}
-    ${kmItem('prep', 'sheets', day + '’s prep sheets', 'One sheet per course')}
-    ${kmItem('shop', 'cart', 'Shopping list', 'Week ' + state.week + ', with the To order numbers')}
-    <div class="kmRule"></div>
-    <div class="kmHead">TODAY</div>
+    <div class="kmHead">TODAY’S PREP</div>
+    ${kmItem('recipe', 'recipe', 'Print this recipe', recipeSub, {disabled: !it})}
+    ${kmItem('prep', 'sheets', 'Print ' + day + '’s prep sheets', 'One sheet per course')}
     ${kmItem('clear', 'clear', 'Clear today’s ticks', 'Untick every ingredient for ' + day)}
-    ${wake}
-    ${out.length ? '<div class="kmRule"></div>' + out.join('') : ''}
+    <div class="kmRule"></div>
+    <div class="kmHead">SHOPPING</div>
+    ${kmItem('shopopen', 'cart', 'Weekly shopping list', state.view === 'shop' ? 'Open now' : 'Numbers for each day, and what to order', {disabled: state.view === 'shop'})}
+    ${kmItem('shop', 'print', 'Print shopping list', 'Week ' + state.week + ', with the To order numbers')}
+    <div class="kmRule"></div>
+    <div class="kmHead">ALLERGIES</div>
+    ${kmItem('allergy', 'matrix', 'Allergy matrix', 'Every dish this week, down to each ingredient')}
+    ${kmItem('allergyprint', 'print', 'Print allergy matrix', 'Week ' + state.week + ', the same layout as Staff admin')}
+    ${(wake || out.length) ? '<div class="kmRule"></div><div class="kmHead">THIS IPAD</div>' + wake + out.join('') : ''}
   </div>`;
   document.body.appendChild(wrap);
-  const btn = document.getElementById('stMenuBtn');
+  const btn = anchor || document.getElementById('stMenuBtn');
   const panel = wrap.querySelector('.kmPanel');
   const r = btn ? btn.getBoundingClientRect() : null;
-  panel.style.top = (r ? Math.round(r.bottom + 8) : 76) + 'px';
+  const top = r ? Math.round(r.bottom + 8) : 76;
+  panel.style.top = top + 'px';
+  panel.style.maxHeight = Math.max(240, window.innerHeight - top - 12) + 'px';
   if(btn) btn.setAttribute('aria-expanded', 'true');
   wrap.addEventListener('click', (e)=>{
     if(e.target === wrap){ closeKitchenMenu(); return; }
@@ -4851,8 +4905,7 @@ function closeKitchenMenu(){
   const m = document.getElementById('kitchenMenu');
   if(m) m.remove();
   document.removeEventListener('keydown', kitchenMenuKeys);
-  const btn = document.getElementById('stMenuBtn');
-  if(btn) btn.setAttribute('aria-expanded', 'false');
+  document.querySelectorAll('[data-kmenu-btn]').forEach(b=> b.setAttribute('aria-expanded', 'false'));
 }
 async function kitchenMenuAction(act, b){
   if(act === 'wake'){
@@ -4865,6 +4918,8 @@ async function kitchenMenuAction(act, b){
   else if(act === 'recipe') printThisRecipe();
   else if(act === 'prep') openPrepSheets();
   else if(act === 'shop') printShoppingListNow();
+  else if(act === 'shopopen'){ setView('shop'); window.scrollTo(0, 0); }
+  else if(act === 'allergyprint') printAllergyMatrixWeek();
   else if(act === 'clear'){
     if(!confirm('Clear every tick for ' + state.day + '?')) return;
     state.checked = {};
@@ -4874,6 +4929,60 @@ async function kitchenMenuAction(act, b){
   else if(act === 'logout'){ const lo = document.getElementById('kitchenLogoutBtn'); if(lo) lo.click(); }
   else if(act === 'admin'){ const t = document.getElementById('rbAdminTriggerBtn'); if(t) t.click(); }
 }
+/* The top bar of a tablet's shopping list, in the station's style: the
+   nursery and week, the page's name, the Nursery / Holiday Club switch
+   when one is running, Daily prep to go back, and the Menu. */
+function renderShopTop(){
+  const el = document.getElementById('shopTop');
+  if(!el) return;
+  const weeks = Object.keys(MENU).sort((a, b)=> a - b);
+  const season = ACTIVE_EXTRA ? (ACTIVE_EXTRA.cfg.label || ACTIVE_EXTRA.key) : ((SEASONS.find(x=> x.key === SEASON_KEY) || {}).label || '');
+  const site = SITE_CONFIG.siteName || SITE_CONFIG.subBrand || SITE_CONFIG.brand || 'Kitchen';
+  const logo = document.querySelector('.brandmark .badge img');
+  const sw = EXTRAS_HERE.length
+    ? `<div class="stMenuSwitch" role="group" aria-label="Menu">${[{key: 'nursery', label: 'Nursery'}].concat(EXTRAS_HERE.map(x=> ({key: x.key, label: x.cfg.label || x.key}))).map(m=>{
+        const on = (ACTIVE_EXTRA ? ACTIVE_EXTRA.key : 'nursery') === m.key;
+        return `<button type="button" class="stMenuSeg${on ? ' on' : ''}" data-sh="switch" data-menu="${escapeHtml(String(m.key))}" aria-pressed="${on}">${escapeHtml(m.label)}</button>`;
+      }).join('')}</div>`
+    : '';
+  el.innerHTML = `<div class="stTop shTop">
+    <div class="stBrand">
+      ${logo ? `<span class="stLogo"><img src="${escapeHtml(logo.src)}" alt=""></span>` : ''}
+      <div class="stBrandText">
+        <div class="stSite">${escapeHtml(site)}</div>
+        <label class="stSeason">${season ? escapeHtml(season) + ' ·' : ''}
+          <select class="stWeekSel" id="shopWeekSel" aria-label="Menu week">
+            ${weeks.map(wk=> `<option value="${escapeHtml(String(wk))}"${Number(wk) === Number(state.week) ? ' selected' : ''}>Week ${escapeHtml(String(wk))}</option>`).join('')}
+          </select>
+        </label>
+      </div>
+    </div>
+    <div class="shTitle"><span>THIS WEEK</span><b>Weekly shopping list</b></div>
+    ${sw}
+    <div class="stSpacer"></div>
+    <div class="stActions">
+      <button type="button" class="stBtn shBack" data-sh="back">${stIcon('prev')}<span>Daily prep</span></button>
+      <button type="button" class="stBtn stMenuBtn" id="shopMenuBtn" data-kmenu-btn="1" data-sh="menu" aria-haspopup="menu" aria-expanded="false">${stIcon('menu')}<span>Menu</span></button>
+    </div>
+  </div>`;
+}
+(function(){
+  const el = document.getElementById('shopTop');
+  if(!el) return;
+  el.addEventListener('click', (e)=>{
+    const b = e.target.closest('[data-sh]');
+    if(!b) return;
+    if(b.dataset.sh === 'back'){ setView('prep'); window.scrollTo(0, 0); }
+    else if(b.dataset.sh === 'menu') openKitchenMenu(b);
+    else if(b.dataset.sh === 'switch') useKitchenMenu(b.dataset.menu);
+  });
+  el.addEventListener('change', (e)=>{
+    if(e.target && e.target.id === 'shopWeekSel'){
+      state.week = Number(e.target.value);
+      onDayOrWeekChange();
+    }
+  });
+})();
 /* The shopping list as Print list prints it, without going to the page. */
 function printShoppingListNow(){
   renderShopGrid();
