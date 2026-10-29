@@ -864,18 +864,54 @@ table.shopListTable tr.shopCatRow td{
 #rbAdminRoot a{color:var(--ink);}
 #rbAdminRoot button{font-family:inherit;font-size:13px;cursor:pointer;}
 #rbAdminRoot input, #rbAdminRoot textarea, #rbAdminRoot select{font-family:inherit;font-size:14px;}
-#rbAdminRoot .topbar{background:var(--ink);color:#fff;padding:10px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
-#rbAdminRoot .topbar .brand{font-weight:700;font-size:16px;}
-#rbAdminRoot .topbar .tabs{display:flex;gap:4px;margin-left:auto;}
-#rbAdminRoot .topbar .tabs button{background:transparent;border:1px solid rgba(255,255,255,0.35);color:#fff;padding:6px 12px;border-radius:8px;}
-#rbAdminRoot .topbar .tabs button.active{background:#fff;color:var(--ink);border-color:#fff;}
+/* The bar stays at the top while the page scrolls under it (#rbAdminRoot
+   is the scrolling box). Below the pop-up windows (.modalOverlay, 50). */
+#rbAdminRoot .topbar{background:var(--ink);color:#fff;padding:12px 20px 14px;display:flex;align-items:center;gap:12px 16px;flex-wrap:wrap;
+  position:sticky;top:0;z-index:40;box-shadow:0 4px 14px rgba(0,0,0,0.18);font-family:'Museo Sans','Inter',system-ui,sans-serif;}
+#rbAdminRoot .topbar .rbRow1{display:flex;align-items:center;gap:14px;width:100%;flex-wrap:wrap;}
+/* Raised buttons, as on the kitchen's bar. */
+#rbAdminRoot .topbar .rbBtn{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px 0 13px;border-radius:22px;font-size:15px;font-weight:800;white-space:nowrap;color:#fff;cursor:pointer;
+  background:linear-gradient(180deg,#3A5E80 0%,#294A66 100%);border:1px solid rgba(255,255,255,0.28);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.25),0 3px 0 #0F2435,0 6px 12px rgba(0,0,0,0.28);transition:transform .08s ease,box-shadow .08s ease;}
+#rbAdminRoot .topbar .rbBtn:active{transform:translateY(2px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.18),0 1px 0 #0F2435,0 2px 5px rgba(0,0,0,0.25);}
+#rbAdminRoot .topbar .rbBtn:focus-visible{outline:3px solid var(--butter);outline-offset:2px;}
+#rbAdminRoot .topbar .rbBtn .rbExt{opacity:.75;font-weight:700;}
+#rbAdminRoot .topbar .rbBrand{display:flex;align-items:center;gap:12px;font-weight:400;font-size:inherit;}
+#rbAdminRoot .topbar .rbLogo{width:44px;height:44px;border-radius:9px;background:#fff;overflow:hidden;display:flex;flex:none;}
+#rbAdminRoot .topbar .rbLogo img{width:100%;height:100%;object-fit:contain;padding:3px;display:block;}
+#rbAdminRoot .topbar .rbLogo:has(img:not([src])){display:none;}
+#rbAdminRoot .topbar .rbBrandText{display:flex;flex-direction:column;line-height:1.1;}
+#rbAdminRoot .topbar .rbBrandText b{font-family:'Roca','Space Grotesk',serif;font-size:22px;font-weight:700;}
+#rbAdminRoot .topbar .rbBrandText span{font-size:12.5px;color:#C9D2DA;}
+/* One "Editing" control: a sunken track, the menu as the raised pill. */
+#rbAdminRoot .topbar .rbEditing{display:inline-flex;align-items:center;height:44px;padding:0 4px;border-radius:22px;
+  background:linear-gradient(180deg,#132a3c 0%,#1a3348 100%);box-shadow:inset 0 2px 6px rgba(0,0,0,0.55),inset 0 -1px 0 rgba(255,255,255,0.10),0 1px 0 rgba(255,255,255,0.12);}
+#rbAdminRoot .topbar .rbEdLabel{font-size:10.5px;letter-spacing:.1em;font-weight:800;color:#9FB3C4;padding:0 10px 0 12px;text-transform:uppercase;}
+#rbAdminRoot .topbar .rbEditing select{-webkit-appearance:none;appearance:none;height:36px;border-radius:18px;padding:0 32px 0 14px;font-size:14.5px;font-weight:800;cursor:pointer;
+  background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;
+  border:0;color:#fff;}
+#rbAdminRoot .topbar .rbEditing select#rbMenuSelect{color:var(--ink);
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231F3C55' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center,linear-gradient(180deg,#FFFFFF 0%,#E4EAEF 100%);
+  border:1px solid #fff;box-shadow:inset 0 1px 0 #fff,0 3px 0 #9FB0BF,0 5px 10px rgba(0,0,0,0.28);}
+#rbAdminRoot .topbar .rbEditing select:focus-visible{outline:3px solid var(--butter);outline-offset:2px;}
+#rbAdminRoot .topbar .rbEditing select[hidden]{display:none;}
+#rbAdminRoot .topbar .rbEditing .rbExtraNote{padding:0 14px 0 12px;font-size:13.5px;font-weight:700;color:#C9D2DA;}
+/* Tabs: each group is one sunken strip; the page you are on is raised. */
+#rbAdminRoot .topbar .tabs{display:flex;gap:2px;margin-left:auto;padding:4px;border-radius:22px;
+  background:linear-gradient(180deg,#132a3c 0%,#1a3348 100%);box-shadow:inset 0 2px 6px rgba(0,0,0,0.55),inset 0 -1px 0 rgba(255,255,255,0.10),0 1px 0 rgba(255,255,255,0.12);}
+#rbAdminRoot .topbar .tabs button{height:36px;padding:0 14px;border-radius:18px;border:0;background:transparent;color:#D5DCE2;font-size:14px;font-weight:700;white-space:nowrap;transition:background .15s,color .15s,transform .08s;}
+#rbAdminRoot .topbar .tabs button:hover{color:#fff;background:rgba(255,255,255,0.07);}
+#rbAdminRoot .topbar .tabs button:active{transform:translateY(1px);}
+#rbAdminRoot .topbar .tabs button.active{background:linear-gradient(180deg,#FFFFFF 0%,#E4EAEF 100%);color:var(--ink);font-weight:800;
+  box-shadow:inset 0 1px 0 #fff,0 3px 0 #9FB0BF,0 5px 10px rgba(0,0,0,0.28);}
+#rbAdminRoot .topbar .tabs button:focus-visible{outline:3px solid var(--butter);outline-offset:1px;}
 /* Grouped navigation. Ten buttons in one undifferentiated row gave no clue
    which screens belong together or which order to work in; these three
    groups follow how the data actually builds -- an ingredient before a
    recipe, recipes before a rotation -- then checking it, then printing it. */
-#rbAdminRoot .topbar .navrow{display:flex;align-items:center;gap:14px;flex-wrap:wrap;width:100%;margin-top:2px;}
+#rbAdminRoot .topbar .navrow{display:flex;align-items:center;gap:12px 18px;flex-wrap:wrap;width:100%;margin-top:0;}
 #rbAdminRoot .topbar .navgroup{display:flex;align-items:center;gap:8px;}
-#rbAdminRoot .topbar .navgroup > .glabel{font-size:10.5px;letter-spacing:0.13em;text-transform:uppercase;color:rgba(255,255,255,0.55);font-weight:700;white-space:nowrap;}
+#rbAdminRoot .topbar .navgroup > .glabel{font-size:10.5px;letter-spacing:0.13em;text-transform:uppercase;color:#9FB3C4;font-weight:800;white-space:nowrap;}
 #rbAdminRoot .topbar .navdiv{width:1px;align-self:stretch;background:rgba(255,255,255,0.22);margin:0 2px;}
 #rbAdminRoot .topbar .navrow .tabs{margin-left:0;}
 #rbAdminRoot .topbar .navspacer{margin-left:auto;}
@@ -883,7 +919,7 @@ table.shopListTable tr.shopCatRow td{
    click handlers are wired at the bottom of this script and the Maintenance
    screen drives them, so nothing has to be rewired in two places. */
 #rbAdminRoot .rbHiddenAction{display:none !important;}
-#rbAdminRoot .topbar select{padding:6px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.35);background:rgba(255,255,255,0.08);color:#fff;}
+#rbAdminRoot .topbar select:not(#rbMenuSelect):not(#rbSeasonSelect){padding:6px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.35);background:rgba(255,255,255,0.08);color:#fff;}
 #rbAdminRoot .topbar select option{color:#000;}
 #rbAdminRoot .wrap{max-width:1200px;margin:0 auto;padding:20px;}
 #rbAdminRoot .crumb{font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-faint);font-weight:700;margin-bottom:4px;}
@@ -1542,15 +1578,20 @@ body.hcSheetOpen .hcSheetFoot{display:flex;justify-content:flex-end;padding:0 16
   </div>
   <div id="rbAppShell">
     <div class="topbar">
-      <div class="brand">🧑‍🍳 Recipe Bank</div>
-      <select id="rbMenuSelect" title="Which menu you are editing. They are separate rotations — editing one never changes the others."></select>
-      <select id="rbSeasonSelect"></select>
-      <span id="rbExtraNote" class="rbExtraNote" hidden>Runs on its own dates, not by season</span>
-      <button type="button" id="rbPreviewBtn" class="rbTopbarBtn" title="Open the kitchen page for the menu you are editing, in a new tab — never affects the live kitchen iPad">👁 Preview kitchen page ↗</button>
+      <div class="rbRow1">
+      <button type="button" id="rbCloseBtn" class="rbBtn rbBack" title="Back to the kitchen prep list"><svg class="rbIco" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5l-7 6.5 7 6.5"/></svg><span>Kitchen</span></button>
+      <div class="brand rbBrand"><span class="rbLogo"><img alt=""></span><span class="rbBrandText"><b>Staff admin</b><span id="rbBrandSite"></span></span></div>
+      <div class="rbEditing" title="Which menu you are editing. They are separate rotations — editing one never changes the others.">
+        <span class="rbEdLabel">Editing</span>
+        <select id="rbMenuSelect" aria-label="Menu being edited"></select>
+        <select id="rbSeasonSelect" aria-label="Season"></select>
+        <span id="rbExtraNote" class="rbExtraNote" hidden>Runs on its own dates</span>
+      </div>
+      <button type="button" id="rbPreviewBtn" class="rbBtn" title="Open the kitchen page for the menu you are editing, in a new tab — never affects the live kitchen iPad"><svg class="rbIco" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span>Preview</span><span class="rbExt" aria-hidden="true">↗</span></button>
       <select id="rbPreviewSiteSelect" class="rbHiddenAction" hidden></select>
       <span class="navspacer"></span>
-      <button type="button" id="rbLockNowBtn" class="rbTopbarBtn" title="Lock staff admin">🔒 Lock</button>
-      <button type="button" id="rbCloseBtn" class="rbTopbarBtn" title="Back to the kitchen prep list">✕ Close</button>
+      <button type="button" id="rbLockNowBtn" class="rbBtn" title="Log out of Staff admin on this device"><svg class="rbIco" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 16l4-4-4-4M14 12H4"/></svg><span id="rbLogoutLabel">Log out</span></button>
+      </div>
       <div class="navrow" id="rbViewTabs">
         <div class="navgroup"><span class="glabel">Build</span><div class="tabs">
           <button data-view="ingredients">Ingredients</button>
@@ -1558,13 +1599,11 @@ body.hcSheetOpen .hcSheetFoot{display:flex;justify-content:flex-end;padding:0 16
           <button data-view="rotation">The rotation</button>
           <button data-view="menuSettings" id="rbMenuSettingsTab" hidden>Menu settings</button>
         </div></div>
-        <div class="navdiv"></div>
         <div class="navgroup"><span class="glabel">Check</span><div class="tabs">
           <button data-view="siteAlerts">Site alerts</button>
           <button data-view="menuNutrition">Nutrition</button>
           <button data-view="menuGuidance">Menu guidance</button>
         </div></div>
-        <div class="navdiv"></div>
         <div class="navgroup"><span class="glabel">Print</span><div class="tabs">
           <button data-view="recipeCards">Recipe cards</button>
           <button data-view="allergenMatrix">Allergen matrix</button>
@@ -1572,9 +1611,9 @@ body.hcSheetOpen .hcSheetFoot{display:flex;justify-content:flex-end;padding:0 16
           <button data-view="shoppingList">Shopping list</button>
         </div></div>
         <span class="navspacer"></span>
-        <div class="navgroup"><div class="tabs">
-          <button data-view="nurseries" title="Add a nursery, kitchen logins and logos">🏠 Nurseries</button>
-          <button data-view="maintenance" title="Season setup, clean-up and backups">⚙ Maintenance</button>
+        <div class="navgroup"><span class="glabel">Set-up</span><div class="tabs">
+          <button data-view="nurseries" title="Add a nursery, kitchen logins and logos">Nurseries</button>
+          <button data-view="maintenance" title="Season setup, clean-up and backups">Maintenance</button>
         </div></div>
       </div>
       <button type="button" id="rbRefreshSeasonBtn" class="rbHiddenAction" hidden>⟳ Refresh</button>
@@ -13972,7 +14011,7 @@ function renderTopbar(){
     everyMenuGroup().forEach(g=>{
       const opt = document.createElement('option');
       opt.value = g;
-      opt.textContent = 'Editing: ' + menuGroupLabel(g);
+      opt.textContent = menuGroupLabel(g);
       if(g === EDITING_GROUP) opt.selected = true;
       menuSel.appendChild(opt);
     });
@@ -14017,6 +14056,7 @@ function renderTopbar(){
     };
   }
 
+  rbFitSelect(menuSel);
   const sel = document.getElementById('rbSeasonSelect');
   /* An extra menu has one rotation and no seasons: the picker would only
      offer seasons that have nothing to do with it. */
@@ -14049,6 +14089,7 @@ function renderTopbar(){
     if(key === DATA.currentSeason) opt.selected = true;
     sel.appendChild(opt);
   });
+  rbFitSelect(sel);
   sel.onchange = async ()=>{
     if(!confirmLeaveRecipe()){ sel.value = DATA.currentSeason; return; }
     const neverHeld = !menuFor(EDITING_GROUP)[sel.value];
@@ -21137,8 +21178,33 @@ async function rbSha256Hex(text){
   return Array.from(new Uint8Array(buf)).map(b=> b.toString(16).padStart(2,'0')).join('');
 }
 
+/* A select box only as wide as the choice it shows (with room for its
+   arrow), not as wide as its longest option. */
+function rbFitSelect(sel){
+  if(!sel || !sel.options.length) return;
+  const opt = sel.options[sel.selectedIndex] || sel.options[0];
+  const cs = getComputedStyle(sel);
+  const c = rbFitSelect.c || (rbFitSelect.c = document.createElement('canvas').getContext('2d'));
+  c.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+  const w = Math.ceil(c.measureText(opt.textContent).width);
+  if(w > 0) sel.style.width = (w + (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0) + 4) + 'px';
+}
+/* The nursery's logo and name in the bar, from the kitchen page's header. */
+function rbFillBrand(){
+  const logo = document.querySelector('.brandmark .badge img');
+  const slot = document.querySelector('#rbAppShell .rbLogo img');
+  if(slot && logo && logo.getAttribute('src')){ slot.src = logo.src; }
+  const site = document.getElementById('rbBrandSite');
+  if(site) site.textContent = (typeof SITE_CONFIG === 'object' && SITE_CONFIG && (SITE_CONFIG.siteName || SITE_CONFIG.subBrand)) || '';
+  const lbl = document.getElementById('rbLogoutLabel');
+  const loggedIn = typeof KITCHEN_SESSION === 'object' && KITCHEN_SESSION && KITCHEN_SESSION.enforced && KITCHEN_SESSION.admin;
+  if(lbl) lbl.textContent = loggedIn ? 'Log out' : 'Lock';
+  const b = document.getElementById('rbLockNowBtn');
+  if(b) b.title = loggedIn ? 'Log out of Staff admin on this device' : 'Lock Staff admin (asks for the password again)';
+}
 async function rbShowAppShell(){
   loadAddedNurseries();
+  rbFillBrand();
   document.getElementById('rbLockScreen').style.display = 'none';
   document.getElementById('rbAppShell').style.display = 'block';
   /* Decide which menu this session edits BEFORE anything renders or
@@ -21227,7 +21293,17 @@ function closeRecipeBankAdmin(){
   document.body.style.overflow = '';
 }
 
+/* With logins on, this is a real log out of the admin login; before
+   that, it locks (closes) Staff admin, which asks for the password again. */
 function lockRecipeBankAdmin(){
+  const loggedIn = typeof KITCHEN_SESSION === 'object' && KITCHEN_SESSION && KITCHEN_SESSION.enforced && KITCHEN_SESSION.admin;
+  if(loggedIn){
+    if(!confirmLeaveRecipe()) return;
+    if(!window.confirm('Log out of Staff admin on this device?')) return;
+    try{ localStorage.removeItem('kitchenAdminLogin.v1'); }catch(e){}
+    location.replace('admin.html' + (SITE_SLUG ? '?site=' + encodeURIComponent(SITE_SLUG) : ''));
+    return;
+  }
   closeRecipeBankAdmin();
 }
 

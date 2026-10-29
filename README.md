@@ -2587,3 +2587,16 @@ John chose **Days A** from the top-bar mock-ups (row 3 of the canvas).
 **Steadier, more tactile bar.**
 - Changing between the Nursery and the Holiday Club moves nothing. The nursery block has a fixed width, the line about the day takes the room that's left, and the lines between menu weeks no longer add width to the ribbon.
 - Menu, the days, the arrows and Back to today are raised buttons: lit from above, with a shadow and a solid edge underneath, and they press down when tapped. Tests: `shopdays.js` SD16.
+
+## Staff admin's top bar (29 October 2026; canvas round 8, all eight changes)
+
+1. **Raised buttons and tabs**, as on the kitchen's bar. The page you are on is the raised white tab.
+2. **Kitchen** (back, top left) replaces Close. **Log out** replaces Lock: with logins on it ends the admin login on this device and goes to the admin login page; before logins are switched on it is "Lock" and closes Staff admin.
+3. **The nursery's logo, "Staff admin"** in the kitchen's heading font, and the nursery's name, replace "🧑‍🍳 Recipe Bank".
+4. **One "Editing" control.** The menu is the white raised pill (its options no longer start "Editing:") and the season follows; an extra menu shows "Runs on its own dates". Each box is only as wide as the choice showing (`rbFitSelect`).
+5. **"Preview ↗"** with an eye icon.
+6. **Tab groups as sunken strips:** Build, Check and Print.
+7. **A "Set-up" group** for Nurseries and Maintenance, without the emoji.
+8. **The bar stays at the top** while the page scrolls. It sits under pop-up windows (z-index 40; `.modalOverlay` is 50).
+
+**Tests:** `adminbar.js` (9). `nurserysettings` and `washwood` were updated for the menu names without "Editing:".
