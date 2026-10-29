@@ -2452,4 +2452,9 @@ A published dish names its recipe id, so that copy is kept. An older published f
 
 **How the prints reach Staff admin's designs.** Staff admin's script is a closed function, so it hands the kitchen page its recipe card and allergen matrix builders through `RB_CARD_KIT`: `recipeCard(recipe, ctx, ingredientsById)`, `matrixCss()`, `matrixSource()`, `matrixPaginate` and `matrixPdf`. There's one design of each. `buildRecipeCardHtml` accepts `ctx.scale`, `ctx.need`, `ctx.bandCounts` and `ctx.printedFor`; without them, Staff admin's own cards are unchanged.
 
-**Tests:** `menutest.js`, 20 checks, in both storage modes.
+**Ingredients in the allergy matrix.**
+- **One dish:** tap it to open its ingredients underneath. Each ingredient shows its own allergens in the same 14 columns, so you can see which ingredient a dish's gluten or milk comes from. Each dish row also says how many ingredients it has.
+- **Same reader:** the ingredients are read one at a time with the same reader as the dish, so a dish's row is exactly what its ingredient rows add up to.
+- **Show every ingredient** opens them all, and **Hide the ingredients** folds them away. Open dishes stay open when you switch between Whole week and one day, and close when you leave the matrix.
+
+**Tests:** `menutest.js`, 25 checks, in both storage modes.
