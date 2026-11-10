@@ -4315,16 +4315,65 @@ ${pages}
 </body></html>`;
 }
 
+
+/* ---------- In-page preview panel for printouts ----------
+   iPad Safari (and the Home Screen app) often refuses or blanks a new
+   tab opened with window.open, so printouts open in a panel over the page
+   instead: Close, Print and the document's own Download PDF button. */
+let DOC_PANEL = null;
+function closeDocPanel(){
+  if(!DOC_PANEL) return;
+  const p = DOC_PANEL; DOC_PANEL = null;
+  if(p.url) URL.revokeObjectURL(p.url);
+  p.el.remove();
+  document.documentElement.style.overflow = p.prevOverflow;
+  document.removeEventListener('keydown', p.onKey);
+}
+function openDocPanel(title){
+  closeDocPanel();
+  const el = document.createElement('div');
+  el.id = 'docPanel';
+  el.setAttribute('style','position:fixed;inset:0;z-index:100000;background:#fff;display:flex;flex-direction:column;');
+  const bar = document.createElement('div');
+  bar.setAttribute('style','flex:none;display:flex;align-items:center;gap:12px;padding:8px 12px;background:#1F3C55;color:#fff;font:700 16px system-ui,sans-serif;');
+  const btn = (label)=>{ const b = document.createElement('button'); b.type='button'; b.textContent=label;
+    b.setAttribute('style','min-height:44px;min-width:44px;padding:0 18px;border-radius:10px;border:1px solid rgba(255,255,255,.6);background:transparent;color:#fff;font:700 16px system-ui,sans-serif;cursor:pointer;'); return b; };
+  const close = btn('Close'); const print = btn('Print');
+  const ttl = document.createElement('div'); ttl.textContent = title || 'Preview'; ttl.setAttribute('style','flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;');
+  bar.append(close, ttl, print);
+  const frame = document.createElement('iframe');
+  frame.setAttribute('style','flex:1;width:100%;border:0;background:#fff;');
+  frame.setAttribute('title', title || 'Preview');
+  frame.srcdoc = '<body style="font:16px system-ui,sans-serif;padding:24px;color:#555">Preparing…</body>';
+  el.append(bar, frame);
+  document.body.appendChild(el);
+  const p = {el, frame, url: null, prevOverflow: document.documentElement.style.overflow,
+    onKey: (e)=>{ if(e.key === 'Escape') closeDocPanel(); }};
+  document.documentElement.style.overflow = 'hidden';
+  document.addEventListener('keydown', p.onKey);
+  close.addEventListener('click', closeDocPanel);
+  print.addEventListener('click', ()=>{
+    try{ frame.contentWindow.focus(); frame.contentWindow.print(); }
+    catch(e){ alert('Printing from here did not start. Use Download PDF at the top of the page, then print the PDF.'); }
+  });
+  DOC_PANEL = p;
+  return p;
+}
+function showDocInPanel(html, title, panel){
+  const p = panel || openDocPanel(title);
+  if(p.url) URL.revokeObjectURL(p.url);
+  p.url = URL.createObjectURL(new Blob([html], {type: 'text/html'}));
+  p.frame.removeAttribute('srcdoc');
+  p.frame.src = p.url;
+  return p;
+}
+
 function openPrepSheets(){
   if(!RB_CARD_KIT){ alert('Prep sheets are still loading. Try again in a moment.'); return; }
   const courses = prepSheetCourses();
   if(!courses.length){ alert('There is no menu on file for this day, so there is nothing to print.'); return; }
   const html = buildPrepSheetsHtml();
-  const blob = new Blob([html], {type: 'text/html'});
-  const url = URL.createObjectURL(blob);
-  const w = window.open(url, '_blank');
-  if(!w){ URL.revokeObjectURL(url); alert('Please allow pop-ups to open the prep sheets.'); return; }
-  const release = setInterval(()=>{ if(w.closed){ URL.revokeObjectURL(url); clearInterval(release); } }, 2000);
+  showDocInPanel(html, 'Prep sheets, week ' + state.week + ' ' + state.day);
 }
 
 /* ---------- shopping list ---------- */
@@ -6026,14 +6075,10 @@ async function printThisRecipe(){
   if(!it){ alert('There is no dish on screen to print.'); return; }
   if(!RB_CARD_KIT || !RB_CARD_KIT.recipeCard){ alert('The recipe card is still loading. Try again in a moment.'); return; }
   if(!(it.servings > 0) && !confirm('No numbers have been entered in Who’s eating for today, so the card can’t be scaled yet.\n\nPrint it at the recipe’s own size' + (it.base ? ' (makes ' + it.base + ')' : '') + ' instead?')) return;
-  const w = window.open('', '_blank');
-  if(!w){ alert('Please allow pop-ups to open the recipe card.'); return; }
-  try{ w.document.title = 'Recipe card'; w.document.body.style.font = '16px system-ui, sans-serif'; w.document.body.textContent = 'Preparing the recipe card…'; }catch(e){}
+  const panel = openDocPanel('Recipe card');
   const bank = await sharedRecipesForCard();
-  const html = buildKitchenRecipeCardHtml(it, bank);
-  const url = URL.createObjectURL(new Blob([html], {type: 'text/html'}));
-  w.location.href = url;
-  const release = setInterval(()=>{ if(w.closed){ URL.revokeObjectURL(url); clearInterval(release); } }, 2000);
+  if(DOC_PANEL !== panel) return;
+  showDocInPanel(buildKitchenRecipeCardHtml(it, bank), 'Recipe card', panel);
 }
 
 /* ================= The allergy matrix =================
@@ -6211,10 +6256,7 @@ function buildKitchenAllergenMatrixHtml(){
 function printAllergyMatrixWeek(){
   if(!RB_CARD_KIT || !RB_CARD_KIT.matrixSource){ alert('The allergen matrix is still loading. Try again in a moment.'); return; }
   const html = buildKitchenAllergenMatrixHtml();
-  const url = URL.createObjectURL(new Blob([html], {type: 'text/html'}));
-  const w = window.open(url, '_blank');
-  if(!w){ URL.revokeObjectURL(url); alert('Please allow pop-ups to open the allergen matrix.'); return; }
-  const release = setInterval(()=>{ if(w.closed){ URL.revokeObjectURL(url); clearInterval(release); } }, 2000);
+  showDocInPanel(html, 'Allergen matrix, week ' + state.week);
 }
 
 /* The menu pack: Staff admin's own (RB_CARD_KIT.menuPack), so there is one
@@ -6254,10 +6296,7 @@ function openKitchenMenuPack(onlyWeek){
     only: onlyWeek != null ? [String(onlyWeek)] : null, menuOnly: true,
     note: label + ', ' + which + (site ? ', ' + site : '') + '. From this kitchen’s published menu.',
   });
-  const url = URL.createObjectURL(new Blob([html], {type: 'text/html'}));
-  const w = window.open(url, '_blank');
-  if(!w){ URL.revokeObjectURL(url); alert('Please allow pop-ups to open the menu pack.'); return; }
-  const release = setInterval(()=>{ if(w.closed){ URL.revokeObjectURL(url); clearInterval(release); } }, 2000);
+  showDocInPanel(html, 'Menu pack');
 }
 
 /* Kept up to date while the shopping list is open, so a print started from
