@@ -5810,7 +5810,30 @@ function printShopList(){
     alert('There is nothing to print yet. Fill in how many are eating each day, and the shopping list builds itself.');
     return;
   }
-  printShopSheet(html);
+  showShopListPanel(html);
+}
+/* The shopping list as its own document in the preview panel, so Print
+   works on an iPad (the Home Screen app ignores window.print on the page
+   itself, which is why Print list appeared to do nothing). */
+function showShopListPanel(sheetHtml){
+  let css = '';
+  try{
+    for(const sh of document.styleSheets){
+      let rules; try{ rules = sh.cssRules; }catch(e){ continue; }
+      for(const r of rules){
+        if(r.selectorText && r.selectorText.indexOf('#shopPrintSheet') === 0 && !r.parentRule) css += r.cssText + '\n';
+      }
+    }
+  }catch(e){}
+  const standalone = !!(window.navigator && window.navigator.standalone);
+  const note = standalone
+    ? '<div class="noprint" style="font:14px system-ui,sans-serif;background:#fff6dd;border:1px solid #e3c878;border-radius:8px;padding:10px 12px;margin:0 0 12px;">If Print does nothing here, open this site in Safari and print from there, or use Copy list.</div>'
+    : '';
+  const doc = '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Shopping list</title><style>'
+    + css + '\n#shopPrintSheet{display:block !important;max-width:210mm;margin:0 auto;padding:12px;background:#fff;}'
+    + '@media print{.noprint{display:none !important;} @page{size:A4 portrait;margin:12mm;} #shopPrintSheet{padding:0;max-width:none;}}</style></head><body style="margin:0;background:#fff;">'
+    + note + '<div id="shopPrintSheet">' + sheetHtml + '</div></body></html>';
+  showDocInPanel(doc, 'Shopping list');
 }
 /* ================= The station's Menu =================
    Option B of the top-bar mock-up: the station keeps Shopping list in the
