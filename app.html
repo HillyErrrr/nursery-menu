@@ -4339,11 +4339,10 @@ function openDocPanel(title, opts){
   closeDocPanel();
   if(!document.getElementById('docPanelCss')){
     const st = document.createElement('style'); st.id = 'docPanelCss';
-    st.textContent = '@media print{html.printingDoc body > *:not(#docPanel){display:none !important;}'
-      + 'html.printingDoc, html.printingDoc body{height:auto !important;overflow:visible !important;background:#fff !important;}'
-      + 'html.printingDoc #docPanel{position:static !important;display:block !important;}'
-      + 'html.printingDoc #docPanel .dpBar{display:none !important;}'
-      + 'html.printingDoc #docPanel iframe{display:block !important;height:var(--dpH) !important;width:100% !important;}}';
+    st.textContent = '#docPrintHost{display:none;}'
+      + '@media print{html.printingDoc body > *:not(#docPrintHost){display:none !important;}'
+      + 'html.printingDoc, html.printingDoc body{height:auto !important;overflow:visible !important;background:#fff !important;margin:0 !important;padding:0 !important;}'
+      + 'html.printingDoc #docPrintHost{display:block !important;}}';
     document.head.appendChild(st);
   }
   const el = document.createElement('div');
@@ -4388,17 +4387,27 @@ function openDocPanel(title, opts){
     setTimeout(()=> URL.revokeObjectURL(u), 10000);
   });
   print.addEventListener('click', ()=>{
-    /* Print the page itself with only the panel showing, the iframe made as
-       tall as its document. An iPad ignores print() called on an iframe. */
-    let h = 0;
-    try{ const d = frame.contentDocument; h = Math.max(d.documentElement.scrollHeight, d.body.scrollHeight); }catch(e){}
-    if(!h){
+    /* Print the page itself with only a copy of the document showing. The
+       copy sits in a shadow root so its styles can't clash with the
+       kitchen page. (An iPad ignores print() on an iframe, and printing
+       the iframe itself clipped the page.) */
+    let d = null;
+    try{ d = frame.contentDocument; }catch(e){}
+    if(!d || !d.body){
       try{ frame.contentWindow.focus(); frame.contentWindow.print(); }
-      catch(e){ alert('Printing did not start. Use Download PDF at the top of the page, then print the PDF.'); }
+      catch(e){ alert('Printing did not start. Use Share PDF at the top of the page, then print the PDF.'); }
       return;
     }
+    const old = document.getElementById('docPrintHost'); if(old) old.remove();
+    const host = document.createElement('div');
+    host.id = 'docPrintHost';
+    const sr = host.attachShadow({mode: 'open'});
+    d.querySelectorAll('style').forEach(st=> sr.appendChild(st.cloneNode(true)));
+    const box = document.createElement('div');
+    Array.prototype.forEach.call(d.body.children, c=>{ if(c.tagName !== 'SCRIPT') box.appendChild(c.cloneNode(true)); });
+    sr.appendChild(box);
+    document.body.appendChild(host);
     const root = document.documentElement;
-    root.style.setProperty('--dpH', (h + 20) + 'px');
     root.classList.add('printingDoc');
     const pg = document.createElement('style'); pg.id = 'docPageCss';
     pg.textContent = '@media print{@page{size:A4 portrait;margin:0;}}';
@@ -4408,6 +4417,7 @@ function openDocPanel(title, opts){
       if(Date.now() - started < 1000) return;
       root.classList.remove('printingDoc');
       const pgs = document.getElementById('docPageCss'); if(pgs) pgs.remove();
+      const h2 = document.getElementById('docPrintHost'); if(h2) h2.remove();
       window.removeEventListener('pointerdown', done, true);
       window.removeEventListener('keydown', done, true);
     };
