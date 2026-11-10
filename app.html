@@ -4321,6 +4321,12 @@ ${pages}
    tab opened with window.open, so printouts open in a panel over the page
    instead: Close, Print and the document's own Download PDF button. */
 let DOC_PANEL = null;
+function docPanelPdfReady(blob, name){
+  if(!DOC_PANEL) return;
+  DOC_PANEL.pdf = {blob, name};
+  DOC_PANEL.pdfBtn.disabled = false;
+  DOC_PANEL.pdfBtn.textContent = 'Share PDF';
+}
 function closeDocPanel(){
   if(!DOC_PANEL) return;
   const p = DOC_PANEL; DOC_PANEL = null;
@@ -4329,32 +4335,85 @@ function closeDocPanel(){
   document.documentElement.style.overflow = p.prevOverflow;
   document.removeEventListener('keydown', p.onKey);
 }
-function openDocPanel(title){
+function openDocPanel(title, opts){
   closeDocPanel();
+  if(!document.getElementById('docPanelCss')){
+    const st = document.createElement('style'); st.id = 'docPanelCss';
+    st.textContent = '@media print{html.printingDoc body > *:not(#docPanel){display:none !important;}'
+      + 'html.printingDoc, html.printingDoc body{height:auto !important;overflow:visible !important;background:#fff !important;}'
+      + 'html.printingDoc #docPanel{position:static !important;display:block !important;}'
+      + 'html.printingDoc #docPanel .dpBar{display:none !important;}'
+      + 'html.printingDoc #docPanel iframe{display:block !important;height:var(--dpH) !important;width:100% !important;}}';
+    document.head.appendChild(st);
+  }
   const el = document.createElement('div');
   el.id = 'docPanel';
   el.setAttribute('style','position:fixed;inset:0;z-index:100000;background:#fff;display:flex;flex-direction:column;');
   const bar = document.createElement('div');
+  bar.className = 'dpBar';
   bar.setAttribute('style','flex:none;display:flex;align-items:center;gap:12px;padding:8px 12px;background:#1F3C55;color:#fff;font:700 16px system-ui,sans-serif;');
   const btn = (label)=>{ const b = document.createElement('button'); b.type='button'; b.textContent=label;
     b.setAttribute('style','min-height:44px;min-width:44px;padding:0 18px;border-radius:10px;border:1px solid rgba(255,255,255,.6);background:transparent;color:#fff;font:700 16px system-ui,sans-serif;cursor:pointer;'); return b; };
   const close = btn('Close'); const print = btn('Print');
+  const pdfBtn = btn('Make PDF'); pdfBtn.style.display = (opts && opts.pdf) ? '' : 'none';
   const ttl = document.createElement('div'); ttl.textContent = title || 'Preview'; ttl.setAttribute('style','flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;');
-  bar.append(close, ttl, print);
+  bar.append(close, ttl, pdfBtn, print);
   const frame = document.createElement('iframe');
   frame.setAttribute('style','flex:1;width:100%;border:0;background:#fff;');
   frame.setAttribute('title', title || 'Preview');
   frame.srcdoc = '<body style="font:16px system-ui,sans-serif;padding:24px;color:#555">Preparing…</body>';
   el.append(bar, frame);
   document.body.appendChild(el);
-  const p = {el, frame, url: null, prevOverflow: document.documentElement.style.overflow,
+  const p = {el, frame, pdfBtn, pdf: null, url: null, prevOverflow: document.documentElement.style.overflow,
     onKey: (e)=>{ if(e.key === 'Escape') closeDocPanel(); }};
   document.documentElement.style.overflow = 'hidden';
   document.addEventListener('keydown', p.onKey);
   close.addEventListener('click', closeDocPanel);
+  /* Make PDF, then Share PDF: the share sheet has Print, Save to Files,
+     Mail and AirDrop, and works in the Home Screen app, where printing
+     the page does not. Two taps because sharing needs a fresh tap. */
+  pdfBtn.addEventListener('click', async ()=>{
+    if(!p.pdf){
+      pdfBtn.textContent = 'Making PDF…'; pdfBtn.disabled = true;
+      try{ frame.contentWindow.downloadRecipeCardsPdf(); }
+      catch(e){ pdfBtn.textContent = 'Make PDF'; pdfBtn.disabled = false; alert('Could not make the PDF: ' + e.message); }
+      return;
+    }
+    const file = new File([p.pdf.blob], p.pdf.name, {type: 'application/pdf'});
+    try{
+      if(navigator.canShare && navigator.canShare({files: [file]})){ await navigator.share({files: [file], title: p.pdf.name}); return; }
+    }catch(e){ if(e && e.name === 'AbortError') return; }
+    const u = URL.createObjectURL(p.pdf.blob);
+    const a = document.createElement('a'); a.href = u; a.download = p.pdf.name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=> URL.revokeObjectURL(u), 10000);
+  });
   print.addEventListener('click', ()=>{
-    try{ frame.contentWindow.focus(); frame.contentWindow.print(); }
-    catch(e){ alert('Printing from here did not start. Use Download PDF at the top of the page, then print the PDF.'); }
+    /* Print the page itself with only the panel showing, the iframe made as
+       tall as its document. An iPad ignores print() called on an iframe. */
+    let h = 0;
+    try{ const d = frame.contentDocument; h = Math.max(d.documentElement.scrollHeight, d.body.scrollHeight); }catch(e){}
+    if(!h){
+      try{ frame.contentWindow.focus(); frame.contentWindow.print(); }
+      catch(e){ alert('Printing did not start. Use Download PDF at the top of the page, then print the PDF.'); }
+      return;
+    }
+    const root = document.documentElement;
+    root.style.setProperty('--dpH', (h + 20) + 'px');
+    root.classList.add('printingDoc');
+    const pg = document.createElement('style'); pg.id = 'docPageCss';
+    pg.textContent = '@media print{@page{size:A4 portrait;margin:0;}}';
+    document.head.appendChild(pg);
+    const started = Date.now();
+    const done = ()=>{
+      if(Date.now() - started < 1000) return;
+      root.classList.remove('printingDoc');
+      const pgs = document.getElementById('docPageCss'); if(pgs) pgs.remove();
+      window.removeEventListener('pointerdown', done, true);
+      window.removeEventListener('keydown', done, true);
+    };
+    window.addEventListener('pointerdown', done, true);
+    window.addEventListener('keydown', done, true);
+    window.print();
   });
   DOC_PANEL = p;
   return p;
@@ -5815,25 +5874,72 @@ function printShopList(){
 /* The shopping list as its own document in the preview panel, so Print
    works on an iPad (the Home Screen app ignores window.print on the page
    itself, which is why Print list appeared to do nothing). */
+function shopDocPaginate(){
+  var src = document.getElementById('spSrc');
+  var out = document.getElementById('spPages');
+  var table = src.querySelector('table');
+  var before = [], after = [], seen = false;
+  Array.prototype.forEach.call(src.children, function(c){
+    if(c === table){ seen = true; return; }
+    (seen ? after : before).push(c);
+  });
+  var thead = table.querySelector('thead'), colgroup = table.querySelector('colgroup');
+  var rows = Array.prototype.slice.call(table.querySelectorAll('tbody tr'));
+  var LIMIT = Math.floor((297 - 24) * 96 / 25.4) - 6;
+  function newPage(first){
+    var wrap = document.createElement('div'); wrap.className = 'pageWrap';
+    var card = document.createElement('div'); card.className = 'card';
+    var inner = document.createElement('div'); inner.className = 'spSheet';
+    card.appendChild(inner); wrap.appendChild(card); out.appendChild(wrap);
+    if(first) before.forEach(function(n){ inner.appendChild(n); });
+    var t = document.createElement('table');
+    if(colgroup) t.appendChild(colgroup.cloneNode(true));
+    if(thead) t.appendChild(thead.cloneNode(true));
+    var tb = document.createElement('tbody'); t.appendChild(tb); inner.appendChild(t);
+    return {inner: inner, tb: tb};
+  }
+  var pg = newPage(true);
+  rows.forEach(function(tr){
+    pg.tb.appendChild(tr);
+    if(pg.inner.offsetHeight > LIMIT && pg.tb.children.length > 1){
+      var moving = [tr], prev = tr.previousElementSibling;
+      if(prev && prev.classList.contains('spCat') && pg.tb.children.length > 2){ moving.unshift(prev); }
+      var np = newPage(false);
+      moving.forEach(function(m){ np.tb.appendChild(m); });
+      pg = np;
+    }
+  });
+  after.forEach(function(n){
+    pg.inner.appendChild(n);
+    if(pg.inner.offsetHeight > LIMIT){ var np = newPage(false); np.inner.appendChild(n); pg = np; }
+  });
+  src.remove();
+  var pages = out.querySelectorAll('.pageWrap');
+  var note = document.getElementById('spStandaloneNote');
+  if(note && pages.length) pages[0].parentNode.insertBefore(note, pages[0]);
+}
 function showShopListPanel(sheetHtml){
   let css = '';
   try{
     for(const sh of document.styleSheets){
       let rules; try{ rules = sh.cssRules; }catch(e){ continue; }
       for(const r of rules){
-        if(r.selectorText && r.selectorText.indexOf('#shopPrintSheet') === 0 && !r.parentRule) css += r.cssText + '\n';
+        if(r.selectorText && r.selectorText.indexOf('#shopPrintSheet') === 0 && !r.parentRule && r.cssText.indexOf('display: none') < 0) css += r.cssText.split('#shopPrintSheet').join('.spSheet') + '\n';
       }
     }
   }catch(e){}
-  const standalone = !!(window.navigator && window.navigator.standalone);
-  const note = standalone
-    ? '<div class="noprint" style="font:14px system-ui,sans-serif;background:#fff6dd;border:1px solid #e3c878;border-radius:8px;padding:10px 12px;margin:0 0 12px;">If Print does nothing here, open this site in Safari and print from there, or use Copy list.</div>'
-    : '';
   const doc = '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Shopping list</title><style>'
-    + css + '\n#shopPrintSheet{display:block !important;max-width:210mm;margin:0 auto;padding:12px;background:#fff;}'
-    + '@media print{.noprint{display:none !important;} @page{size:A4 portrait;margin:12mm;} #shopPrintSheet{padding:0;max-width:none;}}</style></head><body style="margin:0;background:#fff;">'
-    + note + '<div id="shopPrintSheet">' + sheetHtml + '</div></body></html>';
-  showDocInPanel(doc, 'Shopping list');
+    + css
+    + 'body{margin:0;background:#e9e6df;}'
+    + '.pageWrap{width:210mm;margin:0 auto 14px;background:#fff;box-shadow:0 2px 14px rgba(36,30,23,.14);}'
+    + '.pageWrap .card{width:210mm;height:296mm;box-sizing:border-box;padding:12mm;overflow:hidden;background:#fff;}'
+    + '@media print{body{background:#fff;}.pageWrap{margin:0;box-shadow:none;break-after:page;page-break-after:always;}.pageWrap:last-child{break-after:auto;page-break-after:auto;}@page{size:A4 portrait;margin:0;}}'
+    + '</style></head><body><div id="spPages"></div><div id="spSrc" class="spSheet">' + sheetHtml + '</div>'
+    + '<script>window.onPdfReady=function(b,n){try{parent.docPanelPdfReady(b,n);}catch(e){}};<\/script>'
+    + '<script>(' + shopDocPaginate.toString() + ')();<\/script>'
+    + '<script>' + (RB_CARD_KIT ? RB_CARD_KIT.pdf : '') + '<\/script></body></html>';
+  const panel = openDocPanel('Shopping list', {pdf: !!RB_CARD_KIT});
+  showDocInPanel(doc, 'Shopping list', panel);
 }
 /* ================= The station's Menu =================
    Option B of the top-bar mock-up: the station keeps Shopping list in the
@@ -21097,6 +21203,7 @@ const RECIPE_CARD_PDF_SCRIPT = `
       var firstCard = document.querySelector('.pageWrap .card');
       var landscape = !!(firstCard && firstCard.offsetWidth > firstCard.offsetHeight);
       var pdfBlob = buildPdf(rendered, landscape ? 297 : 210, landscape ? 210 : 297);
+      if (window.onPdfReady){ window.onPdfReady(pdfBlob, (document.title || 'Recipe Cards').replace(/[^a-z0-9-_ ]+/gi, '') + '.pdf'); return; }
       var url = URL.createObjectURL(pdfBlob);
       var a = document.createElement('a');
       a.href = url;
