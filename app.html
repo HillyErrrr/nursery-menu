@@ -4404,13 +4404,20 @@ function openDocPanel(title, opts){
     const sr = host.attachShadow({mode: 'open'});
     d.querySelectorAll('style').forEach(st=> sr.appendChild(st.cloneNode(true)));
     const box = document.createElement('div');
-    Array.prototype.forEach.call(d.body.children, c=>{ if(c.tagName !== 'SCRIPT') box.appendChild(c.cloneNode(true)); });
+    /* A document that supplies a plain flowing copy (#spFlow) is printed
+       from that, at the printer's own page width, with 12mm margins. */
+    const flow = d.getElementById('spFlow');
+    if(flow){
+      box.innerHTML = '<div class="spSheet" style="width:100%;box-sizing:border-box;">' + flow.innerHTML + '</div>';
+    }else{
+      Array.prototype.forEach.call(d.body.children, c=>{ if(c.tagName !== 'SCRIPT') box.appendChild(c.cloneNode(true)); });
+    }
     sr.appendChild(box);
     document.body.appendChild(host);
     const root = document.documentElement;
     root.classList.add('printingDoc');
     const pg = document.createElement('style'); pg.id = 'docPageCss';
-    pg.textContent = '@media print{@page{size:A4 portrait;margin:0;}}';
+    pg.textContent = '@media print{@page{size:A4 portrait;margin:' + (flow ? '12mm' : '0') + ';}}';
     document.head.appendChild(pg);
     const started = Date.now();
     const done = ()=>{
@@ -5888,6 +5895,10 @@ function shopDocPaginate(){
   var src = document.getElementById('spSrc');
   var out = document.getElementById('spPages');
   var table = src.querySelector('table');
+  var flow = document.createElement('template');
+  flow.id = 'spFlow';
+  flow.innerHTML = src.innerHTML;
+  document.body.appendChild(flow);
   var before = [], after = [], seen = false;
   Array.prototype.forEach.call(src.children, function(c){
     if(c === table){ seen = true; return; }
