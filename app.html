@@ -4325,7 +4325,7 @@ function docPanelPdfReady(blob, name){
   if(!DOC_PANEL) return;
   DOC_PANEL.pdf = {blob, name};
   DOC_PANEL.pdfBtn.disabled = false;
-  DOC_PANEL.pdfBtn.textContent = 'Share PDF';
+  DOC_PANEL.pdfBtn.textContent = 'Print or share PDF';
 }
 function closeDocPanel(){
   if(!DOC_PANEL) return;
@@ -4354,7 +4354,8 @@ function openDocPanel(title, opts){
   const btn = (label)=>{ const b = document.createElement('button'); b.type='button'; b.textContent=label;
     b.setAttribute('style','min-height:44px;min-width:44px;padding:0 18px;border-radius:10px;border:1px solid rgba(255,255,255,.6);background:transparent;color:#fff;font:700 16px system-ui,sans-serif;cursor:pointer;'); return b; };
   const close = btn('Close'); const print = btn('Print');
-  const pdfBtn = btn('Make PDF'); pdfBtn.style.display = (opts && opts.pdf) ? '' : 'none';
+  const pdfBtn = btn('Make PDF to print'); pdfBtn.style.display = (opts && opts.pdf) ? '' : 'none';
+  if(opts && opts.pdf) print.style.display = 'none';
   const ttl = document.createElement('div'); ttl.textContent = title || 'Preview'; ttl.setAttribute('style','flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;');
   bar.append(close, ttl, pdfBtn, print);
   const frame = document.createElement('iframe');
@@ -4375,7 +4376,7 @@ function openDocPanel(title, opts){
     if(!p.pdf){
       pdfBtn.textContent = 'Making PDF…'; pdfBtn.disabled = true;
       try{ frame.contentWindow.downloadRecipeCardsPdf(); }
-      catch(e){ pdfBtn.textContent = 'Make PDF'; pdfBtn.disabled = false; alert('Could not make the PDF: ' + e.message); }
+      catch(e){ pdfBtn.textContent = 'Make PDF to print'; pdfBtn.disabled = false; alert('Could not make the PDF: ' + e.message); }
       return;
     }
     const file = new File([p.pdf.blob], p.pdf.name, {type: 'application/pdf'});
