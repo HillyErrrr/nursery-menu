@@ -5892,6 +5892,170 @@ function printShopList(){
 /* The shopping list as its own document in the preview panel, so Print
    works on an iPad (the Home Screen app ignores window.print on the page
    itself, which is why Print list appeared to do nothing). */
+/* ---------- The shopping list as a real PDF ----------
+   Written directly (text, lines and boxes, in Helvetica), with no HTML
+   layout and no page-to-image step, so it is the same on every iPad and
+   prints exactly as it looks. */
+const SHOP_PDF_WIDTHS = {"r":[278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584,761,556,278,222,556,333,1000,556,556,333,1000,667,333,1000,278,611,278,278,222,222,333,333,350,556,1000,333,1000,500,333,944,278,500,667,278,333,556,556,556,556,260,556,333,737,370,556,584,333,737,333,400,584,333,333,333,556,537,278,333,333,365,556,834,834,834,611,667,667,667,667,667,667,1000,722,667,667,667,667,278,278,278,278,722,722,778,778,778,778,778,584,778,722,722,722,722,667,667,611,556,556,556,556,556,556,889,500,556,556,556,556,278,278,278,278,556,556,556,556,556,556,556,584,611,556,556,556,556,500,556,500],"b":[278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584,761,556,278,278,556,500,1000,556,556,333,1000,667,333,1000,278,611,278,278,278,278,500,500,350,556,1000,333,1000,556,333,944,278,500,667,278,333,556,556,556,556,280,556,333,737,370,556,584,333,737,333,400,584,333,333,333,611,556,278,333,333,365,556,834,834,834,611,722,722,722,722,722,722,1000,722,667,667,667,667,278,278,278,278,722,722,778,778,778,778,778,584,778,722,722,722,722,667,667,611,556,556,556,556,556,556,889,556,556,556,556,556,278,278,278,278,611,611,611,611,611,611,611,584,611,611,611,611,611,556,611,556]};
+function buildShopPdf(sheetHtml){
+  const CP = {'£':163,'é':233,'è':232,'—':151,'–':150,'‘':145,'’':146,'“':147,'”':148,'•':149,'…':133,'·':183,'×':215,'½':189,'°':176,'€':128,' ':32};
+  const enc = (str)=>{
+    let o = '';
+    for(const ch of String(str)){
+      const c = ch.charCodeAt(0);
+      if(CP[ch] != null) o += String.fromCharCode(CP[ch]);
+      else if(c >= 32 && c < 127) o += ch;
+      else if(c >= 128 && c <= 255) o += ch;
+      else o += c === 10 ? ' ' : '?';
+    }
+    return o;
+  };
+  const width = (s, bold, size)=>{
+    const t = bold ? SHOP_PDF_WIDTHS.b : SHOP_PDF_WIDTHS.r;
+    let w = 0;
+    for(let i = 0; i < s.length; i++){ const c = s.charCodeAt(i); w += (t[(c < 32 ? 0 : c - 32)] || 556); }
+    return w * size / 1000;
+  };
+  const wrap = (str, maxW, bold, size)=>{
+    const words = enc(str).split(/\s+/).filter(Boolean);
+    const lines = []; let cur = '';
+    words.forEach(w=>{
+      const test = cur ? cur + ' ' + w : w;
+      if(width(test, bold, size) <= maxW || !cur){ cur = test; }
+      else{ lines.push(cur); cur = w; }
+    });
+    if(cur) lines.push(cur);
+    return lines.length ? lines : [''];
+  };
+  const esc = (s)=> s.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+
+  const doc = new DOMParser().parseFromString('<body>' + sheetHtml + '</body>', 'text/html');
+  const txt = (el)=> el ? el.textContent.replace(/\s+/g, ' ').trim() : '';
+  const kicker = txt(doc.querySelector('.spKicker')).toUpperCase();
+  const title = txt(doc.querySelector('.spTitle')) || 'Weekly shopping list';
+  const sub = txt(doc.querySelector('.spSub'));
+  const printed = txt(doc.querySelector('.spPrinted'));
+  const notes = Array.from(doc.querySelectorAll('.spNote')).map(txt).filter(Boolean);
+  const totals = Array.from(doc.querySelectorAll('.spTotals span')).map(txt);
+  const heads = Array.from(doc.querySelectorAll('thead th')).map(txt);
+  const rows = Array.from(doc.querySelectorAll('tbody tr')).map(tr=>
+    tr.classList.contains('spCat')
+      ? {cat: txt(tr)}
+      : {done: tr.classList.contains('spDone'), cells: Array.from(tr.children).slice(1).map(txt)});
+
+  const PW = 595.28, PH = 841.89, M = 34.02, mm = 72 / 25.4;
+  const X = {box: M, name: M + 7 * mm, amt: M + (7 + 73) * mm, pack: M + (7 + 73 + 30) * mm,
+             orderR: M + (7 + 73 + 30 + 42 + 17) * mm, costR: M + 186 * mm};
+  const W = {name: 73 * mm - 6, amt: 30 * mm - 6, pack: 42 * mm - 6};
+  const INK = '0.114 0.165 0.208', SOFT = '0.29 0.353 0.4';
+  const pages = [];
+  let ops, y;
+  const T = (x, base, s, bold, size, color, right)=>{
+    const e = enc(s); if(!e) return;
+    const px = right ? x - width(e, bold, size) : x;
+    ops.push('BT /' + (bold ? 'F2' : 'F1') + ' ' + size + ' Tf ' + color + ' rg ' + px.toFixed(2) + ' ' + (PH - base).toFixed(2) + ' Td (' + esc(e) + ') Tj ET');
+  };
+  const RECT = (x, top, w, h, fill)=> ops.push(fill + ' rg ' + x.toFixed(2) + ' ' + (PH - top - h).toFixed(2) + ' ' + w.toFixed(2) + ' ' + h.toFixed(2) + ' re f');
+  const LINE = (x1, x2, at, lw, color)=> ops.push(color + ' RG ' + lw + ' w ' + x1.toFixed(2) + ' ' + (PH - at).toFixed(2) + ' m ' + x2.toFixed(2) + ' ' + (PH - at).toFixed(2) + ' l S');
+  const newPage = ()=>{ ops = []; pages.push(ops); y = M; };
+  const thead = ()=>{
+    const base = y + 8;
+    T(X.name, base, heads[1] || 'Ingredient', true, 7, SOFT);
+    T(X.amt, base, heads[2] || 'Amount needed', true, 7, SOFT);
+    T(X.pack, base, heads[3] || 'Pack size', true, 7, SOFT);
+    T(X.orderR, base, heads[4] || 'To order', true, 7, SOFT, true);
+    T(X.costR, base, heads[5] || 'Cost', true, 7, SOFT, true);
+    y += 12;
+    LINE(M, PW - M, y, 0.8, INK);
+    y += 2;
+  };
+  const LIMIT = PH - M - 16;
+
+  newPage();
+  if(kicker){ T(M, y + 8, kicker, false, 8, '0.416 0.353 0.282'); y += 12; }
+  T(M, y + 17, title, true, 17, INK);
+  if(printed) T(PW - M, y + 17, printed, false, 8, '0.416 0.463 0.502', true);
+  y += 22;
+  if(sub){ T(M, y + 9, sub, false, 9, SOFT); y += 13; }
+  LINE(M, PW - M, y + 2, 1.7, INK);
+  y += 10;
+  notes.forEach(n=>{
+    const ls = wrap(n, PW - 2 * M - 14, false, 8.5);
+    const h = ls.length * 11 + 8;
+    RECT(M, y, PW - 2 * M, h, '0.98 0.965 0.937');
+    ops.push('0.788 0.725 0.639 RG 0.8 w ' + M.toFixed(2) + ' ' + (PH - y - h).toFixed(2) + ' ' + (PW - 2 * M).toFixed(2) + ' ' + h.toFixed(2) + ' re S');
+    ls.forEach((l, i)=> T(M + 7, y + 12 + i * 11, l, false, 8.5, INK));
+    y += h + 5;
+  });
+  thead();
+
+  const rowLayout = (r)=>{
+    const n = wrap(r.cells[0] || '', W.name, true, 9.5);
+    const a = wrap(r.cells[1] || '', W.amt, false, 9.5);
+    const p = wrap(r.cells[2] || '', W.pack, false, 9.5);
+    return {n, a, p, h: Math.max(n.length, a.length, p.length) * 12 + 6};
+  };
+  rows.forEach((r, idx)=>{
+    if(r.cat){
+      const next = rows[idx + 1] && rows[idx + 1].cells ? rowLayout(rows[idx + 1]).h : 18;
+      if(y + 16 + next > LIMIT){ newPage(); thead(); }
+      RECT(M, y, PW - 2 * M, 15, '0.937 0.902 0.847');
+      T(M + 4, y + 10.5, r.cat, true, 8.5, INK);
+      y += 15;
+      return;
+    }
+    const L = rowLayout(r);
+    if(y + L.h > LIMIT){ newPage(); thead(); }
+    const base = y + 3 + 9;
+    ops.push(INK + ' RG 0.9 w ' + (X.box + 1).toFixed(2) + ' ' + (PH - y - 3 - 10.2).toFixed(2) + ' 10.2 10.2 re S');
+    if(r.done){
+      ops.push(INK + ' RG 1.4 w ' + (X.box + 3).toFixed(2) + ' ' + (PH - y - 3 - 5.5).toFixed(2) + ' m ' + (X.box + 5).toFixed(2) + ' ' + (PH - y - 3 - 8).toFixed(2) + ' l ' + (X.box + 9).toFixed(2) + ' ' + (PH - y - 3 - 2.5).toFixed(2) + ' l S');
+    }
+    L.n.forEach((l, i)=> T(X.name, base + i * 12, l, true, 9.5, INK));
+    L.a.forEach((l, i)=> T(X.amt, base + i * 12, l, false, 9.5, INK));
+    L.p.forEach((l, i)=> T(X.pack, base + i * 12, l, false, 9.5, INK));
+    T(X.orderR, base, r.cells[3] || '', false, 9.5, INK, true);
+    T(X.costR, base, r.cells[4] || '', false, 9.5, INK, true);
+    y += L.h;
+    LINE(M, PW - M, y, 0.4, '0.867 0.831 0.776');
+  });
+  if(totals.length){
+    if(y + 24 > LIMIT){ newPage(); }
+    y += 6;
+    LINE(M, PW - M, y, 0.8, INK);
+    T(M, y + 14, totals[0] || '', true, 10, INK);
+    T(PW - M, y + 14, totals[1] || '', true, 10, INK, true);
+  }
+  pages.forEach((o, i)=>{
+    ops = o;
+    T(PW - M, PH - 18, 'Page ' + (i + 1) + ' of ' + pages.length, false, 8, '0.416 0.463 0.502', true);
+  });
+
+  /* assemble the file */
+  const chunks = []; let offset = 0; const offs = [];
+  const put = (s)=>{ const b = new Uint8Array(s.length); for(let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i) & 255; chunks.push(b); offset += b.length; };
+  const total = 4 + pages.length * 2;
+  put('%PDF-1.4\n');
+  offs[1] = offset; put('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
+  const kids = pages.map((_, i)=> (5 + i * 2) + ' 0 R').join(' ');
+  offs[2] = offset; put('2 0 obj\n<< /Type /Pages /Kids [' + kids + '] /Count ' + pages.length + ' >>\nendobj\n');
+  offs[3] = offset; put('3 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>\nendobj\n');
+  offs[4] = offset; put('4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>\nendobj\n');
+  pages.forEach((o, i)=>{
+    const pn = 5 + i * 2, cn = 6 + i * 2;
+    const stream = o.join('\n');
+    offs[pn] = offset;
+    put(pn + ' 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + PW.toFixed(2) + ' ' + PH.toFixed(2) + '] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ' + cn + ' 0 R >>\nendobj\n');
+    offs[cn] = offset;
+    put(cn + ' 0 obj\n<< /Length ' + stream.length + ' >>\nstream\n' + stream + '\nendstream\nendobj\n');
+  });
+  const xref = offset;
+  put('xref\n0 ' + (total + 1) + '\n0000000000 65535 f \n');
+  for(let n = 1; n <= total; n++) put(String(offs[n]).padStart(10, '0') + ' 00000 n \n');
+  put('trailer\n<< /Size ' + (total + 1) + ' /Root 1 0 R >>\nstartxref\n' + xref + '\n%%EOF');
+  return new Blob(chunks, {type: 'application/pdf'});
+}
+
 function shopDocPaginate(){
   var src = document.getElementById('spSrc');
   var out = document.getElementById('spPages');
@@ -5960,8 +6124,12 @@ function showShopListPanel(sheetHtml){
     + '<script>window.onPdfReady=function(b,n){try{parent.docPanelPdfReady(b,n);}catch(e){}};<\/script>'
     + '<script>(' + shopDocPaginate.toString() + ')();<\/script>'
     + '<script>' + (RB_CARD_KIT ? RB_CARD_KIT.pdf : '') + '<\/script></body></html>';
-  const panel = openDocPanel('Shopping list', {pdf: !!RB_CARD_KIT});
+  const panel = openDocPanel('Shopping list', {pdf: true});
   showDocInPanel(doc, 'Shopping list', panel);
+  /* The PDF is written straight away, so a single tap on the button opens
+     the share sheet (Print, Save to Files, Mail...). */
+  try{ docPanelPdfReady(buildShopPdf(sheetHtml), 'Shopping list ' + new Date().toISOString().slice(0, 10) + '.pdf'); }
+  catch(e){ console.error(e); }
 }
 /* ================= The station's Menu =================
    Option B of the top-bar mock-up: the station keeps Shopping list in the
